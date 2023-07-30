@@ -10,9 +10,8 @@ QoL (*Quality of Life*) for Hypixel Skyblock
 - [x] Waypoints (/mesky waypoint)
 - [x] Chat alerts (/mesky alert)
 - [x] Bonzo/Spirit mask timer
+- [x] 2 types of wings (for now you cannot change type or turn them off XD)
 - [x] Ghost block [!**Illegal**!]
-
-Thats probably all for this version, because i started 2 days ago and its my first time with Java + im banned from Hypixel for using "printer" in Schematica by accident (30 days...)
 
 ⪢ TODO:
   - [ ] Settings/Alerts/Waypoints and changing locations

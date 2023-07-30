@@ -6,7 +6,8 @@ import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
-import treemek.mesky.handlers.gui.SettingsGUI;
+import treemek.mesky.handlers.Config;
+import treemek.mesky.handlers.gui.GUI;
 import treemek.mesky.utils.Alerts;
 import treemek.mesky.utils.Waypoints;
 
@@ -24,30 +25,57 @@ public class Commands extends CommandBase{
 		
 		// Command arguments ./mesky [args]
     	if(args.length > 0){
-    		// ./mesky version
-    		if(args[0].equalsIgnoreCase("version")){
-    			sender.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "v" + Reference.VERSION));
-    			return;
-    		}
-    		if(args[0].equalsIgnoreCase("addAlert")){
-    			if(args.length == 3) {
-    				String[] alert = {args[1], args[2]};
-    				Alerts.alerts.add(alert);
-    				sender.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Added: /nTrigger: " + args[1] + "/nText: " + args[2]));
-    				return;
-    			}else{
-    				sender.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Wrong use of command /mesky addAlert [triggerMessage] [alertShown]"));
-    				return;
+    		if(args[0].equalsIgnoreCase("alert")){
+    			if(args.length > 1) {
+		    		if(args[1].equalsIgnoreCase("add")){
+		    			if(args.length == 5) {
+		    				Alerts.addAlert(args[2], args[3], Float.parseFloat(args[4]));
+		    				return;
+		    			}else{
+		    				sender.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Wrong use of command /mesky alert add [triggerMessage] [alertShown] [alertTime]"));
+		    				return;
+		    			}
+		    		}
+		    		if(args[1].equalsIgnoreCase("delete")){
+		    			if(args.length == 3) {
+		    				Alerts.deleteAlert(args[2]);
+		    				return;
+		    			}else{
+		    				sender.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Wrong use of command /mesky alert delete [triggerMessage]"));
+		    				return;
+		    			}
+		    		}
+		    		if(args[1].equalsIgnoreCase("list")){
+		    				Alerts.showAlert();
+		    				return;
+		    		}
+    			}else {
+    				sender.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Wrong use of command /mesky alert [add/delete/list]"));
     			}
+    		}
+    		if(args[0].equalsIgnoreCase("reload")) {
+    			Config.reloadConfig();
     		}
     		if(args[0].equalsIgnoreCase("waypoint")){
-    			if(args.length == 6){
-    				Waypoints.addData(args[1], Integer.parseInt(args[2]), Integer.parseInt(args[3]), Integer.parseInt(args[4]), args[5]);
-    				sender.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Added waypoint " + args[1]));
-    			}else {
-    				sender.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Dumb fuck"));
+	    		if(args[1].equalsIgnoreCase("add")){
+	    			if(args.length == 6){
+	    				Waypoints.addWaypoint(args[2], Float.parseFloat(args[3]), Float.parseFloat(args[4]), Float.parseFloat(args[5]));
+	    			}else {
+	    				sender.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Dumb fuck"));
+	    				return;
+	    			}
+	    		}
+	    		if(args[1].equalsIgnoreCase("delete")){
+	    			if(args.length == 3) {
+	    				Waypoints.deleteWaypoint(Integer.parseInt(args[2]));
+	    			}else{
+	    				sender.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Wrong use of command /mesky waypoint delete [waypoint number]"));
+	    			}
+	    		}
+	    		if(args[1].equalsIgnoreCase("list")){
+    				Waypoints.showList();
     				return;
-    			}
+    		}
     		}
     	}
     }

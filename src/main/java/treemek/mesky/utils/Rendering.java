@@ -18,6 +18,7 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.StringUtils;
+import treemek.mesky.utils.Waypoints.Waypoint;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 
@@ -132,9 +133,9 @@ public class Rendering {
         GlStateManager.popMatrix();
     }
 	
-	public static void draw3DBox(AxisAlignedBB aabb, int colourInt, float partialTicks) {
+	public static void draw3DBox(AxisAlignedBB aabb, String color, float partialTicks) {
         Entity render = Minecraft.getMinecraft().getRenderViewEntity();
-        Color colour = new Color(colourInt, true);
+        Color colour = Color.decode(color);
 
         double realX = render.lastTickPosX + (render.posX - render.lastTickPosX) * partialTicks;
         double realY = render.lastTickPosY + (render.posY - render.lastTickPosY) * partialTicks;
@@ -159,7 +160,7 @@ public class Rendering {
     }
 	
 	 // https://github.com/Moulberry/NotEnoughUpdates/blob/master/src/main/java/io/github/moulberry/notenoughupdates/miscfeatures/DwarvenMinesWaypoints.java#L261
-    public static void draw3DWaypointString(Object[] waypoint, float partialTicks) {
+    public static void draw3DWaypointString(Waypoint waypoint, float partialTicks) {
         GlStateManager.alphaFunc(516, 0.1F);
 
         
@@ -171,7 +172,7 @@ public class Rendering {
         double viewerY = viewer.lastTickPosY + (viewer.posY - viewer.lastTickPosY) * partialTicks;
         double viewerZ = viewer.lastTickPosZ + (viewer.posZ - viewer.lastTickPosZ) * partialTicks;
 
-        int[] coords = (int[]) waypoint[1];
+        float[] coords = (float[]) waypoint.getCoords();
         
         double x = coords[0]-viewerX+0.5f;
         double y = coords[1]-viewerY-viewer.getEyeHeight();
@@ -187,7 +188,7 @@ public class Rendering {
         GlStateManager.translate(x, y, z);
         GlStateManager.translate(0, viewer.getEyeHeight(), 0);
 
-        renderNametag(EnumChatFormatting.AQUA + waypoint[2].toString());
+        renderNametag(EnumChatFormatting.AQUA + waypoint.getName().toString());
 
         GlStateManager.rotate(-Minecraft.getMinecraft().getRenderManager().playerViewY, 0.0F, 1.0F, 0.0F);
         GlStateManager.rotate(Minecraft.getMinecraft().getRenderManager().playerViewX, 1.0F, 0.0F, 0.0F);
@@ -197,7 +198,7 @@ public class Rendering {
         
         EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
         String distance = Math.round(player.getDistance(coords[0], coords[1], coords[2])) + "m";
-        renderNametag(EnumChatFormatting.YELLOW + distance);
+        renderNametag(EnumChatFormatting.WHITE + distance);
         
         GlStateManager.popMatrix();
 

@@ -9,7 +9,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import treemek.mesky.Commands;
 import treemek.mesky.features.FishingTimer;
-import treemek.mesky.handlers.gui.SettingsGUI;
+import treemek.mesky.handlers.gui.GUI;
 
 public class EventHandler{
 	
@@ -23,7 +23,7 @@ public class EventHandler{
 	public void onClientTick(TickEvent.ClientTickEvent event) {
 		// for opening gui, because i have to wait 1 tick before opening it
 		if (Commands.opengui == true) {
-            Minecraft.getMinecraft().displayGuiScreen(new SettingsGUI());
+            Minecraft.getMinecraft().displayGuiScreen(new GUI());
             Commands.opengui = false;
 		}
 	}

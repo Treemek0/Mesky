@@ -20,6 +20,7 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import treemek.mesky.Reference;
 import treemek.mesky.utils.Rendering;
@@ -27,10 +28,11 @@ import treemek.mesky.utils.Rendering;
 public class FishingTimer extends GuiScreen{
 
 	private boolean isFishing = false;
-    private EntityFishHook fishingHook;
+    private EntityFishHook fishingHook = null;
     private float fishingTimer = 0;
     public static boolean isText3d = true;
 
+   
     @SubscribeEvent
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (event.entityLiving == Minecraft.getMinecraft().thePlayer) {
@@ -48,7 +50,6 @@ public class FishingTimer extends GuiScreen{
     
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
-       
 		if (event.phase == TickEvent.Phase.END && isFishing) {
                 if(fishingHook == null){
                 	// Player just started fishing (detecting our bobber)
@@ -67,8 +68,9 @@ public class FishingTimer extends GuiScreen{
                         fishingHook = null;
                     }else{
                     	// Yes Bobber = yes fishing (updating timer)
+        
                     	fishingTimer = (fishingHook.ticksExisted/20f);
-                    	
+                
                     }
                 }
         }
@@ -95,7 +97,7 @@ public class FishingTimer extends GuiScreen{
       
    // Draw the timer text on the screen
       String timerText = String.format(java.util.Locale.US, "%.1f", fishingTimer) + "s";
-      Rendering.draw3DString(fishingHook.posX, fishingHook.posY + 0.3f, fishingHook.posZ, timerText, 0xbfbfbf, partialTicks);
+      Rendering.draw3DString(fishingHook.posX, fishingHook.posY + 0.4f, fishingHook.posZ, timerText, 0xbfbfbf, partialTicks);
 
     }
     
@@ -137,6 +139,19 @@ public class FishingTimer extends GuiScreen{
         Minecraft.getMinecraft().renderEngine.bindTexture(textureLocation);
         drawModalRectWithCustomSizedTexture((int)(posX - textWidth), posY - 5, 0, 0, 12, 17, 12, 17);
         
+    }
+    
+    
+    @SubscribeEvent
+    public void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
+    	isFishing = false;
+		fishingHook = null;
+    }
+
+    @SubscribeEvent
+    public void onPlayerChangedDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
+    	isFishing = false;
+		fishingHook = null;
     }
     
    

@@ -7,14 +7,14 @@ QoL (*Quality of Life*) for Hypixel Skyblock
 ⪢ Features: 
 - [x] Stops flower weapons from placing on blocks (*Flower of Truth & Spirit Sceptre*)
 - [x] Fishing timer
-- [ ] Waypoints (not saveable so useless) + can't delete them lol
-- [ ] Chat alerts (also not saveable) + the same thing here
+- [x] Waypoints (/mesky waypoint)
+- [x] Chat alerts (/mesky alert)
+- [x] Bonzo/Spirit mask timer
+- [x] Ghost block [!**Illegal**!]
 
 Thats probably all for this version, because i started 2 days ago and its my first time with Java + im banned from Hypixel for using "printer" in Schematica by accident (30 days...)
 
 ⪢ TODO:
-  - [ ] Config file for saving options, etc.
-  - [ ] Bonzo/Spirit mask timer
   - [ ] Settings/Alerts/Waypoints and changing locations
   - [ ] Utils for Kuudra (standing spots, pearl spots, etc) *but i have to learn them first*
   - [ ] I will try solvers, because them seem to be fun

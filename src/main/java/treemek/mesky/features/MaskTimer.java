@@ -16,7 +16,7 @@ import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import treemek.mesky.Reference;
-import treemek.mesky.utils.Rendering;
+import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.utils.Utils;
 
 public class MaskTimer extends GuiScreen {
@@ -91,7 +91,7 @@ public class MaskTimer extends GuiScreen {
 		// Calculate the position to render the timer
         int x = resolution.getScaledWidth() / 10;
         int y = resolution.getScaledHeight() / 3 - 10;
-		Rendering.drawText(cooldownTimer, x, y, 1f, false, 0xFFFFFF);
+		RenderHandler.drawText(cooldownTimer, x, y, 1f, false, 0xFFFFFF);
 		
 		int textWidth = Minecraft.getMinecraft().fontRendererObj.getStringWidth(cooldownTimer);
 		
@@ -107,7 +107,7 @@ public class MaskTimer extends GuiScreen {
 		// Calculate the position to render the timer
         int x = resolution.getScaledWidth() / 10;
         int y = resolution.getScaledHeight() / 3 - 20;
-		Rendering.drawText(cooldownTimer, x, y, 1f, false, 0xFFFFFF);
+		RenderHandler.drawText(cooldownTimer, x, y, 1f, false, 0xFFFFFF);
 		
 		int textWidth = Minecraft.getMinecraft().fontRendererObj.getStringWidth(cooldownTimer);
 		

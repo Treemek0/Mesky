@@ -13,36 +13,39 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import treemek.mesky.config.SettingsConfig;
 
 public class GhostBlock {
 
-	public static final KeyBinding GKEY = new KeyBinding("Ghost Block", Keyboard.KEY_G, "mesky");
+	public static final KeyBinding GKEY = new KeyBinding("key.ghostBlock", Keyboard.KEY_G, "key.categories.mesky");
 	boolean hasBeenClicked = false;
 	public static boolean canDestroyHardBlock = false;
 	
 	@SideOnly(Side.CLIENT)
 	@SubscribeEvent
     public void onRenderWorld(RenderWorldLastEvent event) {
-        if (GKEY.isKeyDown()) {
-        	if(!hasBeenClicked) {
-        		hasBeenClicked = true;
-		        MovingObjectPosition object = Minecraft.getMinecraft().thePlayer.rayTrace(Minecraft.getMinecraft().playerController.getBlockReachDistance(), 1.0F);
-		        if (object != null && object.getBlockPos() != null) {
-		            Block lookingAtblock = Minecraft.getMinecraft().theWorld.getBlockState(object.getBlockPos()).getBlock();
-		            if (!isInteractable(lookingAtblock) && lookingAtblock != Blocks.air) {
-		            	if(canDestroyHardBlock) {
-		            		Minecraft.getMinecraft().theWorld.setBlockToAir(object.getBlockPos());
-		            	}else {
-		            		if(!isHardBlock(lookingAtblock)) {
-		            			Minecraft.getMinecraft().theWorld.setBlockToAir(object.getBlockPos());
-		            		}
-		            	}
-		            }
-		        }
-        	}
-        }else {
-        	hasBeenClicked = false;
-        }
+		if(SettingsConfig.GhostBlocks) {
+	        if (GKEY.isKeyDown()) {
+	        	if(!hasBeenClicked) {
+	        		hasBeenClicked = true;
+			        MovingObjectPosition object = Minecraft.getMinecraft().thePlayer.rayTrace(Minecraft.getMinecraft().playerController.getBlockReachDistance(), 1.0F);
+			        if (object != null && object.getBlockPos() != null) {
+			            Block lookingAtblock = Minecraft.getMinecraft().theWorld.getBlockState(object.getBlockPos()).getBlock();
+			            if (!isInteractable(lookingAtblock) && lookingAtblock != Blocks.air) {
+			            	if(canDestroyHardBlock) {
+			            		Minecraft.getMinecraft().theWorld.setBlockToAir(object.getBlockPos());
+			            	}else {
+			            		if(!isHardBlock(lookingAtblock)) {
+			            			Minecraft.getMinecraft().theWorld.setBlockToAir(object.getBlockPos());
+			            		}
+			            	}
+			            }
+			        }
+	        	}
+	        }else {
+	        	hasBeenClicked = false;
+	        }
+		}
 
     }
 	

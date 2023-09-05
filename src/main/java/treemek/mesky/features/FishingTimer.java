@@ -23,10 +23,11 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import treemek.mesky.Reference;
-import treemek.mesky.utils.Rendering;
+import treemek.mesky.config.SettingsConfig;
+import treemek.mesky.handlers.RenderHandler;
 
 public class FishingTimer extends GuiScreen{
-
+	
 	private boolean isFishing = false;
     private EntityFishHook fishingHook = null;
     private float fishingTimer = 0;
@@ -82,10 +83,9 @@ public class FishingTimer extends GuiScreen{
 
     @SubscribeEvent
     public void onWorldRender(RenderWorldLastEvent event) {
-    	if (fishingHook != null && isText3d) {
+    	if (fishingHook != null && isText3d && SettingsConfig.FishingTimer) {
           // Render the fishing timer on the screen
           renderFishingTimer(event.partialTicks);
-          
       }
         
     }
@@ -97,7 +97,7 @@ public class FishingTimer extends GuiScreen{
       
    // Draw the timer text on the screen
       String timerText = String.format(java.util.Locale.US, "%.1f", fishingTimer) + "s";
-      Rendering.draw3DString(fishingHook.posX, fishingHook.posY + 0.4f, fishingHook.posZ, timerText, 0xbfbfbf, partialTicks);
+      RenderHandler.draw3DString(fishingHook.posX, fishingHook.posY + 0.6f, fishingHook.posZ, timerText, 0xbfbfbf, partialTicks);
 
     }
     
@@ -108,7 +108,7 @@ public class FishingTimer extends GuiScreen{
     
     @SubscribeEvent
     public void onRenderOverlay(RenderGameOverlayEvent.Text event) {
-        if (fishingHook != null && !isText3d) {
+        if (fishingHook != null && !isText3d && SettingsConfig.FishingTimer) {
             // Render the fishing timer on the screen
             renderFishingTimer(event.resolution, event.partialTicks);
             

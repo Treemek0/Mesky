@@ -54,7 +54,7 @@ public class AngelWings extends ModelBase
 
 		if (player.equals(mc.thePlayer) && !player.isInvisible()) // Should render wings onto this player?
 		{
-			if(CosmeticHandler.Wings && CosmeticHandler.WingsType == 2) {
+			if(CosmeticHandler.WingsType == 2) {
 				renderWings(player, event.partialRenderTick);
 			}
 		}

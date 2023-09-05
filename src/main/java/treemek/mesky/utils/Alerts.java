@@ -18,7 +18,8 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import treemek.mesky.Reference;
-import treemek.mesky.handlers.Config;
+import treemek.mesky.config.ConfigHandler;
+import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.utils.Waypoints.Waypoint;
 
 public class Alerts {
@@ -55,7 +56,7 @@ public class Alerts {
                 player.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Updated trigger: " + trigger));
         		player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Display: " + display));
         		player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Time: " + time + 's'));
-        		Config.SaveAlert(alertsList);
+        		ConfigHandler.SaveAlert(alertsList);
             	return;
             }
     	}
@@ -65,21 +66,16 @@ public class Alerts {
 		player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Trigger: " + trigger));
 		player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Display: " + display));
 		player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Time: " + time + 's'));
-		Config.SaveAlert(alertsList);
+		ConfigHandler.SaveAlert(alertsList);
     }
     
  // Method to add data
-    public static void deleteAlert(String trigger) {
+    public static void deleteAlert(int id) {
     	EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
-    	for (int i = 0; i < alertsList.size(); i++) {
-    		if(alertsList.get(i).getTrigger().equals(trigger)) {
-    			alertsList.remove(i);
-    	        player.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Deleted: " + trigger));
-    			Config.SaveAlert(alertsList);
-    			return;
-    		}
-		}
-    	player.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "There are no alerts with trigger: " + trigger));
+        player.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Deleted: " + alertsList.get(id).getTrigger()));
+		alertsList.remove(id);
+        ConfigHandler.SaveAlert(alertsList);
+		return;
     }
     
  // Method to add data
@@ -92,7 +88,7 @@ public class Alerts {
         	player.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.DARK_AQUA + "Time: " + EnumChatFormatting.WHITE + alert.getTime()/20f + "s"));
         	player.addChatMessage(new ChatComponentText(""));
         }
-		Config.SaveAlert(alertsList);
+		ConfigHandler.SaveAlert(alertsList);
     }
 	
 	public static String appearedAlert = null;
@@ -131,7 +127,7 @@ public class Alerts {
 	        int posX = resolution.getScaledWidth() / 2;
 	        int posY = resolution.getScaledHeight() / 2;
 	        
-	        Rendering.drawTitle(appearedAlert, resolution, 0xf54245);
+	        RenderHandler.drawTitle(appearedAlert, resolution, 0xf54245);
 	        
 	     // Check if the delay duration has passed
 	        if (System.currentTimeMillis() - alertDisplayTime >= alertDisplayDuration) {

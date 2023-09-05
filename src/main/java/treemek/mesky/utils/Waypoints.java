@@ -21,7 +21,8 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import treemek.mesky.handlers.Config;
+import treemek.mesky.config.ConfigHandler;
+import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.utils.Alerts.Alert;
 
 public class Waypoints {
@@ -48,6 +49,7 @@ public class Waypoints {
         public float[] getCoords() {
             return coords;
         }
+    
 
         public String getWorld() {
             return world;
@@ -60,14 +62,14 @@ public class Waypoints {
     	player.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Added waypoint: "));
 		player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Name: " + name));
 		player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Coords: " + "x: " + x + ", y: " + y + ", z: " + z));
-    	waypointsList.add(new Waypoint(name, x, y, z, Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName()));
-        Config.SaveWaypoint(waypointsList);
+    	waypointsList.add(0, new Waypoint(name, x, y, z, Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName()));
+        ConfigHandler.SaveWaypoint(waypointsList);
     }
     
     public static void deleteWaypoint(int number) {
     	Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Deleted waypoint: " + waypointsList.get(number).getName()));
 		waypointsList.remove(number);
-		Config.SaveWaypoint(waypointsList);
+		ConfigHandler.SaveWaypoint(waypointsList);
     }
     
     public static void showList() {
@@ -81,9 +83,8 @@ public class Waypoints {
 	        	player.addChatMessage(new ChatComponentText(""));
         	}
         }
-		Config.SaveWaypoint(waypointsList);
+		ConfigHandler.SaveWaypoint(waypointsList);
     }
-
    
     @SubscribeEvent
     public void onWorldRender(RenderWorldLastEvent event) {
@@ -91,13 +92,13 @@ public class Waypoints {
             for (Waypoint waypoint : waypointsList) {
                 if(waypoint.getWorld().equals(Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName())){
                 	// when im gonna be unbanned then check for world types
-                    Rendering.draw3DWaypointString(waypoint, event.partialTicks);
+                    RenderHandler.draw3DWaypointString(waypoint, event.partialTicks);
                     
                     float x = Math.round(waypoint.getCoords()[0]);
                     float y = Math.round(waypoint.getCoords()[1]);
                     float z = Math.round(waypoint.getCoords()[2]);
                     AxisAlignedBB aabb = new AxisAlignedBB(x + 1.01, y - 1.01, z + 1.01, x - 0.01, y + 0.01, z - 0.01);
-                    Rendering.draw3DBox(aabb, "#3e91b5", event.partialTicks);
+                    RenderHandler.draw3DBox(aabb, "#3e91b5", event.partialTicks);
                 }
             }
         }

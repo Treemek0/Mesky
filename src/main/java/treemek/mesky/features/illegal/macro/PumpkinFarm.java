@@ -24,8 +24,8 @@ import treemek.mesky.config.SettingsConfig;
 
 public class PumpkinFarm {
 
-	public static final KeyBinding L_KEY = new KeyBinding("macroL", 203, "key.categories.mesky");
-	public static final KeyBinding R_KEY = new KeyBinding("macroR", 205, "key.categories.mesky");
+	public static final KeyBinding L_KEY = new KeyBinding("macro L", 203, "Mesky");
+	public static final KeyBinding R_KEY = new KeyBinding("macro R", 205, "Mesky");
 	
 	
 	

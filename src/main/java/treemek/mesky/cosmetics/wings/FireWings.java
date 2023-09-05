@@ -57,7 +57,7 @@ public class FireWings extends ModelBase
 		EntityPlayer player = event.entityPlayer;
 
 		if (player.equals(mc.thePlayer) && !player.isInvisible()){
-			if(CosmeticHandler.Wings && CosmeticHandler.WingsType == 1) {
+			if(CosmeticHandler.WingsType == 1) {
 				renderWings(player, event.partialRenderTick);
 			}
 		}

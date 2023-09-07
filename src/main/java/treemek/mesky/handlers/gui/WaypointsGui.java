@@ -215,5 +215,6 @@ public class WaypointsGui extends GuiScreen {
 	        waypointsList.add(new Waypoint(name, x, y, z, Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName()));
 	    }
 	    Waypoints.waypointsList = waypointsList;
+	    ConfigHandler.SaveWaypoint(waypointsList);
 	}
 }

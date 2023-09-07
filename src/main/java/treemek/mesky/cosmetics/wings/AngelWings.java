@@ -21,7 +21,7 @@ public class AngelWings extends ModelBase
 	private ModelRenderer wingTip;
 	private boolean playerUsesFullHeight;
 	int WingsScale = 120;
-	float yRotation = 20;
+	float yRotation = 40;
 	float[] color = new float[]{212, 212, 212};
 
 	public AngelWings(){
@@ -37,13 +37,13 @@ public class AngelWings extends ModelBase
 				wing = new ModelRenderer(this, "wing");
 				wing.setTextureSize(22, 19); // 300px / 10px
 				wing.setRotationPoint(0, 0, 0);
-				wing.addBox("skin", -10.0F, 0.0F, 0.5F, 10, 0, 10);
+				wing.addBox("skin", -8.0F, 0.0F, 0.5F, 10, 0, 10);
 
 				// Create wing tip model renderer.
 				wingTip = new ModelRenderer(this, "wingtip");
 				wingTip.setTextureSize(22, 19); // 300px / 10px
-				wingTip.setRotationPoint(-10.0F, 0.0F, 0.0F);
-				wingTip.addBox("skin", -10.0F, 0.0F, 0.5F, 10, 0, 10);
+				wingTip.setRotationPoint(-8.0F, 0.0F, 0.0F); 
+				wingTip.addBox("skin", -10.0F, 0.0F, 0.5F, 10, 0, 10); // x = -side, y = -depth, z = -height
 				wing.addChild(wingTip); // Make the wingtip rotate around the wing.
 	}
 
@@ -70,37 +70,34 @@ public class AngelWings extends ModelBase
 		
 		GL11.glPushMatrix();
 		GL11.glScaled(-scale, -scale, scale);
+		GL11.glRotated(0, 1, 0, 0);
 		GL11.glRotated(180 + rotate, 0, 1, 0); // Rotate the wings to be with the player.
-		GL11.glTranslated(0, -(playerUsesFullHeight ? 1.65 : 1.45) / scale, 0); // Move wings correct amount up.
-		GL11.glTranslated(0, 0, 0.2 / scale);
+		GL11.glTranslated(0, -(playerUsesFullHeight ? 1.75 : 1.55) / scale, 0); // Move wings correct amount up.
+		GL11.glTranslated(0, 0, 0.15 / scale);
 
 		if (player.isSneaking()){
 			GL11.glTranslated(0D, 0.125D / scale, 0D);
+			GL11.glRotated(30, 1, 0, 0);
 		}
 
 		
-		// Acceleration of wing flapping
-		if(player.moveForward > 0) {
-			if (player.isSprinting()){
-				TargetYRotation = 70;
-				if(yRotation < TargetYRotation) {
-				yRotation += 0.2;
-				System.out.println(yRotation);
-				}
-			}else {
-				TargetYRotation = 50;
-				if(yRotation > TargetYRotation) {
-					yRotation -= 0.15;
-				}else if(yRotation < TargetYRotation) {
-					yRotation += 0.05;
-				}
-			}
-		}else {
-			TargetYRotation = 20;
-			if(yRotation > TargetYRotation) {
-				yRotation -= 0.05;
-			}
-		}
+//		float acceleration = 0.1f; // Adjust this value for the desired acceleration
+//		if (player.moveForward > 0) {
+//		    if (player.isSprinting()) {
+//		        TargetYRotation = 70;
+//		    } else {
+//		        TargetYRotation = 50;
+//		    }
+//		} else {
+//		    TargetYRotation = 30;
+//		}
+//
+//		// Calculate the new yRotation using linear interpolation (lerp)
+//		if (yRotation < TargetYRotation) {
+//		    yRotation = Math.min(yRotation + acceleration, TargetYRotation);
+//		} else if (yRotation > TargetYRotation) {
+//		    yRotation = Math.max(yRotation - acceleration, TargetYRotation);
+//		}
 
 		float[] colors = color;
 		GL11.glColor3f(colors[0], colors[1], colors[2]);
@@ -110,10 +107,9 @@ public class AngelWings extends ModelBase
 		{
 			GL11.glEnable(GL11.GL_CULL_FACE);
 			float f11 = (System.currentTimeMillis() % 1000) / 1000F * (float) Math.PI * 2.0F;
-			this.wing.rotateAngleX = (float) Math.toRadians(-80F);
+			this.wing.rotateAngleX = (float) Math.toRadians(-92F);
 			this.wing.rotateAngleZ = (float) Math.toRadians(20F);
-			this.wing.rotateAngleY = (float) Math.toRadians(yRotation);
-			if(Math.round(yRotation) == TargetYRotation) this.wing.rotateAngleY += (float) Math.sin(f11) * 0.1F;
+			this.wing.rotateAngleY = (float) Math.toRadians(yRotation) + (((float) Math.sin(f11) * 0.1F));
 			this.wingTip.rotateAngleZ = -((float)(Math.sin((double)(f11 + 2.0F)) + 0.5D)) * 0.35F;
 			this.wing.render(0.0625F);
 			GL11.glScalef(-1.0F, 1.0F, 1.0F);

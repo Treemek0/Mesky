@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName;
 
 public class SettingsConfig {
 	@SerializedName("Ghost Pickaxe")
-	public static boolean GhostPickaxe = true;
+	public static boolean GhostPickaxe = false;
 
 	@SerializedName("BlockFlowerPlacing")
     public static boolean BlockFlowerPlacing = false;

@@ -8,6 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.init.Items;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
@@ -35,7 +36,7 @@ public class MaskTimer extends GuiScreen {
         if(message.contains(":")) return; // only from server not players
         
 		if(message.contains("Bonzo's Mask") && message.contains("saved your life!")) {
-			if (mask != null && mask.getDisplayName().contains("Bonzo's Mask")) {
+			if (mask != null) {
 				String bonzoLore = StringUtils.join(Utils.getItemLore(mask), " ");
 				
 					String bonzoLoreSplit [] = bonzoLore.split(" ");
@@ -52,7 +53,7 @@ public class MaskTimer extends GuiScreen {
 		
 		if(message.contains("Your Spirit Mask saved your life!")) {
 			System.out.println(mask.getDisplayName());
-			if (mask != null && mask.getDisplayName().contains("Spirit Mask")) {
+			if (mask != null) {
 				SpiritCooldownSeconds = 30;
 				SpiritMaskActivated = true;
 			}

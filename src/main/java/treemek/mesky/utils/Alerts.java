@@ -102,6 +102,7 @@ public class Alerts {
 	public void onChat(ClientChatReceivedEvent event) {
 		// Alerts
 		for(int i = 0; i < Alerts.alertsList.size(); i++) {
+			if(Alerts.alertsList.get(i).triggerMessage.equals("")) continue;
 			if(event.message.getUnformattedText().contains(Alerts.alertsList.get(i).getTrigger())) {
 				Alerts.appearedAlert = Alerts.alertsList.get(i).getDisplay();
 				Alerts.alertDisplayTime = System.currentTimeMillis();

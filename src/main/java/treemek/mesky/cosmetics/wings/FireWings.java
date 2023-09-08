@@ -22,7 +22,6 @@ public class FireWings extends ModelBase
 	private boolean playerUsesFullHeight;
 	int WingsScale = 70;
 	float yRotation = 20;
-	float[] color = new float[]{212, 212, 212};
 
 	public FireWings(){
 		this.mc = Minecraft.getMinecraft();
@@ -104,8 +103,6 @@ public class FireWings extends ModelBase
 //		    yRotation = Math.max(yRotation - acceleration, TargetYRotation);
 //		}
 
-		float[] colors = color;
-		GL11.glColor3f(colors[0], colors[1], colors[2]);
 		mc.getTextureManager().bindTexture(location);
 
 		for (int j = 0; j < 2; ++j)
@@ -127,7 +124,6 @@ public class FireWings extends ModelBase
 
 		GL11.glCullFace(1029);
 		GL11.glDisable(GL11.GL_CULL_FACE);
-		GL11.glColor3f(255F, 255F, 255F);
 		GL11.glPopMatrix();
 	}
 

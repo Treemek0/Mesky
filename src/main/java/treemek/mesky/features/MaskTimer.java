@@ -92,14 +92,12 @@ public class MaskTimer extends GuiScreen {
 		// Calculate the position to render the timer
         int x = resolution.getScaledWidth() / 10;
         int y = resolution.getScaledHeight() / 3 - 10;
-		RenderHandler.drawText(cooldownTimer, x, y, 1f, false, 0xFFFFFF);
-		
-		int textWidth = Minecraft.getMinecraft().fontRendererObj.getStringWidth(cooldownTimer);
 		
 		ResourceLocation textureLocation = new ResourceLocation(Reference.MODID, "textures/Bonzo_Head.png");
         Minecraft.getMinecraft().renderEngine.bindTexture(textureLocation);
-        drawModalRectWithCustomSizedTexture((int)(x - textWidth), y - 5, 0, 0, 12, 17, 12, 17);
+        drawModalRectWithCustomSizedTexture(x, y - 5, 0, 0, 17, 17, 17, 17);
         
+		RenderHandler.drawText(cooldownTimer, x + 17, y, 1f, false, 0xFFFFFF);
 	}
 	
 	private void renderSpiritMaskTimer(ScaledResolution resolution, float partialTicks) {
@@ -108,13 +106,11 @@ public class MaskTimer extends GuiScreen {
 		// Calculate the position to render the timer
         int x = resolution.getScaledWidth() / 10;
         int y = resolution.getScaledHeight() / 3 - 20;
-		RenderHandler.drawText(cooldownTimer, x, y, 1f, false, 0xFFFFFF);
-		
-		int textWidth = Minecraft.getMinecraft().fontRendererObj.getStringWidth(cooldownTimer);
 		
 		ResourceLocation textureLocation = new ResourceLocation(Reference.MODID, "textures/Spirit_Mask.png");
         Minecraft.getMinecraft().renderEngine.bindTexture(textureLocation);
-        drawModalRectWithCustomSizedTexture((int)(x - textWidth), y - 5, 0, 0, 12, 17, 12, 17);
+        drawModalRectWithCustomSizedTexture(x, y - 5, 0, 0, 17, 17, 17, 17);
         
+		RenderHandler.drawText(cooldownTimer, x + 17, y, 1f, false, 0xFFFFFF);
 	}
 }

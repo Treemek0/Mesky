@@ -175,9 +175,9 @@ public class RenderHandler {
 
         float[] coords = (float[]) waypoint.getCoords();
         
-        double x = coords[0]-viewerX+0.5f;
+        double x = coords[0]-viewerX;
         double y = coords[1]-viewerY-viewer.getEyeHeight();
-        double z = coords[2]-viewerZ+0.5f;
+        double z = coords[2]-viewerZ;
 
         double distSq = x*x + y*y + z*z;
         double dist = Math.sqrt(distSq);

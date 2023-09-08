@@ -94,10 +94,10 @@ public class Waypoints {
                 	// when im gonna be unbanned then check for world types
                     RenderHandler.draw3DWaypointString(waypoint, event.partialTicks);
                     
-                    float x = Math.round(waypoint.getCoords()[0]);
-                    float y = Math.round(waypoint.getCoords()[1]);
-                    float z = Math.round(waypoint.getCoords()[2]);
-                    AxisAlignedBB aabb = new AxisAlignedBB(x + 1.01, y - 1.01, z + 1.01, x - 0.01, y + 0.01, z - 0.01);
+                    float x = (float) Math.floor(waypoint.getCoords()[0]);
+                    float y = (float) Math.floor(waypoint.getCoords()[1]);
+                    float z = (float) Math.floor(waypoint.getCoords()[2]);
+                    AxisAlignedBB aabb = new AxisAlignedBB(x + 1.001, y + 1.001, z + 1.001, x - 0.001, y - 0.001, z - 0.001);
                     RenderHandler.draw3DBox(aabb, "#3e91b5", event.partialTicks);
                 }
             }

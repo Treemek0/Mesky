@@ -24,9 +24,7 @@ import treemek.mesky.utils.Waypoints.Waypoint;
 public class AlertsGui extends GuiScreen {
 	ArrayList<GuiTextField> alertsFields;
 	ArrayList<GuiTextField> timeFields;
-	int Xplace;
-	int displayX = Xplace + (width/4) + 5;
-	int timeX;
+
 	
 	@Override
 	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
@@ -39,11 +37,14 @@ public class AlertsGui extends GuiScreen {
 
         RenderHandler.drawText("Alerts", titleX, titleY, scale, true, 0x3e91b5);
         
+    	int alertTrigger_X = width / 6;
+    	int alertDisplay_X = alertTrigger_X + (width / 4) + 10;
+    	int alertTime_X = alertDisplay_X + (width / 4);
         
         int infoY = (int)((height / 3) - 15);
         RenderHandler.drawText("Trigger", width / 6, infoY, 1, true, 0x7a7a7a);
-        RenderHandler.drawText("Display", displayX, infoY, 1, true, 0x7a7a7a);
-        RenderHandler.drawText("Time [seconds]", timeX + 10, infoY, 1, true, 0x7a7a7a);
+        RenderHandler.drawText("Display", alertDisplay_X, infoY, 1, true, 0x7a7a7a);
+        RenderHandler.drawText("Time [seconds]", alertTime_X + 10, infoY, 1, true, 0x7a7a7a);
         
         
         for (GuiTextField input : alertsFields) {
@@ -70,26 +71,24 @@ public class AlertsGui extends GuiScreen {
         
         for (int i = 0; i < Alerts.alertsList.size(); i++) {
 	        	this.buttonList.add(new DeleteButton(0 + (4*i), (int)(width * 0.8f), positionY + (30 * i), 20, 20, ""));
+
+	        	int alertTrigger_X = width / 6;
+	        	int alertDisplay_X = alertTrigger_X + (width / 4) + 10;
+	        	int alertTime_X = alertDisplay_X + (width / 4);
 	        	
-	        	Xplace = width / 6;
-	        	GuiTextField alertTrigger = new GuiTextField(1 + (4 * i), this.fontRendererObj, Xplace, positionY + (30 * i), width / 4, 20);
+	        	GuiTextField alertTrigger = new GuiTextField(1 + (4 * i), this.fontRendererObj, alertTrigger_X, positionY + (30 * i), width / 4, 20);
 	            alertTrigger.setMaxStringLength(30);
 	            alertTrigger.setCanLoseFocus(true);
 	            alertTrigger.setText(Alerts.alertsList.get(i).getTrigger());
 	            alertsFields.add(alertTrigger);
 	            
-	            
-	            displayX = Xplace + alertTrigger.width + 10;
-	            
-	            GuiTextField alertDisplay = new GuiTextField(1 + (4 * i), this.fontRendererObj, displayX, positionY + (30 * i), width / 4, 20);
+	            GuiTextField alertDisplay = new GuiTextField(1 + (4 * i), this.fontRendererObj, alertDisplay_X, positionY + (30 * i), width / 4, 20);
 	            alertDisplay.setMaxStringLength(16);
 	            alertDisplay.setCanLoseFocus(true);
 	            alertDisplay.setText(Alerts.alertsList.get(i).getDisplay());
 	            alertsFields.add(alertDisplay);
-	            
-	            timeX = displayX + alertDisplay.width;
-	            
-	            GuiTextField alertTime = new GuiTextField(2 + (4 * i), this.fontRendererObj, timeX + 10, positionY + (30 * i), width / 10, 20);
+
+	            GuiTextField alertTime = new GuiTextField(2 + (4 * i), this.fontRendererObj, alertTime_X + 10, positionY + (30 * i), width / 10, 20);
 	            alertTime.setMaxStringLength(16);
 	            alertTime.setCanLoseFocus(true);
 	            alertTime.setText(Float.toString(Alerts.alertsList.get(i).getTime() / 1000));

@@ -205,5 +205,6 @@ public class AlertsGui extends GuiScreen {
 	        alertsList.add(new Alert(trigger, display, time));
 	    }
 	    Alerts.alertsList = alertsList;
+	    ConfigHandler.SaveAlert(alertsList);
 	}
 }

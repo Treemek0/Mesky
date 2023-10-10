@@ -47,24 +47,21 @@ public class Settings extends GuiScreen {
     protected void actionPerformed(GuiButton button) {
         switch (button.id) {
         	case 0:
-            	if(SettingsConfig.GhostBlocks) SettingsConfig.GhostBlocks = false;
-                else SettingsConfig.GhostBlocks = true;
+            	SettingsConfig.GhostBlocks = !SettingsConfig.GhostBlocks;
+            	SettingsConfig.GhostPickaxe = false;
                 break;
             case 1:
-                if(SettingsConfig.FishingTimer) SettingsConfig.FishingTimer = false;
-                else SettingsConfig.FishingTimer = true;
+                SettingsConfig.FishingTimer = !SettingsConfig.FishingTimer;
                 break;
             case 2:
-            	if(SettingsConfig.BonzoTimer) SettingsConfig.BonzoTimer = false;
-                else SettingsConfig.BonzoTimer = true;
+            	SettingsConfig.BonzoTimer = !SettingsConfig.BonzoTimer;
                 break;
             case 3:
-                if(SettingsConfig.SpiritTimer) SettingsConfig.SpiritTimer = false;
-                else SettingsConfig.SpiritTimer = true;
+                SettingsConfig.SpiritTimer = !SettingsConfig.SpiritTimer;
                 break;
             case 4:
-                if(SettingsConfig.GhostPickaxe) SettingsConfig.GhostPickaxe = false;
-                else SettingsConfig.GhostPickaxe = true;
+            	SettingsConfig.GhostPickaxe = !SettingsConfig.GhostPickaxe;
+            	SettingsConfig.GhostBlocks = false;
                 break;
         }
         ConfigHandler.saveSettings();

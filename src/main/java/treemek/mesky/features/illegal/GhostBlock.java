@@ -17,7 +17,7 @@ import treemek.mesky.config.SettingsConfig;
 
 public class GhostBlock {
 
-	public static final KeyBinding GKEY = new KeyBinding("Ghost Block", Keyboard.KEY_G, "Mesky");
+	public static final KeyBinding GKEY = new KeyBinding("Ghost Block/Pickaxe", Keyboard.KEY_G, "Mesky");
 	boolean hasBeenClicked = false;
 	public static boolean canDestroyHardBlock = false;
 	

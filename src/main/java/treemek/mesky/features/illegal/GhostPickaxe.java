@@ -24,7 +24,7 @@ import treemek.mesky.config.SettingsConfig;
 
 public class GhostPickaxe {
 
-	public static final KeyBinding GKEY = new KeyBinding("Ghost Pickaxe", Keyboard.KEY_G, "Mesky");
+	public static final KeyBinding GKEY = GhostBlock.GKEY;
 	public static int slotID = 5;
 	boolean hasBeenClicked = false;
 	

@@ -31,7 +31,7 @@ public class FishingTimer extends GuiScreen{
 	private boolean isFishing = false;
     private EntityFishHook fishingHook = null;
     private float fishingTimer = 0;
-    public static boolean isText3d = true;
+    public static boolean isText3d = false;
 
    
     @SubscribeEvent
@@ -52,6 +52,12 @@ public class FishingTimer extends GuiScreen{
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
 		if (event.phase == TickEvent.Phase.END && isFishing) {
+			if(Minecraft.getMinecraft().theWorld == null) return;
+			if(Minecraft.getMinecraft().theWorld.loadedEntityList == null) {
+				isFishing = false;
+                fishingHook = null;
+				return;
+			}
                 if(fishingHook == null){
                 	// Player just started fishing (detecting our bobber)
                     for (Entity entity : Minecraft.getMinecraft().theWorld.loadedEntityList) {
@@ -63,7 +69,8 @@ public class FishingTimer extends GuiScreen{
                     }
                 }else{
                 	// Player is already fishing (bobber is already detected)
-                    if(fishingHook.isDead) {
+                	
+                    if(fishingHook.isDead || !Minecraft.getMinecraft().theWorld.loadedEntityList.contains((Entity)fishingHook)) {
                         // No bobber = no fishing
                         isFishing = false;
                         fishingHook = null;
@@ -96,7 +103,7 @@ public class FishingTimer extends GuiScreen{
       FontRenderer fontRenderer = mc.fontRendererObj;
       
    // Draw the timer text on the screen
-      String timerText = String.format(java.util.Locale.US, "%.1f", fishingTimer) + "s";
+      String timerText = String.format(java.util.Locale.US, "%.1f", fishingTimer);
       RenderHandler.draw3DString(fishingHook.posX, fishingHook.posY + 0.6f, fishingHook.posZ, timerText, 0xbfbfbf, partialTicks);
 
     }

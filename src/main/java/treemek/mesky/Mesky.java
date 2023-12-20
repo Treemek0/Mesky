@@ -20,6 +20,7 @@ import treemek.mesky.features.illegal.macro.PumpkinFarm;
 import treemek.mesky.handlers.GuiHandler;
 import treemek.mesky.proxy.CommonProxy;
 import treemek.mesky.utils.Alerts;
+import treemek.mesky.utils.HypixelCheck;
 import treemek.mesky.utils.Waypoints;
 
 @Mod(modid = Reference.MODID, name = Reference.NAME, version = Reference.VERSION, clientSideOnly = true)
@@ -37,7 +38,7 @@ public class Mesky {
 		ClientCommandHandler.instance.registerCommand(new Commands());
 		ConfigHandler.reloadConfig();
 		
-		
+		MinecraftForge.EVENT_BUS.register(new HypixelCheck());
 		MinecraftForge.EVENT_BUS.register(new GuiHandler());
 		MinecraftForge.EVENT_BUS.register(new FishingTimer());
 		MinecraftForge.EVENT_BUS.register(new BlockFlowerPlacing());
@@ -54,7 +55,6 @@ public class Mesky {
 		ClientRegistry.registerKeyBinding(PumpkinFarm.L_KEY);
 		ClientRegistry.registerKeyBinding(PumpkinFarm.R_KEY);
 		ClientRegistry.registerKeyBinding(GhostBlock.GKEY);
-		ClientRegistry.registerKeyBinding(GhostPickaxe.GKEY);
 	}
 		
 	@Mod.EventHandler

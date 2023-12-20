@@ -17,6 +17,9 @@ import treemek.mesky.handlers.GuiHandler;
 import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.handlers.gui.buttons.CheckButton;
 import treemek.mesky.handlers.gui.buttons.DeleteButton;
+import treemek.mesky.utils.HypixelCheck;
+import treemek.mesky.utils.Locations;
+import treemek.mesky.utils.Locations.Location;
 import treemek.mesky.utils.Waypoints;
 import treemek.mesky.utils.Waypoints.Waypoint;
 
@@ -67,8 +70,9 @@ public class WaypointsGui extends GuiScreen {
         this.buttonList.add(new GuiButton(-1, (int)(width * 0.8f), (height/15), (int)(width * 0.2f), 20, "Save"));
         this.buttonList.add(new GuiButton(-2, 0, (height/15), (int)(width * 0.2f), 20, "New waypoint"));
         
+        Location.checkTabLocation();
         for (int i = 0; i < Waypoints.waypointsList.size(); i++) {
-        	if(Waypoints.waypointsList.get(i).getWorld().equals(Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName())) {
+        	if((!HypixelCheck.isOnHypixel() && Waypoints.waypointsList.get(i).getWorld().equals(Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName())) || (HypixelCheck.isOnHypixel() && Waypoints.waypointsList.get(i).getWorld().equals(Locations.currentLocationText))) {
         		int waypointName_X = width / 6;
         		int coords_X = waypointName_X + (width/4) + 15;
         		int coord_Width = width / 10;
@@ -203,8 +207,12 @@ public class WaypointsGui extends GuiScreen {
 	}
 	
 	private void SaveWaypoints() {
-		List<Waypoint> waypointsList = new ArrayList<Waypoint>();
+		Location.checkTabLocation();
+		// it to prevent removing waypoints from other regions, so i just remove waypoints from my region and add them updated
+		List<Waypoint> waypointsList = Waypoints.GetWaypointsWithoutLocation();
+		
 	    for (int i = 0; i < waypointNameFields.size(); i += 4) {
+	    	
 	        String name = waypointNameFields.get(i).getText();
 	        float x = 0, y = 0, z = 0;
 	        try {
@@ -216,7 +224,16 @@ public class WaypointsGui extends GuiScreen {
 	            System.out.println(e);
 	            continue; // Skip this iteration if there's a parsing error
 	        }
-	        waypointsList.add(new Waypoint(name, x, y, z, Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName()));
+	        
+	        // JAKIM CUDEM TO PODWAJA WAYPOINTY TERAAAAAA
+	        if(!HypixelCheck.isOnHypixel()) {
+	    		waypointsList.add(0, new Waypoint(name, x, y, z, Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName()));
+	    	}else{
+	    		if(Locations.currentLocationText != null) {
+	    			waypointsList.add(0, new Waypoint(name, x, y, z, Locations.currentLocationText));
+	    		}
+	    	}
+	        
 	    }
 	    Waypoints.waypointsList = waypointsList;
 	    ConfigHandler.SaveWaypoint(waypointsList);

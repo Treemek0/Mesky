@@ -24,6 +24,8 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import treemek.mesky.config.ConfigHandler;
 import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.utils.Alerts.Alert;
+import treemek.mesky.utils.Locations.Location;
+import treemek.mesky.utils.Waypoints.Waypoint;
 
 public class Waypoints {
 
@@ -59,11 +61,15 @@ public class Waypoints {
     // Method to add data
     public static void addWaypoint(String name, float x, float y, float z) {
     	EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
-    	player.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Added waypoint: "));
-		player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Name: " + name));
-		player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Coords: " + "x: " + x + ", y: " + y + ", z: " + z));
-    	waypointsList.add(0, new Waypoint(name, x, y, z, Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName()));
-        ConfigHandler.SaveWaypoint(waypointsList);
+    	if(!HypixelCheck.isOnHypixel()) {
+    		waypointsList.add(0, new Waypoint(name, x, y, z, Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName()));
+    	}else{
+    		Location.checkTabLocation();
+    		if(Locations.currentLocationText != null) {
+    			waypointsList.add(0, new Waypoint(name, x, y, z, Locations.currentLocationText));
+    		}   		
+    	}
+		ConfigHandler.SaveWaypoint(waypointsList);
     }
     
     public static void deleteWaypoint(int number) {
@@ -71,26 +77,13 @@ public class Waypoints {
 		waypointsList.remove(number);
 		ConfigHandler.SaveWaypoint(waypointsList);
     }
-    
-    public static void showList() {
-		EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
-        player.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Waypoints list:"));
-        for (int i = 0; i < waypointsList.size(); i++) {
-        	if(waypointsList.get(i).getWorld().equals(Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName())){
-        		player.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.DARK_AQUA + "Number: " + EnumChatFormatting.WHITE + i));
-        		player.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.DARK_AQUA + "Name: " + EnumChatFormatting.WHITE + waypointsList.get(i).getName()));
-	        	player.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.DARK_AQUA + "Coords: " + EnumChatFormatting.WHITE + "x: " + waypointsList.get(i).getCoords()[0] + ", y: " + waypointsList.get(i).getCoords()[1] + ", z: " + waypointsList.get(i).getCoords()[2]));
-	        	player.addChatMessage(new ChatComponentText(""));
-        	}
-        }
-		ConfigHandler.SaveWaypoint(waypointsList);
-    }
    
     @SubscribeEvent
     public void onWorldRender(RenderWorldLastEvent event) {
         if (!waypointsList.isEmpty()) {
+        	Location.checkTabLocation();
             for (Waypoint waypoint : waypointsList) {
-                if(waypoint.getWorld().equals(Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName())){
+            	if((!HypixelCheck.isOnHypixel() && waypoint.getWorld().equals(Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName())) || (HypixelCheck.isOnHypixel() && waypoint.getWorld().equals(Locations.currentLocationText))) {
                 	// when im gonna be unbanned then check for world types
                     RenderHandler.draw3DWaypointString(waypoint, event.partialTicks);
                     
@@ -102,5 +95,45 @@ public class Waypoints {
                 }
             }
         }
+    }
+    
+    public static List<Waypoint> GetLocationWaypoints() {
+    	List<Waypoint> LocationWaypointsList = new ArrayList<Waypoint>();
+		Location.checkTabLocation();
+		
+		for (Waypoint waypoint : Waypoints.waypointsList) {
+	        if(!HypixelCheck.isOnHypixel()) {
+	    		if(waypoint.world.equals(Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName())){
+	        	LocationWaypointsList.add(new Waypoint(waypoint.getName(), waypoint.getCoords()[0], waypoint.getCoords()[1], waypoint.getCoords()[2], Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName()));
+	    		}
+	    	}else{
+	    		if(Locations.currentLocationText != null) {
+	    			if(waypoint.world.equalsIgnoreCase(Locations.currentLocationText)) {
+	    			LocationWaypointsList.add(new Waypoint(waypoint.getName(), waypoint.getCoords()[0], waypoint.getCoords()[1], waypoint.getCoords()[2], Locations.currentLocationText));
+	    			}
+	    		}   		
+	    	}
+		}
+		return LocationWaypointsList;
+    }
+    
+    public static List<Waypoint> GetWaypointsWithoutLocation() {
+    	List<Waypoint> LocationWaypointsList = new ArrayList<Waypoint>();
+		Location.checkTabLocation();
+		
+		for (Waypoint waypoint : Waypoints.waypointsList) {
+	        if(!HypixelCheck.isOnHypixel()) {
+	    		if(waypoint.getWorld() != Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName()){
+	        	LocationWaypointsList.add(new Waypoint(waypoint.getName(), waypoint.getCoords()[0], waypoint.getCoords()[1], waypoint.getCoords()[2],  waypoint.getWorld()));
+	    		}
+	    	}else{
+	    		if(Locations.currentLocationText != null) {
+	    			if(!waypoint.world.equalsIgnoreCase(Locations.currentLocationText)) {
+	    			LocationWaypointsList.add(new Waypoint(waypoint.getName(), waypoint.getCoords()[0], waypoint.getCoords()[1], waypoint.getCoords()[2], waypoint.getWorld()));
+	    			}
+	    		}   		
+	    	}
+		}
+		return LocationWaypointsList;
     }
 }

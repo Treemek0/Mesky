@@ -1,22 +1,16 @@
 package treemek.mesky.utils;
 
+import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 
 public class HypixelCheck {
-
-	public static boolean isOnHypixel = false;
 	
-	public void onClientConnectedToServer(FMLNetworkEvent.ClientConnectedToServerEvent event) {
-		String serverIP = event.manager.getRemoteAddress().toString();
-	
-		if(serverIP.startsWith("/")) serverIP = serverIP.substring(1);
-		if(serverIP.contains(":")) serverIP = serverIP.split(":")[0];
-    
-		isOnHypixel = false;
-    
-        if(serverIP.equalsIgnoreCase("hypixel.net")) isOnHypixel = true;
-        if(serverIP.equalsIgnoreCase("mc.hypixel.net")) isOnHypixel = true;
-    
+	public static boolean isOnHypixel() {
+		if(Minecraft.getMinecraft().isSingleplayer() || Minecraft.getMinecraft().thePlayer.getClientBrand() == null || !Minecraft.getMinecraft().thePlayer.getClientBrand().toLowerCase().contains("hypixel")) {
+			return false;
+		}else {
+			return true;
+		}
 	}
 	
 }

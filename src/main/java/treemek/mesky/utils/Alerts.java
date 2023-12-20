@@ -92,7 +92,7 @@ public class Alerts {
     }
 	
 	public static String appearedAlert = null;
-	private float alertDisplayDuration = 1000;
+	private static float alertDisplayDuration = 1000;
 	public static long alertDisplayTime = 0;
 	// we must setup saving it in file
 	
@@ -113,6 +113,14 @@ public class Alerts {
 		}
 	}
 	
+	
+	public static void DisplayCustomAlerts(String display, int dur) {
+		Alerts.appearedAlert = display;
+		Alerts.alertDisplayTime = System.currentTimeMillis();
+		alertDisplayDuration = dur;
+		ResourceLocation soundLocation = new ResourceLocation("minecraft", "random.anvil_land");
+        Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.create(soundLocation));
+	}
 	
 	 @SubscribeEvent
 	    public void onRenderOverlay(RenderGameOverlayEvent.Text event) {

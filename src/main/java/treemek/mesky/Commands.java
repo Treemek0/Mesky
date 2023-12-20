@@ -7,6 +7,7 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
 import treemek.mesky.config.ConfigHandler;
+import treemek.mesky.features.FishingTimer;
 import treemek.mesky.handlers.GuiHandler;
 import treemek.mesky.handlers.gui.GUI;
 import treemek.mesky.utils.Alerts;
@@ -27,6 +28,8 @@ public class Commands extends CommandBase{
     	if(args.length > 0){
     		if(args[0].equalsIgnoreCase("reload")) {
     			ConfigHandler.reloadConfig();
+    		}else if(args[0].equalsIgnoreCase("fishing")) {
+    			FishingTimer.isText3d = !FishingTimer.isText3d;
     		}
     	}
     }

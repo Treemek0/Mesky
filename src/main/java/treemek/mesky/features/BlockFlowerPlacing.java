@@ -12,7 +12,7 @@ public class BlockFlowerPlacing {
 	@SubscribeEvent
     public void onInteract(PlayerInteractEvent event) {
 		if(SettingsConfig.BlockFlowerPlacing) {
-	        if(Minecraft.getMinecraft().thePlayer != event.entityPlayer || !HypixelCheck.isOnHypixel) return;
+	        if(Minecraft.getMinecraft().thePlayer != event.entityPlayer || !HypixelCheck.isOnHypixel()) return;
 	        ItemStack item = event.entityPlayer.getHeldItem();
 	
 	        if(item != null && event.action == PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK) {

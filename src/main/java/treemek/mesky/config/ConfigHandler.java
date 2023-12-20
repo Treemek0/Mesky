@@ -85,7 +85,7 @@ public class ConfigHandler {
 	public static void SaveAlert(List<Alerts.Alert> alerts) {
     	// saves correctly
     	try (FileWriter writer = new FileWriter(Mesky.configDirectory + "/mesky/meskyAlerts.json")) {
-            new GsonBuilder().create().toJson(alerts, writer);
+            new GsonBuilder().setPrettyPrinting().create().toJson(alerts, writer);
             writer.flush();
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -95,7 +95,7 @@ public class ConfigHandler {
     public static void SaveWaypoint(List<Waypoints.Waypoint> waypoints) {
     	// saves correctly
     	try (FileWriter writer = new FileWriter(Mesky.configDirectory + "/mesky/meskyWaypoints.json")) {
-            new GsonBuilder().create().toJson(waypoints, writer);
+            new GsonBuilder().setPrettyPrinting().create().toJson(waypoints, writer);
             writer.flush();
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -112,7 +112,7 @@ public class ConfigHandler {
         SettingsConfig.BonzoTimer = config.getBoolean("BonzoTimer", Configuration.CATEGORY_GENERAL, false, "BonzoMask Timer");
         SettingsConfig.SpiritTimer = config.getBoolean("SpiritTimer", Configuration.CATEGORY_GENERAL, false, "SpiritMask Timer");
         SettingsConfig.GhostBlocks = config.getBoolean("GhostBlocks", Configuration.CATEGORY_GENERAL, false, "Ghost Blocks");
-        SettingsConfig.GhostBlocks = config.getBoolean("GhostPickaxe", Configuration.CATEGORY_GENERAL, false, "Ghost Pickaxe");
+        SettingsConfig.GhostPickaxe = config.getBoolean("GhostPickaxe", Configuration.CATEGORY_GENERAL, false, "Ghost Pickaxe");
     
         // cosmetics
         CosmeticHandler.WingsType = config.getInt("WingsType", Configuration.CATEGORY_GENERAL, 0, 0, 10, "Type of wings (0 == null)");

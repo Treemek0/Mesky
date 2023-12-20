@@ -4,7 +4,7 @@ QoL (*Quality of Life*) for Hypixel Skyblock
 **• Version: forge 1.8.9**
 (*Download at your own risk, i dont take any responsibility because i didn't optimized it yet.*)
 
-**Waypoints works only for world, and hypixel have all islands on skyblock on "the same world" or something so it doesnt work there (will be fixed sooner or later)**
+**Waypoints works only for hypixel skyblock rn (i found bug with worlds as i write this down, sadly its after i released this version)**
 
 ⪢ Features: 
 - [x] Stops flower weapons from placing on blocks (*Flower of Truth & Spirit Sceptre*)

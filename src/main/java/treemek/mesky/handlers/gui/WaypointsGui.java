@@ -1,6 +1,7 @@
 package treemek.mesky.handlers.gui;
 
 import java.io.IOException;
+import org.lwjgl.input.Keyboard;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -10,6 +11,8 @@ import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.EnumChatFormatting;
 import treemek.mesky.config.ConfigHandler;
 import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.features.BlockFlowerPlacing;
@@ -24,8 +27,10 @@ import treemek.mesky.utils.Waypoints;
 import treemek.mesky.utils.Waypoints.Waypoint;
 
 public class WaypointsGui extends GuiScreen {
-	ArrayList<GuiTextField> waypointNameFields;
+	ArrayList<GuiTextField> allFields;
 	ArrayList<GuiTextField> coordsFields;
+	public static GuiTextField region;
+	String oldRegion;
 	
 	@Override
 	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
@@ -49,7 +54,11 @@ public class WaypointsGui extends GuiScreen {
         RenderHandler.drawText("Z", coords_X + (coord_Width*2) + 10, infoY, 1, true, 0x7a7a7a);
         
         
-        for (GuiTextField input : waypointNameFields) {
+        for (GuiTextField input : allFields) {
+        	if(input.getId() == -3 && !HypixelCheck.isOnHypixel()) {
+        		continue;
+        		// region should be only visible on hypixel
+        	}
 			input.drawTextBox();
 		}
         
@@ -59,7 +68,7 @@ public class WaypointsGui extends GuiScreen {
 	@Override
 	public void initGui() {
 	    super.initGui();
-	    waypointNameFields = new ArrayList<GuiTextField>();
+	    allFields = new ArrayList<GuiTextField>();
 	    coordsFields = new ArrayList<GuiTextField>();
 	    
         int checkX = (int)(width / 4);
@@ -71,42 +80,56 @@ public class WaypointsGui extends GuiScreen {
         this.buttonList.add(new GuiButton(-2, 0, (height/15), (int)(width * 0.2f), 20, "New waypoint"));
         
         Location.checkTabLocation();
-        for (int i = 0; i < Waypoints.waypointsList.size(); i++) {
-        	if((!HypixelCheck.isOnHypixel() && Waypoints.waypointsList.get(i).getWorld().equals(Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName())) || (HypixelCheck.isOnHypixel() && Waypoints.waypointsList.get(i).getWorld().equals(Locations.currentLocationText))) {
-        		int waypointName_X = width / 6;
-        		int coords_X = waypointName_X + (width/4) + 15;
-        		int coord_Width = width / 10;
-        		
-        		this.buttonList.add(new DeleteButton(0 + (4*i), (int)(width * 0.8f), positionY + (30 * i), 20, 20, ""));
-	        	
-	        	GuiTextField waypointName = new GuiTextField(1 + (4 * i), this.fontRendererObj, waypointName_X, positionY + (30 * i), width / 4, 20);
-	            waypointName.setMaxStringLength(30);
-	            waypointName.setCanLoseFocus(true);
-	            waypointName.setText(Waypoints.waypointsList.get(i).getName());
-	            waypointNameFields.add(waypointName);
-	            
-	            
-	            GuiTextField waypointX = new GuiTextField(1 + (4 * i), this.fontRendererObj, coords_X, positionY + (30 * i), coord_Width, 20);
-	            waypointX.setMaxStringLength(16);
-	            waypointX.setCanLoseFocus(true);
-	            waypointX.setText(Float.toString(Waypoints.waypointsList.get(i).getCoords()[0]));
-	            waypointNameFields.add(waypointX);
-	            coordsFields.add(waypointX);
-	            
-	            GuiTextField waypointY = new GuiTextField(2 + (4 * i), this.fontRendererObj, coords_X + coord_Width + 5, positionY + (30 * i), coord_Width, 20);
-	            waypointY.setMaxStringLength(16);
-	            waypointY.setCanLoseFocus(true);
-	            waypointY.setText(Float.toString(Waypoints.waypointsList.get(i).getCoords()[1]));
-	            waypointNameFields.add(waypointY);
-	            coordsFields.add(waypointY);
-	            
-	            GuiTextField waypointZ = new GuiTextField(3 + (4 * i), this.fontRendererObj, coords_X + (width / 5) + 10, positionY + (30 * i), coord_Width, 20);
-	            waypointZ.setMaxStringLength(16);
-	            waypointZ.setCanLoseFocus(true);
-	            waypointZ.setText(Float.toString(Waypoints.waypointsList.get(i).getCoords()[2]));
-	            waypointNameFields.add(waypointZ);
-	            coordsFields.add(waypointZ);
-        	}
+        
+        region = new GuiTextField(-3, this.fontRendererObj, (int)(width * 0.8f), 1, width / 4, 20);
+        region.setMaxStringLength(30);
+        region.setCanLoseFocus(true);
+        if(oldRegion == null) {
+        	region.setText(Locations.currentLocationText);
+        }else {
+        	region.setText(oldRegion);
+        }
+        allFields.add(region);
+        
+        
+        for (int i = 0; i < Waypoints.GetLocationWaypoints().size(); i++) {
+    		int waypointName_X = width / 6;
+    		int coords_X = waypointName_X + (width/4) + 15;
+    		int coord_Width = width / 10;
+    		
+    		this.buttonList.add(new DeleteButton(0 + (4*i), (int)(width * 0.8f), positionY + (30 * i), 20, 20, ""));
+        	
+    		// each waypoint name text
+        	GuiTextField waypointName = new GuiTextField(1 + (4 * i), this.fontRendererObj, waypointName_X, positionY + (30 * i), width / 4, 20);
+            waypointName.setMaxStringLength(30);
+            waypointName.setCanLoseFocus(true);
+            waypointName.setText(Waypoints.GetLocationWaypoints().get(i).getName());
+            allFields.add(waypointName);
+            
+            // each X waypoint coord
+            GuiTextField waypointX = new GuiTextField(1 + (4 * i), this.fontRendererObj, coords_X, positionY + (30 * i), coord_Width, 20);
+            waypointX.setMaxStringLength(16);
+            waypointX.setCanLoseFocus(true);
+            waypointX.setText(Float.toString(Waypoints.GetLocationWaypoints().get(i).getCoords()[0]));
+            allFields.add(waypointX);
+            coordsFields.add(waypointX);
+            
+            // each Y waypoint coord
+            GuiTextField waypointY = new GuiTextField(2 + (4 * i), this.fontRendererObj, coords_X + coord_Width + 5, positionY + (30 * i), coord_Width, 20);
+            waypointY.setMaxStringLength(16);
+            waypointY.setCanLoseFocus(true);
+            waypointY.setText(Float.toString(Waypoints.GetLocationWaypoints().get(i).getCoords()[1]));
+            allFields.add(waypointY);
+            coordsFields.add(waypointY);
+            
+            // each Z waypoint coord
+            GuiTextField waypointZ = new GuiTextField(3 + (4 * i), this.fontRendererObj, coords_X + (width / 5) + 10, positionY + (30 * i), coord_Width, 20);
+            waypointZ.setMaxStringLength(16);
+            waypointZ.setCanLoseFocus(true);
+            waypointZ.setText(Float.toString(Waypoints.GetLocationWaypoints().get(i).getCoords()[2]));
+            allFields.add(waypointZ);
+            coordsFields.add(waypointZ);
+    	
         }	
 	}
 	
@@ -117,24 +140,28 @@ public class WaypointsGui extends GuiScreen {
 			SaveWaypoints();
 			return;
 		}
+		
 		if(button.id == -2) {
 			// Add weaypoint button
 			EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
 			Waypoints.addWaypoint("Name", (int)player.posX, (int)player.posY, (int)player.posZ);;
 			buttonList.clear();
-            waypointNameFields.clear();
+			oldRegion = region.getText();
+            allFields.clear();
             coordsFields.clear();
             initGui();
             return;
 		}
+		
         for (GuiButton guiButton : buttonList) {
 			if(guiButton.id == button.id) {
 				int listId = (button.id > 0)?(button.id/4):0;
-				Waypoints.deleteWaypoint(listId);
+				Waypoints.deleteWaypointFromLocation(listId);
 
 	            // Clear existing buttons and text fields
 	            buttonList.clear();
-	            waypointNameFields.clear();
+	            oldRegion = region.getText();
+	            allFields.clear();
 	            coordsFields.clear();
 
 	            // Reinitialize the GUI with updated data
@@ -154,34 +181,50 @@ public class WaypointsGui extends GuiScreen {
 			return;
 		}
 		
-		for (GuiTextField input : waypointNameFields) {
+		for (GuiTextField input : allFields) {
 			if(input.isFocused()) {
-				// Backspace / leftArrow / rightArrow / . / delete
-				if(coordsFields.contains(input) && keyCode != 14 && keyCode != 203 && keyCode != 205 && keyCode != 52 && keyCode != 211) {
+				if(coordsFields.contains(input)) {
+					// Backspace / leftArrow / rightArrow / . / delete
+					if(keyCode == 14 || keyCode == 203 || keyCode == 205 || keyCode == 211) input.textboxKeyTyped(typedChar, keyCode);
+					
+					// disallows more than one "." in coords 
+					if(keyCode == 52 && !input.getText().contains(".")) input.textboxKeyTyped(typedChar, keyCode);
+						
+					// CTRL + A/C/V
+					if((keyCode == Keyboard.KEY_A || keyCode == Keyboard.KEY_C || keyCode == Keyboard.KEY_V) && isCtrlKeyDown()) input.textboxKeyTyped(typedChar, keyCode);
+					
 					try {
-						// coords
-		                float coord = Integer.parseInt(String.valueOf(typedChar));
+		                float isNumber = Integer.parseInt(String.valueOf(typedChar));
 		                input.textboxKeyTyped(typedChar, keyCode);
-		                
-		            } catch (NumberFormatException ex) {
-		            	return;
-		            }
-				}else {
-					if(keyCode == 52 && input.getText().contains(".") && coordsFields.contains(input)) {
-						return;
-						// dis-allow more than one "." in coords 
-					}
+					} catch (NumberFormatException ex) { return; }
+
+						
+				}else{
 					// name
 					input.textboxKeyTyped(typedChar, keyCode);
+					if(input.getId() == -3 && keyCode != 203 && keyCode != 205 && keyCode != 29 && keyCode != 42 && keyCode != 54 && keyCode != 56 && keyCode != 184) {
+						oldRegion = region.getText();
+			
+						// it loses focus when typing because of initGui and im too lazy to find other way
+						region.setCanLoseFocus(false);
+						buttonList.clear();
+						initGui();
+						region.setCanLoseFocus(true);
+						region.setFocused(true);
+						
+					}
 				}
 			}
 		}
 		super.keyTyped(typedChar, keyCode);
 	}
 	
+	
+	
 	@Override
 	protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
-		for (GuiTextField input : waypointNameFields) {
+		// focusing
+		for (GuiTextField input : allFields) {
 			if (mouseX >= input.xPosition && mouseX <= input.xPosition + input.width && mouseY >= input.yPosition && mouseY <= input.yPosition + input.height) {
 				input.mouseClicked(mouseX, mouseY, mouseButton);
 			}else {
@@ -189,13 +232,13 @@ public class WaypointsGui extends GuiScreen {
 			}
 		}
 		
-		
 		super.mouseClicked(mouseX, mouseY, mouseButton);
 	}
 	
 	@Override
 	public void updateScreen() {
-		for (GuiTextField input : waypointNameFields) {
+		// sam nawet nwm
+		for (GuiTextField input : allFields) {
 			input.updateCursorCounter();
 		}
 	}
@@ -211,26 +254,26 @@ public class WaypointsGui extends GuiScreen {
 		// it to prevent removing waypoints from other regions, so i just remove waypoints from my region and add them updated
 		List<Waypoint> waypointsList = Waypoints.GetWaypointsWithoutLocation();
 		
-	    for (int i = 0; i < waypointNameFields.size(); i += 4) {
+	    for (int i = 1; i < allFields.size() - 1; i += 4) {
 	    	
-	        String name = waypointNameFields.get(i).getText();
+	        String name = allFields.get(i).getText();
 	        float x = 0, y = 0, z = 0;
+	        
 	        try {
-	            x = Float.parseFloat(waypointNameFields.get(i + 1).getText());
-	            y = Float.parseFloat(waypointNameFields.get(i + 2).getText());
-	            z = Float.parseFloat(waypointNameFields.get(i + 3).getText());
+	            x = Float.parseFloat(allFields.get(i + 1).getText());
+	            y = Float.parseFloat(allFields.get(i + 2).getText());
+	            z = Float.parseFloat(allFields.get(i + 3).getText());
 	            
 	        } catch (NumberFormatException e) {
 	            System.out.println(e);
 	            continue; // Skip this iteration if there's a parsing error
 	        }
 	        
-	        // JAKIM CUDEM TO PODWAJA WAYPOINTY TERAAAAAA
 	        if(!HypixelCheck.isOnHypixel()) {
 	    		waypointsList.add(0, new Waypoint(name, x, y, z, Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName()));
 	    	}else{
 	    		if(Locations.currentLocationText != null) {
-	    			waypointsList.add(0, new Waypoint(name, x, y, z, Locations.currentLocationText));
+	    			waypointsList.add(0, new Waypoint(name, x, y, z, region.getText()));
 	    		}
 	    	}
 	        

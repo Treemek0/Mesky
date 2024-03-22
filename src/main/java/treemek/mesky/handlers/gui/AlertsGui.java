@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.lwjgl.input.Keyboard;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -140,21 +142,22 @@ public class AlertsGui extends GuiScreen {
 		
 		for (GuiTextField input : alertsFields) {
 			if(input.isFocused()) {
-				// Backspace / leftArrow / rightArrow / . / delete
-				if(timeFields.contains(input) && keyCode != 14 && keyCode != 203 && keyCode != 205 && keyCode != 52 && keyCode != 211) {
+				if(timeFields.contains(input)) {
+					// Backspace / leftArrow / rightArrow / . / delete
+					if(keyCode == 14 || keyCode == 203 || keyCode == 205 || keyCode == 211) input.textboxKeyTyped(typedChar, keyCode);
+					
+					// disallows more than one "." in coords 
+					if(keyCode == 52 && !input.getText().contains(".")) input.textboxKeyTyped(typedChar, keyCode);
+						
+					// CTRL + A/C/V
+					if((keyCode == Keyboard.KEY_A || keyCode == Keyboard.KEY_C || keyCode == Keyboard.KEY_V) && isCtrlKeyDown()) input.textboxKeyTyped(typedChar, keyCode);
+					
 					try {
-						// coords
-		                float time = Integer.parseInt(String.valueOf(typedChar));
+		                float isNumber = Integer.parseInt(String.valueOf(typedChar));
 		                input.textboxKeyTyped(typedChar, keyCode);
-		                
-		            } catch (NumberFormatException ex) {
-		            	return;
-		            }
+					} catch (NumberFormatException ex) { return; }
+
 				}else {
-					if(keyCode == 52 && input.getText().contains(".") && timeFields.contains(input)) {
-						return;
-						// dis-allow more than one "." in time 
-					}
 					// name
 					input.textboxKeyTyped(typedChar, keyCode);
 				}

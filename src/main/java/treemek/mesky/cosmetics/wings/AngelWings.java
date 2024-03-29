@@ -32,6 +32,7 @@ public class AngelWings extends ModelBase
 				setTextureOffset("wing.skin", -9, 0);
 				setTextureOffset("wingtip.skin", -9, 10);
 
+				
 				// Create wing model renderer.
 				wing = new ModelRenderer(this, "wing");
 				wing.setTextureSize(22, 19); // 300px / 10px
@@ -78,6 +79,8 @@ public class AngelWings extends ModelBase
 			GL11.glTranslated(0D, 0.125D / scale, 0D);
 			GL11.glRotated(30, 1, 0, 0);
 		}
+		
+
 
 		
 //		float acceleration = 0.1f; // Adjust this value for the desired acceleration

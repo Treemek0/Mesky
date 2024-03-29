@@ -10,15 +10,20 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import com.google.gson.*;
 
 import net.minecraftforge.common.config.Configuration;
+import scala.util.parsing.input.Reader;
 import treemek.mesky.Mesky;
 import treemek.mesky.cosmetics.CosmeticHandler;
 import treemek.mesky.utils.Alerts;
 import treemek.mesky.utils.Waypoints;
 import treemek.mesky.utils.Alerts.Alert;
+import treemek.mesky.utils.Locations.Location;
+import treemek.mesky.utils.ChatFunctions;
+import treemek.mesky.utils.FriendsLocations;
 import treemek.mesky.utils.Waypoints.Waypoint;
 
 public class ConfigHandler {
@@ -63,17 +68,23 @@ public class ConfigHandler {
 
     public static void reloadConfig() {
         try {
-            File directory = new File(Mesky.configDirectory + "/mesky");
+            File directory = new File(Mesky.configDirectory);
             if (!directory.exists()) directory.mkdir();
 
 
             // Alerts
-            Object[] alerts = initJsonArray(directory + "/meskyAlerts.json", Alerts.Alert[].class);
+            Object[] alerts = initJsonArray(directory + "/mesky/utils/meskyAlerts.json", Alerts.Alert[].class);
             if (alerts != null) Alerts.alertsList = new ArrayList<>(Arrays.asList((Alerts.Alert[]) alerts));
         
+            // Chat Functions
+            Object[] chatFunctions = initJsonArray(directory + "/mesky/utils/meskyChatFunctions.json", ChatFunctions.ChatFunction[].class);
+            if (chatFunctions != null) ChatFunctions.chatFunctionsList = new ArrayList<>(Arrays.asList((ChatFunctions.ChatFunction[]) chatFunctions));
+        
             // Waypoints
-            Object[] waypoints = initJsonArray(directory + "/meskyWaypoints.json", Waypoints.Waypoint[].class);
+            Object[] waypoints = initJsonArray(directory + "/mesky/utils/meskyWaypoints.json", Waypoints.Waypoint[].class);
             if (waypoints != null) Waypoints.waypointsList = new ArrayList<>(Arrays.asList((Waypoints.Waypoint[]) waypoints));
+            
+            
             
             loadSettings();
             
@@ -84,7 +95,8 @@ public class ConfigHandler {
 
 	public static void SaveAlert(List<Alerts.Alert> alerts) {
     	// saves correctly
-    	try (FileWriter writer = new FileWriter(Mesky.configDirectory + "/mesky/meskyAlerts.json")) {
+		new File(Mesky.configDirectory + "/mesky/utils/").mkdirs();
+    	try (FileWriter writer = new FileWriter(Mesky.configDirectory + "/mesky/utils/meskyAlerts.json")) {
             new GsonBuilder().setPrettyPrinting().create().toJson(alerts, writer);
             writer.flush();
         } catch (IOException ex) {
@@ -92,9 +104,21 @@ public class ConfigHandler {
         }
     }
     
+	public static void SaveChatFunction(List<ChatFunctions.ChatFunction> chatFunctions) {
+    	// saves correctly
+		new File(Mesky.configDirectory + "/mesky/utils/").mkdirs();
+    	try (FileWriter writer = new FileWriter(Mesky.configDirectory + "/mesky/utils/meskyChatFunctions.json")) {
+            new GsonBuilder().setPrettyPrinting().create().toJson(chatFunctions, writer);
+            writer.flush();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+	
     public static void SaveWaypoint(List<Waypoints.Waypoint> waypoints) {
     	// saves correctly
-    	try (FileWriter writer = new FileWriter(Mesky.configDirectory + "/mesky/meskyWaypoints.json")) {
+    	new File(Mesky.configDirectory + "/mesky/utils/").mkdirs();
+    	try (FileWriter writer = new FileWriter(Mesky.configDirectory + "/mesky/utils/meskyWaypoints.json")) {
             new GsonBuilder().setPrettyPrinting().create().toJson(waypoints, writer);
             writer.flush();
         } catch (IOException ex) {
@@ -102,6 +126,9 @@ public class ConfigHandler {
         }
     }
     
+    // !!!
+    // Saving friends locations is in FriendsLocations file
+    // !!!
 
 
 

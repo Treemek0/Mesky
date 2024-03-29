@@ -20,6 +20,7 @@ import treemek.mesky.features.illegal.macro.PumpkinFarm;
 import treemek.mesky.handlers.GuiHandler;
 import treemek.mesky.proxy.CommonProxy;
 import treemek.mesky.utils.Alerts;
+import treemek.mesky.utils.ChatFunctions;
 import treemek.mesky.utils.HypixelCheck;
 import treemek.mesky.utils.Waypoints;
 
@@ -43,6 +44,7 @@ public class Mesky {
 		MinecraftForge.EVENT_BUS.register(new FishingTimer());
 		MinecraftForge.EVENT_BUS.register(new BlockFlowerPlacing());
 		MinecraftForge.EVENT_BUS.register(new Alerts());
+		MinecraftForge.EVENT_BUS.register(new ChatFunctions());
 		MinecraftForge.EVENT_BUS.register(new Waypoints());
 		MinecraftForge.EVENT_BUS.register(new GhostBlock());
 		MinecraftForge.EVENT_BUS.register(new GhostPickaxe());

@@ -7,11 +7,11 @@ import net.minecraft.client.network.NetworkPlayerInfo;
 
 public class Locations {
 
-	public static Location currentLocation;
-	public static String currentLocationText;
+	public static Location currentLocation = Location.NONE;
+	public static String currentLocationText = " ";
 	
 	public enum Location {
-	    NONE(""),
+	    NONE(" "),
 	    CRIMSON_ISLE("Crimson Isle"),
 	    CRYSTAL_HOLLOWS("Crystal Hollows"),
 	    DEEP_CAVERNS("Deep Caverns"),

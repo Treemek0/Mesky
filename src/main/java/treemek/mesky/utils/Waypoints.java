@@ -23,6 +23,7 @@ import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import treemek.mesky.config.ConfigHandler;
 import treemek.mesky.handlers.RenderHandler;
+import treemek.mesky.handlers.gui.WaypointsGui;
 import treemek.mesky.utils.Alerts.Alert;
 import treemek.mesky.utils.Locations.Location;
 import treemek.mesky.utils.Waypoints.Waypoint;
@@ -65,8 +66,8 @@ public class Waypoints {
     		waypointsList.add(0, new Waypoint(name, x, y, z, Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName()));
     	}else{
     		Location.checkTabLocation();
-    		if(Locations.currentLocationText != null) {
-    			waypointsList.add(0, new Waypoint(name, x, y, z, Locations.currentLocationText));
+    		if(WaypointsGui.region.getText() != null) {
+    			waypointsList.add(0, new Waypoint(name, x, y, z, WaypointsGui.region.getText()));
     		}   		
     	}
 		ConfigHandler.SaveWaypoint(waypointsList);
@@ -108,8 +109,8 @@ public class Waypoints {
 	    		}
 	    	}else{
 	    		if(Locations.currentLocationText != null) {
-	    			if(waypoint.world.equalsIgnoreCase(Locations.currentLocationText)) {
-	    			LocationWaypointsList.add(new Waypoint(waypoint.getName(), waypoint.getCoords()[0], waypoint.getCoords()[1], waypoint.getCoords()[2], Locations.currentLocationText));
+	    			if(waypoint.world.equalsIgnoreCase(WaypointsGui.region.getText())) {
+	    			LocationWaypointsList.add(new Waypoint(waypoint.getName(), waypoint.getCoords()[0], waypoint.getCoords()[1], waypoint.getCoords()[2], WaypointsGui.region.getText()));
 	    			}
 	    		}   		
 	    	}
@@ -123,17 +124,52 @@ public class Waypoints {
 		
 		for (Waypoint waypoint : Waypoints.waypointsList) {
 	        if(!HypixelCheck.isOnHypixel()) {
-	    		if(waypoint.getWorld() != Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName()){
+	    		if(!waypoint.getWorld().contains(Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName())){
 	        	LocationWaypointsList.add(new Waypoint(waypoint.getName(), waypoint.getCoords()[0], waypoint.getCoords()[1], waypoint.getCoords()[2],  waypoint.getWorld()));
 	    		}
 	    	}else{
 	    		if(Locations.currentLocationText != null) {
-	    			if(!waypoint.world.equalsIgnoreCase(Locations.currentLocationText)) {
+	    			if(!waypoint.world.equalsIgnoreCase(WaypointsGui.region.getText())) {
 	    			LocationWaypointsList.add(new Waypoint(waypoint.getName(), waypoint.getCoords()[0], waypoint.getCoords()[1], waypoint.getCoords()[2], waypoint.getWorld()));
 	    			}
 	    		}   		
 	    	}
 		}
 		return LocationWaypointsList;
+    }
+    
+    public static void deleteWaypointFromLocation(int number) {
+    	int numberInLocation = 0;
+    	
+    	for (int i = 0; i < waypointsList.size(); i++) {
+    		Waypoint waypoint = waypointsList.get(i);
+    		if(!HypixelCheck.isOnHypixel()) {
+	    		System.out.println(i);
+    			if(waypoint.world.equals(Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName())){
+    				if(numberInLocation == number) {
+    					Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Deleted waypoint: " + waypointsList.get(i).getName()));
+	    				waypointsList.remove(i);
+	    				ConfigHandler.SaveWaypoint(waypointsList);
+	    				break;
+	    			}else {
+	    				numberInLocation++;
+	    			}
+	    			
+	    		}
+	    	}else{
+	    		if(Locations.currentLocationText != null) {
+	    			if(waypoint.world.equalsIgnoreCase(WaypointsGui.region.getText())) {
+	    				if(numberInLocation == number) {
+	    					Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Deleted waypoint: " + waypointsList.get(i).getName()));
+	    					waypointsList.remove(i);	
+	    					ConfigHandler.SaveWaypoint(waypointsList);
+	    					break;
+		    			}else {
+		    				numberInLocation++;
+		    			}
+	    			}   		
+	    		}
+	    	}
+    	}
     }
 }

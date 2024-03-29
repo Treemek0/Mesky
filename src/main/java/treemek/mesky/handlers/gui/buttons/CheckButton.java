@@ -11,7 +11,7 @@ public class CheckButton extends GuiButton{
 	int x;
 	int y;
 	String buttonText;
-	boolean isFull;
+	public boolean isFull;
 	
 	
 	public CheckButton(int buttonId, int x, int y, int width, int height, String buttonText, boolean isFull) {

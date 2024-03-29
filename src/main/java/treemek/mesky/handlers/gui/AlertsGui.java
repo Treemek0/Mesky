@@ -39,14 +39,14 @@ public class AlertsGui extends GuiScreen {
 
         RenderHandler.drawText("Alerts", titleX, titleY, scale, true, 0x3e91b5);
         
-    	int alertTrigger_X = width / 6;
-    	int alertDisplay_X = alertTrigger_X + (width / 4) + 10;
-    	int alertTime_X = alertDisplay_X + (width / 4);
+    	int trigger_X = width / 6;
+    	int display_X = trigger_X + (width / 4) + 10;
+    	int time_X = display_X + (width / 4);
         
-        int infoY = (int)((height / 3) - 15);
-        RenderHandler.drawText("Trigger", width / 6, infoY, 1, true, 0x7a7a7a);
-        RenderHandler.drawText("Display", alertDisplay_X, infoY, 1, true, 0x7a7a7a);
-        RenderHandler.drawText("Time [seconds]", alertTime_X + 10, infoY, 1, true, 0x7a7a7a);
+        int positionY = (int)((height / 3) - 15);
+        RenderHandler.drawText("Trigger", width / 6, positionY, 1, true, 0x7a7a7a);
+        RenderHandler.drawText("Display", display_X, positionY, 1, true, 0x7a7a7a);
+        RenderHandler.drawText("Time [seconds]", time_X + 10, positionY, 1, true, 0x7a7a7a);
         
         
         for (GuiTextField input : alertsFields) {
@@ -61,70 +61,72 @@ public class AlertsGui extends GuiScreen {
 	    super.initGui();
 	    
 	    alertsFields = new ArrayList<GuiTextField>();
-	    timeFields = new ArrayList<GuiTextField>();
 	    
-        int checkX = (int)(width / 4);
         int positionY = height / 3;
         int buttonWidth = 20;
         int buttonHeight = 20;
+        int trigger_X = width / 6;
+    	int display_X = trigger_X + (width / 4) + 10;
+    	int time_X = display_X + (width / 4);
         
+        // Save button
         this.buttonList.add(new GuiButton(-1, (int)(width * 0.8f), (height/15), (int)(width * 0.2f), 20, "Save"));
+        
+        // New Alert button
         this.buttonList.add(new GuiButton(-2, 0, (height/15), (int)(width * 0.2f), 20, "New alert"));
         
         for (int i = 0; i < Alerts.alertsList.size(); i++) {
-	        	this.buttonList.add(new DeleteButton(0 + (4*i), (int)(width * 0.8f), positionY + (30 * i), 20, 20, ""));
+        	// Delete button
+        	this.buttonList.add(new DeleteButton(0 + (4*i), (int)(width * 0.8f), positionY + (30 * i), 20, 20, ""));
 
-	        	int alertTrigger_X = width / 6;
-	        	int alertDisplay_X = alertTrigger_X + (width / 4) + 10;
-	        	int alertTime_X = alertDisplay_X + (width / 4);
-	        	
-	        	GuiTextField alertTrigger = new GuiTextField(1 + (4 * i), this.fontRendererObj, alertTrigger_X, positionY + (30 * i), width / 4, 20);
-	            alertTrigger.setMaxStringLength(30);
-	            alertTrigger.setCanLoseFocus(true);
-	            alertTrigger.setText(Alerts.alertsList.get(i).getTrigger());
-	            alertsFields.add(alertTrigger);
-	            
-	            GuiTextField alertDisplay = new GuiTextField(1 + (4 * i), this.fontRendererObj, alertDisplay_X, positionY + (30 * i), width / 4, 20);
-	            alertDisplay.setMaxStringLength(16);
-	            alertDisplay.setCanLoseFocus(true);
-	            alertDisplay.setText(Alerts.alertsList.get(i).getDisplay());
-	            alertsFields.add(alertDisplay);
+        	// trigger text input
+        	GuiTextField alertTrigger = new GuiTextField(1, this.fontRendererObj, trigger_X, positionY + (30 * i), width / 4, 20);
+            alertTrigger.setMaxStringLength(128);
+            alertTrigger.setCanLoseFocus(true);
+            alertTrigger.setText(Alerts.alertsList.get(i).getTrigger());
+            alertsFields.add(alertTrigger);
+            
+            // display text input
+            GuiTextField alertDisplay = new GuiTextField(1, this.fontRendererObj, display_X, positionY + (30 * i), width / 4, 20);
+            alertDisplay.setMaxStringLength(35);
+            alertDisplay.setCanLoseFocus(true);
+            alertDisplay.setText(Alerts.alertsList.get(i).getDisplay());
+            alertsFields.add(alertDisplay);
 
-	            GuiTextField alertTime = new GuiTextField(2 + (4 * i), this.fontRendererObj, alertTime_X + 10, positionY + (30 * i), width / 10, 20);
-	            alertTime.setMaxStringLength(16);
-	            alertTime.setCanLoseFocus(true);
-	            alertTime.setText(Float.toString(Alerts.alertsList.get(i).getTime() / 1000));
-	            alertsFields.add(alertTime);
-	            timeFields.add(alertTime);
-	           
+            // time text input
+            GuiTextField alertTime = new GuiTextField(2, this.fontRendererObj, time_X + 10, positionY + (30 * i), width / 10, 20);
+            alertTime.setMaxStringLength(16);
+            alertTime.setCanLoseFocus(true);
+            alertTime.setText(Float.toString(Alerts.alertsList.get(i).getTime() / 1000));
+            alertsFields.add(alertTime);
         }
 	}
 	
 	@Override
     protected void actionPerformed(GuiButton button) {
 		if(button.id == -1) {
+			// Save button
 			SaveAlerts();
 			return;
 		}
 		if(button.id == -2) {
+			// New alert button
 			Alerts.addAlert("", "", 1);
+			// Clearing all lists because in initGui() it will add them again
 			buttonList.clear();
             alertsFields.clear();
-            timeFields.clear();
             initGui();
             return;
 		}
+		
+		// Every other button
         for (GuiButton guiButton : buttonList) {
 			if(guiButton.id == button.id) {
-				int listId = (button.id > 0)?(button.id/4):0;
+				// Removing alert from list
+				int listId = button.id/4;
 				Alerts.deleteAlert(listId);
-
-	            // Clear existing buttons and text fields
 	            buttonList.clear();
 	            alertsFields.clear();
-	            timeFields.clear();
-
-	            // Reinitialize the GUI with updated data
 	            initGui();
 	            return;
 			}
@@ -134,15 +136,16 @@ public class AlertsGui extends GuiScreen {
 	
 	@Override
 	protected void keyTyped(char typedChar, int keyCode) throws IOException {
-		// TODO Auto-generated method stub
 		if(keyCode == 1) {
+			// Esc
 			Minecraft.getMinecraft().thePlayer.closeScreen();
 			return;
 		}
 		
 		for (GuiTextField input : alertsFields) {
 			if(input.isFocused()) {
-				if(timeFields.contains(input)) {
+				// Numerical (time input)
+				if(input.getId() == 2) {
 					// Backspace / leftArrow / rightArrow / . / delete
 					if(keyCode == 14 || keyCode == 203 || keyCode == 205 || keyCode == 211) input.textboxKeyTyped(typedChar, keyCode);
 					
@@ -158,7 +161,7 @@ public class AlertsGui extends GuiScreen {
 					} catch (NumberFormatException ex) { return; }
 
 				}else {
-					// name
+					// Trigger and display inputs
 					input.textboxKeyTyped(typedChar, keyCode);
 				}
 			}
@@ -189,12 +192,12 @@ public class AlertsGui extends GuiScreen {
 	
 	@Override
 	public boolean doesGuiPauseGame() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 	
 	private void SaveAlerts() {
 		List<Alert> alertsList = new ArrayList<Alert>();
+		// idk why i did it like this with alertsFields.size(), but because of it we have to do "i +=3" since we have 3 input fields per alert
 	    for (int i = 0; i < alertsFields.size(); i += 3) {
 	        String trigger = alertsFields.get(i).getText();
 	        String display = alertsFields.get(i+1).getText();

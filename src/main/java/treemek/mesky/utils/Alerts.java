@@ -50,16 +50,6 @@ public class Alerts {
 	// Method to add data
     public static void addAlert(String trigger, String display, float time) {
     	EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
-    	for (int i = 0; i < alertsList.size(); i++) {
-            if (alertsList.get(i).getTrigger().equals(trigger)) {
-            	alertsList.set(i, new Alert(trigger, display, time * 1000));
-                player.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Updated trigger: " + trigger));
-        		player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Display: " + display));
-        		player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Time: " + time + 's'));
-        		ConfigHandler.SaveAlert(alertsList);
-            	return;
-            }
-    	}
     	
     	alertsList.add(new Alert(trigger, display, time * 1000));
         player.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Added: "));
@@ -101,9 +91,12 @@ public class Alerts {
 	@SubscribeEvent(priority = EventPriority.HIGH)
 	public void onChat(ClientChatReceivedEvent event) {
 		// Alerts
+		String message = event.message.getUnformattedText();
+		System.out.println(message);
+		
 		for(int i = 0; i < Alerts.alertsList.size(); i++) {
 			if(Alerts.alertsList.get(i).triggerMessage.equals("")) continue;
-			if(event.message.getUnformattedText().contains(Alerts.alertsList.get(i).getTrigger())) {
+			if(message.contains(Alerts.alertsList.get(i).getTrigger())) {
 				Alerts.appearedAlert = Alerts.alertsList.get(i).getDisplay();
 				Alerts.alertDisplayTime = System.currentTimeMillis();
 				alertDisplayDuration = Alerts.alertsList.get(i).getTime();

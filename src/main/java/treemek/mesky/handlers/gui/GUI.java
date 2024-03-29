@@ -39,6 +39,7 @@ public class GUI extends GuiScreen {
         this.buttonList.add(new GuiButton(1, centerX - buttonWidth / 2, centerY + 50, buttonWidth, buttonHeight, "Waypoints"));
         this.buttonList.add(new GuiButton(2, centerX - buttonWidth / 2, centerY + 80, buttonWidth, buttonHeight, "Alerts"));
         this.buttonList.add(new GuiButton(3, centerX - buttonWidth / 2, centerY + 110, buttonWidth, buttonHeight, "Cosmetics"));
+        this.buttonList.add(new GuiButton(4, centerX - buttonWidth / 2, centerY + 140, buttonWidth, buttonHeight, "Chat Functions"));
 	}
 	
 	@Override
@@ -56,6 +57,9 @@ public class GUI extends GuiScreen {
                 break;
             case 3:
             	GuiHandler.GuiType = 5;
+                break;
+            case 4:
+            	GuiHandler.GuiType = 6;
                 break;
         }
     }

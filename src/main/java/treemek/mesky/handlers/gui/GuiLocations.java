@@ -45,6 +45,7 @@ public class GuiLocations extends GuiScreen {
 		// idfk how to do it man
 		renderFishingTimer();
 		renderBonzoMask();
+		renderSpiritMask();
         
 	    super.drawScreen(mouseX, mouseY, partialTicks);
 	}
@@ -115,7 +116,7 @@ public class GuiLocations extends GuiScreen {
 		float x = width * (GuiLocationConfig.spiritMaskTimer[0] / 100);
 		float y = height * (GuiLocationConfig.spiritMaskTimer[1] / 100);
 		RenderHandler.drawText("30s", x + 17, y, 1, false, 0xFFFFFF);
-        Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(Reference.MODID, "textures/Spirit_Head.png"));
+        Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(Reference.MODID, "textures/Spirit_Mask.png"));
         drawModalRectWithCustomSizedTexture((int)x, (int)y - 5, 0, 0, 17, 17, 17, 17);
 	}
 	

@@ -64,7 +64,7 @@ public class AngelWings extends ModelBase
 	{
 		double scale = WingsScale / 100D;
 		double rotate = interpolate(player.prevRenderYawOffset, player.renderYawOffset, partialTicks);
-
+		
 		int TargetYRotation = 20;
 		
 		
@@ -79,9 +79,6 @@ public class AngelWings extends ModelBase
 			GL11.glTranslated(0D, 0.125D / scale, 0D);
 			GL11.glRotated(30, 1, 0, 0);
 		}
-		
-
-
 		
 //		float acceleration = 0.1f; // Adjust this value for the desired acceleration
 //		if (player.moveForward > 0) {
@@ -110,7 +107,7 @@ public class AngelWings extends ModelBase
 			this.wing.rotateAngleX = (float) Math.toRadians(-92F);
 			this.wing.rotateAngleZ = (float) Math.toRadians(20F);
 			this.wing.rotateAngleY = (float) Math.toRadians(yRotation) + (((float) Math.sin(f11) * 0.1F));
-			this.wingTip.rotateAngleZ = -((float)(Math.sin((double)(f11 + 2.0F)) + 0.5D)) * 0.35F;
+			this.wingTip.rotateAngleZ = -((float)(Math.sin((double)(f11 + 2.0F)) + 0.5D)) * 0.25F;
 			this.wing.render(0.0625F);
 			GL11.glScalef(-1.0F, 1.0F, 1.0F);
 

@@ -20,12 +20,21 @@ public class DeleteButton extends GuiButton{
 	}
 	
 	ResourceLocation delete = new ResourceLocation(Reference.MODID, "gui/delete.png");
-	
+	ResourceLocation delete_hovered = new ResourceLocation(Reference.MODID, "gui/delete_hovered.png");
 	
 	@Override
 	public void drawButton(Minecraft mc, int mouseX, int mouseY) {
-		mc.renderEngine.bindTexture(delete);
-		drawModalRectWithCustomSizedTexture(x, y, 0, 0, width, height, width, height);
+		
+		 this.hovered = mouseX >= this.xPosition && mouseY >= this.yPosition && mouseX < this.xPosition + this.width && mouseY < this.yPosition + this.height;
+         if(this.hovered) {
+        	 mc.renderEngine.bindTexture(delete_hovered);
+     		drawModalRectWithCustomSizedTexture(x, y, 0, 0, width, height, width, height);
+         }else {
+        	 mc.renderEngine.bindTexture(delete);
+        	 zLevel = 1;
+     		drawModalRectWithCustomSizedTexture(x, y, 0, 0, width, height, width, height);
+     		
+         }
 	}
 	
 	

@@ -21,7 +21,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import treemek.mesky.Reference;
-import treemek.mesky.config.GuiLocation;
+import treemek.mesky.config.GuiLocationConfig;
 import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.utils.Alerts;
@@ -107,14 +107,14 @@ public class MaskTimer extends GuiScreen {
 		String cooldownTimer = Math.round(BonzoCooldownSeconds) + "s";
 		
 		// Calculate the position to render the timer
-		int x = resolution.getScaledWidth() / 2;
-        int y = resolution.getScaledHeight() / 3 - 10;
+		float x = resolution.getScaledWidth() * (GuiLocationConfig.bonzoMaskTimer[0]/100);
+        float y = resolution.getScaledHeight() * (GuiLocationConfig.bonzoMaskTimer[1]/100);
 		
         RenderHandler.drawText(cooldownTimer, x + 17, y, 1, false, 0xFFFFFF);
         
 		ResourceLocation textureLocation = new ResourceLocation(Reference.MODID, "textures/Bonzo_Head.png");
         Minecraft.getMinecraft().renderEngine.bindTexture(textureLocation);
-        drawModalRectWithCustomSizedTexture(x, y - 5, 0, 0, 17, 17, 17, 17);
+        drawModalRectWithCustomSizedTexture((int)x, (int)y - 5, 0, 0, 17, 17, 17, 17);
         
         
 	}
@@ -123,14 +123,15 @@ public class MaskTimer extends GuiScreen {
 		String cooldownTimer = Math.round(SpiritCooldownSeconds) + "s";
 		
 		// Calculate the position to render the timer
-        int x = resolution.getScaledWidth() / 2;
-        int y = resolution.getScaledHeight() / 3 - 20;
+		float x = resolution.getScaledWidth() * (GuiLocationConfig.spiritMaskTimer[0]/100);
+        float y = resolution.getScaledHeight() * (GuiLocationConfig.spiritMaskTimer[1]/100);
+		
 		
         RenderHandler.drawText(cooldownTimer, x + 17, y, 1, false, 0xFFFFFF);
         
 		ResourceLocation textureLocation = new ResourceLocation(Reference.MODID, "textures/Spirit_Mask.png");
         Minecraft.getMinecraft().renderEngine.bindTexture(textureLocation);
-        drawModalRectWithCustomSizedTexture(x, y - 5, 0, 0, 17, 17, 17, 17);
+        drawModalRectWithCustomSizedTexture((int)x, (int)y - 5, 0, 0, 17, 17, 17, 17);
         
         
 	}

@@ -61,8 +61,10 @@ public class FriendsLocations {
 	
 	public static void removePlayer(String nick) {
 		Map<String, Location> playerLocationMap = loadPlayerLocationsFromFile();
-        playerLocationMap.remove(nick);
-        savePlayerLocationsToFile(playerLocationMap);
+		if(playerLocationMap.containsKey(nick)) {
+			playerLocationMap.remove(nick);
+			savePlayerLocationsToFile(playerLocationMap);
+		}
 	}
 
 	// Method to update or set the location for a player

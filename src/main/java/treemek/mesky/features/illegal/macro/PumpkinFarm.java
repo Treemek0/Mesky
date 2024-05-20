@@ -27,8 +27,6 @@ public class PumpkinFarm {
 	public static final KeyBinding L_KEY = new KeyBinding("macro L", 203, "Mesky");
 	public static final KeyBinding R_KEY = new KeyBinding("macro R", 205, "Mesky");
 	
-	
-	
 	boolean rightMacro = false;
 	boolean leftMacro = false;
 	
@@ -43,7 +41,6 @@ public class PumpkinFarm {
 	public void onKeyPress(InputEvent.KeyInputEvent event) {
 		
        if(L_KEY.isPressed()) {
-    	   System.out.println("Left");
     	   if(leftMacro) TurnOff();
     	   leftMacro = (leftMacro)?false:true;
     	   rightMacro = false;
@@ -71,8 +68,8 @@ public class PumpkinFarm {
 		KeyBinding.setKeyBindState(leftClick, false);
 	}
 	
+	
 	private void RightSide() {
-		EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
 	    KeyBinding.setKeyBindState(right, true);
 		KeyBinding.setKeyBindState(forward, true);
 		KeyBinding.setKeyBindState(left, false);
@@ -80,8 +77,6 @@ public class PumpkinFarm {
 	}
 
 	private void LeftSide() {
-		EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
-	    System.out.println("left");
 	    KeyBinding.setKeyBindState(left, true);
 		KeyBinding.setKeyBindState(forward, true);
 		KeyBinding.setKeyBindState(right, false);

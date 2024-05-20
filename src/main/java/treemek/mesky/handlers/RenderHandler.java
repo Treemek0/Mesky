@@ -136,7 +136,7 @@ public class RenderHandler {
 	
 	public static void draw3DBox(AxisAlignedBB aabb, String color, float partialTicks) {
         Entity render = Minecraft.getMinecraft().getRenderViewEntity();
-        Color colour = Color.decode(color);
+        Color colour = Color.decode("#" + color);
 
         double realX = render.lastTickPosX + (render.posX - render.lastTickPosX) * partialTicks;
         double realY = render.lastTickPosY + (render.posY - render.lastTickPosY) * partialTicks;
@@ -189,7 +189,7 @@ public class RenderHandler {
         GlStateManager.translate(x, y, z);
         GlStateManager.translate(0, viewer.getEyeHeight(), 0);
 
-        renderNametag(EnumChatFormatting.AQUA + waypoint.getName().toString());
+        renderNametag(waypoint.getName().toString(), waypoint.getColor());
 
         GlStateManager.rotate(-Minecraft.getMinecraft().getRenderManager().playerViewY, 0.0F, 1.0F, 0.0F);
         GlStateManager.rotate(Minecraft.getMinecraft().getRenderManager().playerViewX, 1.0F, 0.0F, 0.0F);
@@ -199,7 +199,7 @@ public class RenderHandler {
         
         EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
         String distance = Math.round(player.getDistance(coords[0], coords[1], coords[2])) + "m";
-        renderNametag(EnumChatFormatting.WHITE + distance);
+        renderNametag(distance, "#ffffff");
         
         GlStateManager.popMatrix();
 
@@ -207,42 +207,48 @@ public class RenderHandler {
     }
 
     // https://github.com/Moulberry/NotEnoughUpdates/blob/master/src/main/java/io/github/moulberry/notenoughupdates/miscfeatures/DwarvenMinesWaypoints.java#L300
-    public static void renderNametag(String str) {
-        FontRenderer fontrenderer = Minecraft.getMinecraft().fontRendererObj;
-        float f = 1.6F;
-        float f1 = 0.016666668F * f;
-        GlStateManager.pushMatrix();
-        GL11.glNormal3f(0.0F, 1.0F, 0.0F);
-        GlStateManager.rotate(-Minecraft.getMinecraft().getRenderManager().playerViewY, 0.0F, 1.0F, 0.0F);
-        GlStateManager.rotate(Minecraft.getMinecraft().getRenderManager().playerViewX, 1.0F, 0.0F, 0.0F);
-        GlStateManager.scale(-f1, -f1, f1);
-        GlStateManager.disableLighting();
-        GlStateManager.depthMask(false);
-        GlStateManager.disableDepth();
-        GlStateManager.enableBlend();
-        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
-        Tessellator tessellator = Tessellator.getInstance();
-        WorldRenderer worldrenderer = tessellator.getWorldRenderer();
-        int i = 0;
-
-        int j = fontrenderer.getStringWidth(str) / 2;
-        GlStateManager.disableTexture2D();
-        worldrenderer.begin(7, DefaultVertexFormats.POSITION_COLOR);
-        worldrenderer.pos(-j - 1, -1 + i, 0.0D).color(0.0F, 0.0F, 0.0F, 0.25F).endVertex();
-        worldrenderer.pos(-j - 1, 8 + i, 0.0D).color(0.0F, 0.0F, 0.0F, 0.25F).endVertex();
-        worldrenderer.pos(j + 1, 8 + i, 0.0D).color(0.0F, 0.0F, 0.0F, 0.25F).endVertex();
-        worldrenderer.pos(j + 1, -1 + i, 0.0D).color(0.0F, 0.0F, 0.0F, 0.25F).endVertex();
-        tessellator.draw();
-        GlStateManager.enableTexture2D();
-        fontrenderer.drawString(str, -fontrenderer.getStringWidth(str) / 2, i, 553648127);
-        GlStateManager.depthMask(true);
-
-        fontrenderer.drawString(str, -fontrenderer.getStringWidth(str) / 2, i, -1);
-
-        GlStateManager.enableDepth();
-        GlStateManager.enableBlend();
-        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-        GlStateManager.popMatrix();
+    public static void renderNametag(String str, String c) {
+    	int color;
+    	try {
+    		color = Integer.parseInt(c.replace("#", ""), 16);
+	        FontRenderer fontrenderer = Minecraft.getMinecraft().fontRendererObj;
+	        float f = 1.6F;
+	        float f1 = 0.016666668F * f;
+	        GlStateManager.pushMatrix();
+	        GL11.glNormal3f(0.0F, 1.0F, 0.0F);
+	        GlStateManager.rotate(-Minecraft.getMinecraft().getRenderManager().playerViewY, 0.0F, 1.0F, 0.0F);
+	        GlStateManager.rotate(Minecraft.getMinecraft().getRenderManager().playerViewX, 1.0F, 0.0F, 0.0F);
+	        GlStateManager.scale(-f1, -f1, f1);
+	        GlStateManager.disableLighting();
+	        GlStateManager.depthMask(false);
+	        GlStateManager.disableDepth();
+	        GlStateManager.enableBlend();
+	        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+	        Tessellator tessellator = Tessellator.getInstance();
+	        WorldRenderer worldrenderer = tessellator.getWorldRenderer();
+	        int i = 0;
+	
+	        int j = fontrenderer.getStringWidth(str) / 2;
+	        GlStateManager.disableTexture2D();
+	        worldrenderer.begin(7, DefaultVertexFormats.POSITION_COLOR);
+	        worldrenderer.pos(-j - 1, -1 + i, 0.0D).color(0.0F, 0.0F, 0.0F, 0.25F).endVertex();
+	        worldrenderer.pos(-j - 1, 8 + i, 0.0D).color(0.0F, 0.0F, 0.0F, 0.25F).endVertex();
+	        worldrenderer.pos(j + 1, 8 + i, 0.0D).color(0.0F, 0.0F, 0.0F, 0.25F).endVertex();
+	        worldrenderer.pos(j + 1, -1 + i, 0.0D).color(0.0F, 0.0F, 0.0F, 0.25F).endVertex();
+	        tessellator.draw();
+	        GlStateManager.enableTexture2D();
+	        fontrenderer.drawString(str, -fontrenderer.getStringWidth(str) / 2, i, 553648127);
+	        GlStateManager.depthMask(true);
+	
+	        fontrenderer.drawString(str, -fontrenderer.getStringWidth(str) / 2, i, color);
+	
+	        GlStateManager.enableDepth();
+	        GlStateManager.enableBlend();
+	        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+	        GlStateManager.popMatrix();
+    	} catch (Exception e) {
+			e.printStackTrace();
+		}
     }
 	
 	

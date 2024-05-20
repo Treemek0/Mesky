@@ -1,13 +1,18 @@
 package treemek.mesky.handlers.gui;
 
+import java.awt.Color;
+
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.util.ResourceLocation;
+import treemek.mesky.Reference;
 import treemek.mesky.config.ConfigHandler;
 import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.cosmetics.CosmeticHandler;
 import treemek.mesky.features.BlockFlowerPlacing;
 import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.handlers.gui.buttons.CheckButton;
+import treemek.mesky.handlers.gui.buttons.CosmeticCheckButton;
 
 public class CosmeticsGui extends GuiScreen {
 	 
@@ -16,6 +21,8 @@ public class CosmeticsGui extends GuiScreen {
 	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
 		drawDefaultBackground();
         
+		drawRect(0, 0, width, height, new Color(33, 33, 33,255).getRGB());
+		
         double scale = 3;
         int textLength = mc.fontRendererObj.getStringWidth("Mesky");
         int titleX = (int) ((width / 2) - (textLength * scale / 2));
@@ -32,15 +39,15 @@ public class CosmeticsGui extends GuiScreen {
 	public void initGui() {
 	    super.initGui();
 	    
+	    int inputHeight = ((height / 25) < 12)?12:(height / 25);
         
-        int checkX = (int)(width / 3);
-        int centerY = height / 2;
-        int buttonWidth = 20;
-        int buttonHeight = 20;
+        int checkX = 5;
+        int centerY = height / 3;
         
+        int previewSize = inputHeight*4;
         
-        this.buttonList.add(new CheckButton(0, checkX, centerY - (buttonHeight / 2), buttonWidth, buttonHeight, "Dragon Wings", (CosmeticHandler.WingsType == 1)?true:false));
-        this.buttonList.add(new CheckButton(1, checkX, centerY + 30 - (buttonHeight / 2), buttonWidth, buttonHeight, "Angel Wings", (CosmeticHandler.WingsType == 2)?true:false));
+        this.buttonList.add(new CosmeticCheckButton(0, checkX + (previewSize/2), centerY, inputHeight, inputHeight, "Dragon Wings", (CosmeticHandler.WingsType == 1)?true:false, new ResourceLocation(Reference.MODID, "textures/fireWings_preview.png")));
+        this.buttonList.add(new CosmeticCheckButton(1, checkX + ((previewSize * 2)), centerY, inputHeight, inputHeight, "Angel Wings", (CosmeticHandler.WingsType == 2)?true:false, new ResourceLocation(Reference.MODID, "textures/angelWings_preview.png")));
 	}
 	
 	@Override

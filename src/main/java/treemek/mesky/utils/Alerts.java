@@ -13,6 +13,7 @@ import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.StringUtils;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
@@ -27,12 +28,18 @@ public class Alerts {
 	public static class Alert {
 		private String triggerMessage;
         private String displayedMessage;
-        private float Time;
+        private float Time; // [ms]
+        private boolean onlyParty;
+        public boolean ignorePlayers;
+        public boolean isEqual; // will be added but it requires fixing all code in AlertGui (and i dont have time for that rn)
         
-        public Alert(String trigger, String displayed, float time) {
+        public Alert(String trigger, String displayed, float time, boolean onlyParty, boolean ignorePlayers, boolean isEqual) {
 	        this.triggerMessage = trigger;
 	        this.displayedMessage = displayed;
 	        this.Time = time;
+	        this.onlyParty = onlyParty;
+	        this.ignorePlayers = ignorePlayers;
+	        this.isEqual = isEqual;
         }
         
         public String getTrigger() {
@@ -45,13 +52,24 @@ public class Alerts {
         public float getTime() {
         	return Time;
         }
+
+		public boolean getOnlyParty() {
+			return onlyParty;
+		}
+		
+		public boolean getIgnorePlayers() {
+        	return ignorePlayers;
+        }
+        public boolean getIsEqual() {
+        	return isEqual;
+        }
     }
 	
 	// Method to add data
     public static void addAlert(String trigger, String display, float time) {
     	EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
     	
-    	alertsList.add(new Alert(trigger, display, time * 1000));
+    	alertsList.add(new Alert(trigger, display, time * 1000, false, false, false));
         player.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Added: "));
 		player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Trigger: " + trigger));
 		player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Display: " + display));
@@ -92,19 +110,51 @@ public class Alerts {
 	public void onChat(ClientChatReceivedEvent event) {
 		// Alerts
 		String message = event.message.getUnformattedText();
-		System.out.println(message);
+		String nickname = Minecraft.getMinecraft().thePlayer.getName();
+		String nonColorMessage = StringUtils.stripControlCodes(message);
+		String onlyNonColorMessage = nonColorMessage;
+		boolean autor = false;
 		
-		for(int i = 0; i < Alerts.alertsList.size(); i++) {
-			if(Alerts.alertsList.get(i).triggerMessage.equals("")) continue;
-			if(message.contains(Alerts.alertsList.get(i).getTrigger())) {
-				Alerts.appearedAlert = Alerts.alertsList.get(i).getDisplay();
-				Alerts.alertDisplayTime = System.currentTimeMillis();
-				alertDisplayDuration = Alerts.alertsList.get(i).getTime();
-				ResourceLocation soundLocation = new ResourceLocation("minecraft", "random.anvil_land");
-    	        Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.create(soundLocation));
+		if(nonColorMessage.contains(": ")){
+			onlyNonColorMessage = nonColorMessage.substring(nonColorMessage.indexOf(":") + 1);
+			String[] beforeMessage = nonColorMessage.split(":")[0].split(" ");
+			
+			for (String string : beforeMessage) {
+				if(string.equals(nickname) || string.equals(nickname + ":")) autor = true;
+			}
+		}
+		
+		
+		for(int i = 0; i < alertsList.size(); i++) {
+			if(alertsList.get(i).triggerMessage.equals("")) continue;
+			if(alertsList.get(i).getIsEqual()) {
+				if(onlyNonColorMessage.equals(alertsList.get(i).getTrigger())) {
+					if(alertsList.get(i).getOnlyParty() && !nonColorMessage.startsWith("Party >")) return;
+					if(alertsList.get(i).getIgnorePlayers() && nonColorMessage.contains(": ")) return;
+					if(autor) return;
+
+					Alerts.appearedAlert = Alerts.alertsList.get(i).getDisplay();
+					Alerts.alertDisplayTime = System.currentTimeMillis();
+					alertDisplayDuration = Alerts.alertsList.get(i).getTime();
+					ResourceLocation soundLocation = new ResourceLocation("minecraft", "random.anvil_land");
+				    Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.create(soundLocation));
+				}
+			}else {
+				if(message.contains(alertsList.get(i).getTrigger())) {
+					if(alertsList.get(i).getOnlyParty() && !nonColorMessage.startsWith("Party >")) return;
+					if(alertsList.get(i).getIgnorePlayers() && nonColorMessage.contains(": ")) return;
+					if(autor) return; // ignores messages written by yourself
+					
+					Alerts.appearedAlert = Alerts.alertsList.get(i).getDisplay();
+					Alerts.alertDisplayTime = System.currentTimeMillis();
+					alertDisplayDuration = Alerts.alertsList.get(i).getTime();
+					ResourceLocation soundLocation = new ResourceLocation("minecraft", "random.anvil_land");
+				    Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.create(soundLocation));
+				}
 			}
 		}
 	}
+	
 	
 	
 	public static void DisplayCustomAlerts(String display, int dur) {

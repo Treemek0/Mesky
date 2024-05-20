@@ -13,6 +13,7 @@ import treemek.mesky.cosmetics.wings.AngelWings;
 import treemek.mesky.cosmetics.wings.FireWings;
 import treemek.mesky.features.BlockFlowerPlacing;
 import treemek.mesky.features.FishingTimer;
+import treemek.mesky.features.HidePlayers;
 import treemek.mesky.features.MaskTimer;
 import treemek.mesky.features.illegal.GhostBlock;
 import treemek.mesky.features.illegal.GhostPickaxe;
@@ -21,8 +22,10 @@ import treemek.mesky.handlers.GuiHandler;
 import treemek.mesky.proxy.CommonProxy;
 import treemek.mesky.utils.Alerts;
 import treemek.mesky.utils.ChatFunctions;
+import treemek.mesky.utils.FriendsLocations;
 import treemek.mesky.utils.HypixelCheck;
 import treemek.mesky.utils.Waypoints;
+import treemek.mesky.utils.chat.CoordsDetector;
 
 @Mod(modid = Reference.MODID, name = Reference.NAME, version = Reference.VERSION, clientSideOnly = true)
 public class Mesky {
@@ -45,6 +48,7 @@ public class Mesky {
 		MinecraftForge.EVENT_BUS.register(new BlockFlowerPlacing());
 		MinecraftForge.EVENT_BUS.register(new Alerts());
 		MinecraftForge.EVENT_BUS.register(new ChatFunctions());
+		MinecraftForge.EVENT_BUS.register(new FriendsLocations());
 		MinecraftForge.EVENT_BUS.register(new Waypoints());
 		MinecraftForge.EVENT_BUS.register(new GhostBlock());
 		MinecraftForge.EVENT_BUS.register(new GhostPickaxe());
@@ -52,7 +56,8 @@ public class Mesky {
 		MinecraftForge.EVENT_BUS.register(new FireWings());
 		MinecraftForge.EVENT_BUS.register(new AngelWings());
 		MinecraftForge.EVENT_BUS.register(new PumpkinFarm());
-		
+		MinecraftForge.EVENT_BUS.register(new HidePlayers());
+		MinecraftForge.EVENT_BUS.register(new CoordsDetector());
 		
 		ClientRegistry.registerKeyBinding(PumpkinFarm.L_KEY);
 		ClientRegistry.registerKeyBinding(PumpkinFarm.R_KEY);

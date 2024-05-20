@@ -23,6 +23,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import treemek.mesky.Reference;
+import treemek.mesky.config.GuiLocationConfig;
 import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.handlers.RenderHandler;
 
@@ -92,12 +93,12 @@ public class FishingTimer extends GuiScreen{
     public void onWorldRender(RenderWorldLastEvent event) {
     	if (fishingHook != null && isText3d && SettingsConfig.FishingTimer) {
           // Render the fishing timer on the screen
-          renderFishingTimer(event.partialTicks);
+          renderFishingTimer3D(event.partialTicks);
       }
         
     }
     // Method to render the fishing timer on the screen
-    private void renderFishingTimer(float partialTicks) {
+    private void renderFishingTimer3D(float partialTicks) {
       // Get the Minecraft instance
       Minecraft mc = Minecraft.getMinecraft();
       FontRenderer fontRenderer = mc.fontRendererObj;
@@ -131,21 +132,14 @@ public class FishingTimer extends GuiScreen{
         FontRenderer fontRenderer = mc.fontRendererObj;
 
         // Calculate the position to render the timer
-        int posX = resolution.getScaledWidth() / 10;
-        int posY = resolution.getScaledHeight() / 3;
+        float x = resolution.getScaledWidth() * (GuiLocationConfig.fishingTimer[0]/100);
+        float y = resolution.getScaledHeight() * (GuiLocationConfig.fishingTimer[1]/100);
         
-     // Draw the timer text on the screen
+        // Draw the timer text on the screen
         String timerText = String.format(java.util.Locale.US, "%.1f", fishingTimer) + "s";
-        int textWidth = fontRenderer.getStringWidth(timerText);
-        fontRenderer.drawStringWithShadow(timerText, posX, posY, 0xFFFFFF);
-        
-        
-        
-        
-        ResourceLocation textureLocation = new ResourceLocation(Reference.MODID, "textures/bobber.png");
-        Minecraft.getMinecraft().renderEngine.bindTexture(textureLocation);
-        drawModalRectWithCustomSizedTexture((int)(posX - textWidth), posY - 5, 0, 0, 12, 17, 12, 17);
-        
+		fontRenderer.drawStringWithShadow(timerText, x + 15, y, 0xFFFFFF);
+        Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(Reference.MODID, "textures/bobber.png"));
+        drawModalRectWithCustomSizedTexture((int)x, (int)(y - 5), 0, 0, 12, 17, 12, 17);  
     }
     
     

@@ -13,6 +13,7 @@ import treemek.mesky.handlers.gui.AlertsGui;
 import treemek.mesky.handlers.gui.ChatFunctionsGui;
 import treemek.mesky.handlers.gui.CosmeticsGui;
 import treemek.mesky.handlers.gui.GUI;
+import treemek.mesky.handlers.gui.GuiLocations;
 import treemek.mesky.handlers.gui.Settings;
 import treemek.mesky.handlers.gui.WaypointsGui;
 import treemek.mesky.utils.Locations;
@@ -50,6 +51,10 @@ public class GuiHandler{
 	            break;
 			case 6:
 				Minecraft.getMinecraft().displayGuiScreen(new ChatFunctionsGui());
+	            GuiType = 0;
+	            break;
+			case 7:
+				Minecraft.getMinecraft().displayGuiScreen(new GuiLocations());
 	            GuiType = 0;
 	            break;
 		}

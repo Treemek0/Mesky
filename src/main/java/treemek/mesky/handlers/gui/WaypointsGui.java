@@ -6,6 +6,7 @@ import java.awt.event.MouseWheelListener;
 import java.io.IOException;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
+import org.lwjgl.opengl.GL11;
 
 import com.google.common.collect.Lists;
 
@@ -20,6 +21,7 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainerCreative;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.ResourceLocation;
@@ -32,6 +34,7 @@ import treemek.mesky.handlers.GuiHandler;
 import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.handlers.gui.buttons.CheckButton;
 import treemek.mesky.handlers.gui.buttons.DeleteButton;
+import treemek.mesky.handlers.gui.buttons.MeskyButton;
 import treemek.mesky.utils.HypixelCheck;
 import treemek.mesky.utils.Locations;
 import treemek.mesky.utils.Locations.Location;
@@ -52,6 +55,7 @@ public class WaypointsGui extends GuiScreen {
 	private float scrollbar_startPosition;
 	private float scrollbarBg_height;
 	private float scrollbar_width;
+	private GuiButton saveButton;
 	
 	@Override
 	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
@@ -59,15 +63,22 @@ public class WaypointsGui extends GuiScreen {
         
 		drawRect(0, height/3 - 1, width, height, new Color(33, 33, 33,255).getRGB());
 		
-		for (GuiTextField input : allFields) {
-			input.drawTextBox(); // drawing all inputs to screen
-		}
-		
-		for (GuiButton button : deleteButtonList) {
-			button.drawButton(mc, mouseX, mouseY); // drawing all delete buttons to screen (i had to separate it from drawScreen() because of order and its z levels (it had to be before next drawRect)
-		}
-		
-		
+		// Draw text fields first
+	    for (GuiTextField input : allFields) {
+	        input.drawTextBox();
+	    }
+
+	    // Reset color and blending state before drawing buttons
+	    GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
+	    GlStateManager.enableBlend();
+	    GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
+
+	    // Draw delete buttons
+	    for (GuiButton button : deleteButtonList) {
+	        button.drawButton(mc, mouseX, mouseY);
+	    }
+	    
+	    
 		drawRect(0, 0, width, height/3 - 1, new Color(33, 33, 33,255).getRGB());
 		
         double scale = 3;
@@ -81,12 +92,13 @@ public class WaypointsGui extends GuiScreen {
         	region.drawTextBox(); // Region input should be only visible on Hypixel (its in right upper corner)
     	}
         
-        
-        int name_X = width / 6;
+        int color_X = width / 20;
+        int name_X = color_X + width / 8;
     	int coords_X = name_X + (width/4) + 15;
     	int coords_width = width / 10;
         
         int positionY = (int)((height / 3) - 15);
+        RenderHandler.drawText("Hex Color", color_X, positionY, 1, true, 0x7a7a7a);
         RenderHandler.drawText("Name", name_X, positionY, 1, true, 0x7a7a7a);
         RenderHandler.drawText("X", coords_X, positionY, 1, true, 0x7a7a7a);
         RenderHandler.drawText("Y", coords_X + coords_width + 5, positionY, 1, true, 0x7a7a7a);
@@ -108,9 +120,6 @@ public class WaypointsGui extends GuiScreen {
 	        int scrollbar_positionY = (int)(scrollbar_startPosition + (scrollbar_percent * (scrollbar_endPosition - scrollbar_startPosition)));
 	        scrollbar_positionY = (int) Math.max(scrollbar_startPosition, Math.min(scrollbar_positionY, scrollbar_endPosition)); // scrollbar cant go past start and end positions (its because of bugs when changing resolution)
 	       
-	        ResourceLocation scrollbar_background = new ResourceLocation(Reference.MODID, "/gui/scrollbar_background.png");
-        	mc.getTextureManager().bindTexture(scrollbar_background);
-        	//drawTexturedModalRect((int)(width * 0.9), scrollbar_startPosition, 0, 0, scrollbar_width, scrollbarBg_height);
         	drawRect((int)(width * 0.9), (int)scrollbar_startPosition, (int)((width * 0.9) + scrollbar_width), (int)(scrollbar_startPosition + scrollbarBg_height), new Color(8, 7, 10, 150).getRGB());
         	
         	ResourceLocation scrollbar = new ResourceLocation(Reference.MODID, "/gui/scrollbar.png");
@@ -137,10 +146,11 @@ public class WaypointsGui extends GuiScreen {
         
         
         // Save button
-        this.buttonList.add(new GuiButton(-1, (int)(width * 0.8f), (height/15), (int)(width * 0.2f), 20, "Save"));
+        saveButton = new MeskyButton(-1, (int)(width * 0.8f), (height/15), (int)(width * 0.2f), 20, "Save");
+        this.buttonList.add(saveButton);
         
         // New waypoint button
-        this.buttonList.add(new GuiButton(-2, 0, (height/15), (int)(width * 0.2f), 20, "New waypoint"));
+        this.buttonList.add(new MeskyButton(-2, 0, (height/15), (int)(width * 0.2f), 20, "New waypoint"));
         
         // Updating location from tab
         Location.checkTabLocation();
@@ -153,7 +163,8 @@ public class WaypointsGui extends GuiScreen {
         region.setText((oldRegion == null)?Locations.currentLocationText:oldRegion);
         
         
-        int waypointName_X = width / 6;
+        int waypointColor_X = width / 20;
+        int waypointName_X = waypointColor_X + width / 8;
 		int coords_X = waypointName_X + (width/4) + 15;
 		int coord_Width = width / 10;
 		this.fontRendererObj.FONT_HEIGHT = (int)(height / 56.5);
@@ -176,35 +187,42 @@ public class WaypointsGui extends GuiScreen {
                 continue;
             }
         	
-        	DeleteButton deleteButton = new DeleteButton(0 + (4*i), (int)(width * 0.8f), inputFullPosition, inputHeight, inputHeight, "");
+        	DeleteButton deleteButton = new DeleteButton(0 + (5*i), (int)(width * 0.8f), inputFullPosition, inputHeight, inputHeight, "");
         	deleteButtonList.add(deleteButton);
         	
         	
+        	
     		// Name text input
-        	GuiTextField waypointName = new GuiTextField(0 + (4 * i), this.fontRendererObj, waypointName_X, inputFullPosition, width / 4, inputHeight);
+        	GuiTextField waypointName = new GuiTextField(0 + (5 * i), this.fontRendererObj, waypointName_X, inputFullPosition, width / 4, inputHeight);
             waypointName.setMaxStringLength(32);
             waypointName.setCanLoseFocus(true);
             waypointName.setText(Waypoints.GetLocationWaypoints().get(i).getName());
             allFields.add(waypointName);
             
-            
+            // color text input
+        	GuiTextField waypointColor = new GuiTextField(1 + (5 * i), this.fontRendererObj, waypointColor_X, inputFullPosition, width / 10, inputHeight);
+            waypointColor.setMaxStringLength(7);
+            waypointColor.setCanLoseFocus(true);
+            waypointColor.setText(Waypoints.GetLocationWaypoints().get(i).getColor());
+            allFields.add(waypointColor);
+        	
             
             // X coordinate input
-            GuiTextField waypointX = new GuiTextField(1 + (4 * i), this.fontRendererObj, coords_X, inputFullPosition, coord_Width, inputHeight);
+            GuiTextField waypointX = new GuiTextField(2 + (5 * i), this.fontRendererObj, coords_X, inputFullPosition, coord_Width, inputHeight);
             waypointX.setMaxStringLength(16);
             waypointX.setCanLoseFocus(true);
             waypointX.setText(Float.toString(Waypoints.GetLocationWaypoints().get(i).getCoords()[0]));
             allFields.add(waypointX);
             
             // Y coordinate input
-            GuiTextField waypointY = new GuiTextField(2 + (4 * i), this.fontRendererObj, coords_X + coord_Width + 5, inputFullPosition, coord_Width, inputHeight);
+            GuiTextField waypointY = new GuiTextField(3 + (5 * i), this.fontRendererObj, coords_X + coord_Width + 5, inputFullPosition, coord_Width, inputHeight);
             waypointY.setMaxStringLength(16);
             waypointY.setCanLoseFocus(true);
             waypointY.setText(Float.toString(Waypoints.GetLocationWaypoints().get(i).getCoords()[1]));
             allFields.add(waypointY);
             
             // Z coordinate input
-            GuiTextField waypointZ = new GuiTextField(3 + (4 * i), this.fontRendererObj, coords_X + (width / 5) + 10, inputFullPosition, coord_Width, inputHeight);
+            GuiTextField waypointZ = new GuiTextField(4 + (5 * i), this.fontRendererObj, coords_X + (width / 5) + 10, inputFullPosition, coord_Width, inputHeight);
             waypointZ.setMaxStringLength(16);
             waypointZ.setCanLoseFocus(true);
             waypointZ.setText(Float.toString(Waypoints.GetLocationWaypoints().get(i).getCoords()[2]));
@@ -224,8 +242,9 @@ public class WaypointsGui extends GuiScreen {
 		if(button.id == -2) {
 			// Add waypoint button
 			EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
-			Waypoints.addWaypoint("Name", (int)player.posX, (int)player.posY, (int)player.posZ);
-			int waypointName_X = width / 6;
+			Waypoints.addWaypoint("Name", "ffffff", (int)player.posX, (int)player.posY, (int)player.posZ);
+			int waypointColor_X = width / 20;
+	        int waypointName_X = waypointColor_X + width / 8;
 			int coords_X = waypointName_X + (width/4) + 15;
 			int coord_Width = width / 10;
 			this.fontRendererObj.FONT_HEIGHT = (int)(height / 56.5);
@@ -237,48 +256,77 @@ public class WaypointsGui extends GuiScreen {
 			maxBottomScroll = Math.min(0, -(((Waypoints.GetLocationWaypoints().size() * (inputHeight + inputMargin))) - (height - (height/3))));
     		ScrollOffset = Math.max(ScrollOffset, maxBottomScroll); // so scrolloffset doesnt go below maxbottomscroll
 			
-        	DeleteButton deleteButton = new DeleteButton(0 + (4*i), (int)(width * 0.8f), inputFullPosition, inputHeight, inputHeight, "");
+        	DeleteButton deleteButton = new DeleteButton(0 + (5*i), (int)(width * 0.8f), inputFullPosition, inputHeight, inputHeight, "");
         	deleteButtonList.add(deleteButton);
         	
-    		// Name text input
-        	GuiTextField waypointName = new GuiTextField(0 + (4 * i), this.fontRendererObj, waypointName_X, inputFullPosition, width / 4, inputHeight);
-            waypointName.setMaxStringLength(32);
-            waypointName.setCanLoseFocus(true);
-            waypointName.setText("Name");
-            allFields.add(waypointName);
-
-            // X coordinate input
-            GuiTextField waypointX = new GuiTextField(1 + (4 * i), this.fontRendererObj, coords_X, inputFullPosition, coord_Width, inputHeight);
-            waypointX.setMaxStringLength(16);
-            waypointX.setCanLoseFocus(true);
-            waypointX.setText(Integer.toString((int)player.posX));
-            allFields.add(waypointX);
-            
-            // Y coordinate input
-            GuiTextField waypointY = new GuiTextField(2 + (4 * i), this.fontRendererObj, coords_X + coord_Width + 5, inputFullPosition, coord_Width, inputHeight);
-            waypointY.setMaxStringLength(16);
-            waypointY.setCanLoseFocus(true);
-            waypointY.setText(Integer.toString((int)player.posY));
-            allFields.add(waypointY);
-            
-            // Z coordinate input
-            GuiTextField waypointZ = new GuiTextField(3 + (4 * i), this.fontRendererObj, coords_X + (width / 5) + 10, inputFullPosition, coord_Width, inputHeight);
+        	
+        	// i have to do it from the end because of saving (it will be from the other way than normal)
+        	
+        	// Z coordinate input
+            GuiTextField waypointZ = new GuiTextField(4 + (5 * i), this.fontRendererObj, coords_X + (width / 5) + 10, inputFullPosition, coord_Width, inputHeight);
             waypointZ.setMaxStringLength(16);
             waypointZ.setCanLoseFocus(true);
             waypointZ.setText(Integer.toString((int)player.posZ));
-            allFields.add(waypointZ);
-    	
+            allFields.add(0, waypointZ);
+            
+            // Y coordinate input
+            GuiTextField waypointY = new GuiTextField(3 + (5 * i), this.fontRendererObj, coords_X + coord_Width + 5, inputFullPosition, coord_Width, inputHeight);
+            waypointY.setMaxStringLength(16);
+            waypointY.setCanLoseFocus(true);
+            waypointY.setText(Integer.toString((int)player.posY));
+            allFields.add(0, waypointY);
+            
+            // X coordinate input
+            GuiTextField waypointX = new GuiTextField(2 + (5 * i), this.fontRendererObj, coords_X, inputFullPosition, coord_Width, inputHeight);
+            waypointX.setMaxStringLength(16);
+            waypointX.setCanLoseFocus(true);
+            waypointX.setText(Integer.toString((int)player.posX));
+            allFields.add(0, waypointX);
+            
+            // color text input
+        	GuiTextField waypointColor = new GuiTextField(1 + (5 * i), this.fontRendererObj, waypointColor_X, inputFullPosition, width / 10, inputHeight);
+            waypointColor.setMaxStringLength(7);
+            waypointColor.setCanLoseFocus(true);
+            waypointColor.setText("ffffff");
+            allFields.add(0, waypointColor);
+            
+    		// Name text input
+        	GuiTextField waypointName = new GuiTextField(0 + (5 * i), this.fontRendererObj, waypointName_X, inputFullPosition, width / 4, inputHeight);
+            waypointName.setMaxStringLength(32);
+            waypointName.setCanLoseFocus(true);
+            waypointName.setText("Name");
+            allFields.add(0, waypointName);
+            
+
+  
+            // sorting all
+            maxBottomScroll = Math.min(0, -(((Waypoints.GetLocationWaypoints().size() * (inputHeight + inputMargin))) - (height - (height/3))));
+    		ScrollOffset = Math.max(ScrollOffset, maxBottomScroll); // so scrolloffset doesnt go below maxbottomscroll
+    		positionY = (int) (height / 3 + ScrollOffset);
+    		deleteButtonList.clear();
+    		for (int ii = 0; ii < allFields.size(); ii+=5) {
+    			inputFullPosition = positionY + ((inputHeight + inputMargin) * (ii/5));
+    			allFields.get(ii).yPosition = inputFullPosition;
+    			allFields.get(ii+1).yPosition = inputFullPosition;
+    			allFields.get(ii+2).yPosition = inputFullPosition;
+    			allFields.get(ii+3).yPosition = inputFullPosition;
+    			allFields.get(ii+4).yPosition = inputFullPosition;
+    			deleteButton = new DeleteButton(0 + (ii), (int)(width * 0.8f), inputFullPosition, inputHeight, inputHeight, "");
+            	deleteButtonList.add(deleteButton);
+			}
             return;
 		}
 		
         for (GuiButton guiButton : deleteButtonList) {
 			if(guiButton.id == button.id) {
-				int listId = button.id/4;
+				int listId = button.id/5;
 				Waypoints.deleteWaypointFromLocation(listId);
 	            allFields.remove(button.id); // removing name
+	            allFields.remove(button.id); // removing color
 	            allFields.remove(button.id); // removing x
 	            allFields.remove(button.id); // removing y
 	            allFields.remove(button.id); // removing z
+	            
 	            // i had to do them above like that so every has the same "button.id" because when i remove one the other goes down in list
 	            deleteButtonList.remove(listId);
 	            ScrollOffset += 0;
@@ -288,12 +336,13 @@ public class WaypointsGui extends GuiScreen {
 	    		ScrollOffset = Math.max(ScrollOffset, maxBottomScroll); // so scrolloffset doesnt go below maxbottomscroll
 	    		int positionY = (int) (height / 3 + ScrollOffset);
 	    		deleteButtonList.clear();
-	    		for (int i = 0; i < allFields.size(); i+=4) {
-	    			int inputFullPosition = positionY + ((inputHeight + inputMargin) * (i/4));
+	    		for (int i = 0; i < allFields.size(); i+=5) {
+	    			int inputFullPosition = positionY + ((inputHeight + inputMargin) * (i/5));
 	    			allFields.get(i).yPosition = inputFullPosition;
 	    			allFields.get(i+1).yPosition = inputFullPosition;
 	    			allFields.get(i+2).yPosition = inputFullPosition;
 	    			allFields.get(i+3).yPosition = inputFullPosition;
+	    			allFields.get(i+4).yPosition = inputFullPosition;
 	    			DeleteButton deleteButton = new DeleteButton(0 + (i), (int)(width * 0.8f), inputFullPosition, inputHeight, inputHeight, "");
 	            	deleteButtonList.add(deleteButton);
 				}
@@ -305,55 +354,57 @@ public class WaypointsGui extends GuiScreen {
 	
 	@Override
 	protected void keyTyped(char typedChar, int keyCode) throws IOException {
-		System.out.println(keyCode);
-		if(keyCode == 1) {
-			Minecraft.getMinecraft().thePlayer.closeScreen();
-			return;
-		}
-		
-		if(region.isFocused()) {
-			region.textboxKeyTyped(typedChar, keyCode);
-			if(keyCode != 203 && keyCode != 205 && keyCode != 29 && keyCode != 42 && keyCode != 54 && keyCode != 56 && keyCode != 184) {
-				oldRegion = region.getText();
-	
-				// it loses focus when typing because of initGui and im too lazy to find other way
-				
-				// as i write it a while later idk what i meant with losing focus but this function updates gui to correct location while writing in region input
-				region.setCanLoseFocus(false);
-				buttonList.clear();
-				initGui();
-				region.setCanLoseFocus(true);
-				region.setFocused(true);
-				
+		try {
+			if(keyCode == 1) {
+				Minecraft.getMinecraft().thePlayer.closeScreen();
+				return;
 			}
-		}
+			
+			if(region.isFocused()) {
+				region.textboxKeyTyped(typedChar, keyCode);
+				if(keyCode != 203 && keyCode != 205 && keyCode != 29 && keyCode != 42 && keyCode != 54 && keyCode != 56 && keyCode != 184) {
+					oldRegion = region.getText();
 		
-		for (GuiTextField input : allFields) {
-			if(input.isFocused()) {
-				// numerical (coordinates inputs) [and because region input have id -1 it would count as coords input so i had to disable it]
-				if((input.getId() - 1) % 4 == 0 || (input.getId() - 2) % 4 == 0 || (input.getId() - 3) % 4 == 0 && input.getId() != -1){
-					// Backspace / leftArrow / rightArrow / . / delete
-					if(keyCode == 14 || keyCode == 203 || keyCode == 205 || keyCode == 211) input.textboxKeyTyped(typedChar, keyCode);
+					// it loses focus when typing because of initGui and im too lazy to find other way
 					
-					// disallows more than one "." in coords 
-					if(keyCode == 52 && !input.getText().contains(".")) input.textboxKeyTyped(typedChar, keyCode);
-						
-					// CTRL + A/C/V
-					if((keyCode == Keyboard.KEY_A || keyCode == Keyboard.KEY_C || keyCode == Keyboard.KEY_V) && isCtrlKeyDown()) input.textboxKeyTyped(typedChar, keyCode);
+					// as i write it a while later idk what i meant with losing focus but this function updates gui to correct location while writing in region input
+					region.setCanLoseFocus(false);
+					buttonList.clear();
+					initGui();
+					region.setCanLoseFocus(true);
+					region.setFocused(true);
 					
-					try {
-		                float isNumber = Integer.parseInt(String.valueOf(typedChar));
-		                input.textboxKeyTyped(typedChar, keyCode);
-					} catch (NumberFormatException ex) { return; }
-
-						
-				}else{
-					// Name input
-					input.textboxKeyTyped(typedChar, keyCode);
 				}
 			}
+			
+			for (GuiTextField input : allFields) {
+				if(input.isFocused()) {
+					// numerical (coordinates inputs) [and because region input have id -1 it would count as coords input so i had to disable it]
+					if((input.getId() - 2) % 5 == 0 || (input.getId() - 3) % 5 == 0 || (input.getId() - 4) % 5 == 0 && input.getId() != -1){
+						// Backspace / leftArrow / rightArrow / . / delete
+						if(keyCode == 14 || keyCode == 203 || keyCode == 205 || keyCode == 211) input.textboxKeyTyped(typedChar, keyCode);
+						
+						// disallows more than one "." in coords 
+						if(keyCode == 52 && !input.getText().contains(".")) input.textboxKeyTyped(typedChar, keyCode);
+							
+						// CTRL + A/C/V
+						if((keyCode == Keyboard.KEY_A || keyCode == Keyboard.KEY_C || keyCode == Keyboard.KEY_V) && isCtrlKeyDown()) input.textboxKeyTyped(typedChar, keyCode);
+						
+						try {
+			                float isNumber = Integer.parseInt(String.valueOf(typedChar));
+			                input.textboxKeyTyped(typedChar, keyCode);
+						} catch (NumberFormatException ex) { return; }
+	
+							
+					}else{
+						input.textboxKeyTyped(typedChar, keyCode);
+					}
+				}
+			}
+			super.keyTyped(typedChar, keyCode);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		super.keyTyped(typedChar, keyCode);
 	}
 	
 	
@@ -385,12 +436,13 @@ public class WaypointsGui extends GuiScreen {
 			int positionY = (int) (height / 3 + ScrollOffset);
     		deleteButtonList.clear();
     		
-    		for (int i = 0; i < allFields.size(); i+=4) {
-    			int inputFullPosition = positionY + ((inputHeight + inputMargin) * (i/4));
+    		for (int i = 0; i < allFields.size(); i+=5) {
+    			int inputFullPosition = positionY + ((inputHeight + inputMargin) * (i/5));
     			allFields.get(i).yPosition = inputFullPosition;
     			allFields.get(i+1).yPosition = inputFullPosition;
     			allFields.get(i+2).yPosition = inputFullPosition;
     			allFields.get(i+3).yPosition = inputFullPosition;
+    			allFields.get(i+4).yPosition = inputFullPosition;
     			
     			DeleteButton deleteButton = new DeleteButton(0 + (i), (int)(width * 0.8f), inputFullPosition, inputHeight, inputHeight, "");
             	deleteButtonList.add(deleteButton);
@@ -426,7 +478,7 @@ public class WaypointsGui extends GuiScreen {
     public void handleMouseInput() throws IOException {
         super.handleMouseInput();
         int scroll = Mouse.getEventDWheel();
-        int SCROLL_SPEED = height / 50;
+        int SCROLL_SPEED = height / 70;
         
         if (scroll != 0) {
         	if(ScrollOffset < maxBottomScroll && scroll < 0) return;
@@ -440,12 +492,13 @@ public class WaypointsGui extends GuiScreen {
     		int positionY = (int) (height / 3 + ScrollOffset);
     		deleteButtonList.clear();
     		
-    		for (int i = 0; i < allFields.size(); i+=4) {
-    			int inputFullPosition = positionY + ((inputHeight + inputMargin) * (i/4));
+    		for (int i = 0; i < allFields.size(); i+=5) {
+    			int inputFullPosition = positionY + ((inputHeight + inputMargin) * (i/5));
     			allFields.get(i).yPosition = inputFullPosition;
     			allFields.get(i+1).yPosition = inputFullPosition;
     			allFields.get(i+2).yPosition = inputFullPosition;
     			allFields.get(i+3).yPosition = inputFullPosition;
+    			allFields.get(i+4).yPosition = inputFullPosition;
     			
     			DeleteButton deleteButton = new DeleteButton(0 + (i), (int)(width * 0.8f), inputFullPosition, inputHeight, inputHeight, "");
             	deleteButtonList.add(deleteButton);
@@ -470,35 +523,56 @@ public class WaypointsGui extends GuiScreen {
 		Location.checkTabLocation();
 		// its to prevent removing waypoints from other regions, so i just remove waypoints from my region and add them updated
 		List<Waypoint> waypointsList = Waypoints.GetWaypointsWithoutLocation();
+		boolean isError = false;
 		
-		// idk why i did it like this with allFields.size(), but because of it we have to do "i -=4" since we have 4 input fields per waypoint
-		// and i did "int i = allFields.size() - 4" so it start from the end because every time you pressed Save button the order was different
-	    for (int i = allFields.size() - 4; i >= 0; i -= 4) {
+		// idk why i did it like this with allFields.size(), but because of it we have to do "i -=5" since we have 5 input fields per waypoint
+		// and i did "int i = allFields.size() - 5" so it start from the end because every time you pressed Save button the order was different
+	    for (int i = allFields.size() - 5; i >= 0; i -= 5) {
+	    	allFields.get(i + 1).setTextColor(14737632);
+	    	allFields.get(i + 2).setTextColor(14737632);
+            allFields.get(i + 3).setTextColor(14737632);
+            allFields.get(i + 4).setTextColor(14737632);
+	    	
 	        String name = allFields.get(i).getText();
+	        String color = allFields.get(i + 1).getText().replace("#", ""); 
+	        try {
+	        	Color.decode("#" + color);
+	        } catch (NumberFormatException e) {
+	        	System.out.println(e);
+	            allFields.get(i + 1).setTextColor(11217193);
+	            isError = true;
+	        }
+	        
 	        float x = 0, y = 0, z = 0;
+	        try {
+	            x = Float.parseFloat(allFields.get(i + 2).getText());
+	        } catch (NumberFormatException e) { allFields.get(i + 2).setTextColor(11217193); isError = true; }
 	        
 	        try {
-	            x = Float.parseFloat(allFields.get(i + 1).getText());
-	            y = Float.parseFloat(allFields.get(i + 2).getText());
-	            z = Float.parseFloat(allFields.get(i + 3).getText());
-	            
-	        } catch (NumberFormatException e) {
-	            System.out.println(e);
-	            continue; // Skip this iteration if there's a parsing error
+	            y = Float.parseFloat(allFields.get(i + 3).getText());
+	        } catch (NumberFormatException e) { allFields.get(i + 3).setTextColor(11217193); isError = true; }
+	        
+	        try {
+	        	z = Float.parseFloat(allFields.get(i + 4).getText()); 
+	        } catch (NumberFormatException e) { allFields.get(i + 4).setTextColor(11217193); isError = true; }
+	        
+	        if(isError) {
+	        	saveButton.packedFGColour = 14258834;
+	        	return; // skip
 	        }
 	        
 	        if(!HypixelCheck.isOnHypixel()) {
-	    		waypointsList.add(0, new Waypoint(name, x, y, z, Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName()));
+	    		waypointsList.add(0, new Waypoint(name, color, x, y, z, Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName()));
 	    	}else{
 	    		if(Locations.currentLocationText != null) {
-	    			waypointsList.add(0, new Waypoint(name, x, y, z, region.getText()));
+	    			waypointsList.add(0, new Waypoint(name, color, x, y, z, region.getText()));
 	    		}
 	    	}
 	        
 	    }
+	    saveButton.packedFGColour = 11131282;
 	    Waypoints.waypointsList = waypointsList;
 	    ConfigHandler.SaveWaypoint(waypointsList);
 	}
-	
 
 }

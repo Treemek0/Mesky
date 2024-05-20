@@ -21,5 +21,7 @@ public class SettingsConfig {
     @SerializedName("GhostBlocks")
     public static boolean GhostBlocks = false;
     
+    @SerializedName("HidePlayers")
+    public static boolean HidePlayers = false;
     
 }

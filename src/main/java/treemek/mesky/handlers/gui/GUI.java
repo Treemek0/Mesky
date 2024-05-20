@@ -9,6 +9,7 @@ import net.minecraft.util.ResourceLocation;
 import treemek.mesky.handlers.GuiHandler;
 import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.handlers.gui.buttons.CheckButton;
+import treemek.mesky.handlers.gui.buttons.MeskyButton;
 
 public class GUI extends GuiScreen {
 	
@@ -35,11 +36,13 @@ public class GUI extends GuiScreen {
         int buttonWidth = 150;
         int buttonHeight = 20;
         
-        this.buttonList.add(new GuiButton(0, centerX - buttonWidth / 2, centerY + 20, buttonWidth, buttonHeight, "Settings"));
-        this.buttonList.add(new GuiButton(1, centerX - buttonWidth / 2, centerY + 50, buttonWidth, buttonHeight, "Waypoints"));
-        this.buttonList.add(new GuiButton(2, centerX - buttonWidth / 2, centerY + 80, buttonWidth, buttonHeight, "Alerts"));
-        this.buttonList.add(new GuiButton(3, centerX - buttonWidth / 2, centerY + 110, buttonWidth, buttonHeight, "Cosmetics"));
-        this.buttonList.add(new GuiButton(4, centerX - buttonWidth / 2, centerY + 140, buttonWidth, buttonHeight, "Chat Functions"));
+        this.buttonList.add(new MeskyButton(0, centerX - buttonWidth / 2, centerY - 20, buttonWidth, buttonHeight, "Settings"));
+        this.buttonList.add(new MeskyButton(1, centerX - buttonWidth / 2, centerY + 10, buttonWidth, buttonHeight, "Waypoints"));
+        this.buttonList.add(new MeskyButton(2, centerX - buttonWidth / 2, centerY + 40, buttonWidth, buttonHeight, "Alerts"));
+        this.buttonList.add(new MeskyButton(4, centerX - buttonWidth / 2, centerY + 70, buttonWidth, buttonHeight, "Chat Functions"));
+        this.buttonList.add(new MeskyButton(5, 0, height - buttonHeight, buttonWidth, buttonHeight, "Gui Locations"));
+        
+        this.buttonList.add(new MeskyButton(3, width - buttonWidth, height - buttonHeight, buttonWidth, buttonHeight, "Cosmetics"));
 	}
 	
 	@Override
@@ -60,6 +63,9 @@ public class GUI extends GuiScreen {
                 break;
             case 4:
             	GuiHandler.GuiType = 6;
+                break;
+            case 5:
+            	GuiHandler.GuiType = 7;
                 break;
         }
     }

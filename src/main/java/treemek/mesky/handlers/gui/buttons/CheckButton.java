@@ -16,42 +16,39 @@ public class CheckButton extends GuiButton{
 	
 	public CheckButton(int buttonId, int x, int y, int width, int height, String buttonText, boolean isFull) {
 		super(buttonId, x, y, width, height, buttonText);
-		// TODO Auto-generated constructor stub
 		this.x = x;
 		this.y = y;
 		this.buttonText = buttonText;
 		this.isFull = isFull;
 	}
 	
+	
 	ResourceLocation empty = new ResourceLocation(Reference.MODID, "gui/check-empty.png");
 	ResourceLocation check = new ResourceLocation(Reference.MODID, "gui/check.png");
 	
+	public boolean isFull() {
+		return isFull;
+	}
 	
 	@Override
 	public void drawButton(Minecraft mc, int mouseX, int mouseY) {
-		// TODO Auto-generated method stub
-		if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height) {
-            hovered = true;
-        } else {
-            hovered = false;
-        }
-		
 		if(isFull) {
 			mc.renderEngine.bindTexture(check);
 		}else {
 			mc.renderEngine.bindTexture(empty);
 		}
 		drawModalRectWithCustomSizedTexture(x, y, 0, 0, width, height, width, height);
-		float textY = y + ((height/2) - (Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT / 2));
-		RenderHandler.drawText(buttonText, x + 30, textY, 1, true, 0x3e91b5);
+		
+		float defaultFontHeight = mc.fontRendererObj.FONT_HEIGHT;
+		float scaleFactor = (float) (height / defaultFontHeight) / 2;
+		
+		float textY = y + ((height / 2) - ((defaultFontHeight * scaleFactor) / 2));
+		RenderHandler.drawText(buttonText, x + width + 10, textY, scaleFactor, true, 0x3e91b5);
 	}
-	
 
-	
 	@Override
 	public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
-		// TODO Auto-generated method stub
-		if(hovered) {
+		if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height) {
 			if(isFull) { 
 				isFull = false;
 			}else {

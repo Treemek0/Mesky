@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.util.ResourceLocation;
+import treemek.mesky.handlers.GuiHandler;
 import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.handlers.gui.buttons.CheckButton;
 import treemek.mesky.handlers.gui.buttons.MeskyButton;
@@ -50,28 +51,26 @@ public class GUI extends GuiScreen {
 	@Override
     protected void actionPerformed(GuiButton button) {
         switch (button.id) {
-            case 0:
-            	// Button 1 clicked
-            	Minecraft.getMinecraft().displayGuiScreen(new Settings());
-                break;
-            case 1:
-            	Minecraft.getMinecraft().displayGuiScreen(new WaypointsGui());
-				Location.checkTabLocation();
-				WaypointsGui.region.setText(Locations.currentLocationText);
-                break;
-            case 2:
-            	Minecraft.getMinecraft().displayGuiScreen(new AlertsGui());
-                break;
-            case 3:
-            	Minecraft.getMinecraft().displayGuiScreen(new CosmeticsGui());
-                break;
-            case 4:
-            	Minecraft.getMinecraft().displayGuiScreen(new ChatFunctionsGui());
-                break;
-            case 5:
-            	Minecraft.getMinecraft().displayGuiScreen(new GuiLocations());
-                break;
-        }
+        case 0:
+        	// Button 1 clicked
+        	GuiHandler.GuiType = 2;
+            break;
+        case 1:
+            GuiHandler.GuiType = 3;
+            break;
+        case 2:
+        	GuiHandler.GuiType = 4;
+            break;
+        case 3:
+        	GuiHandler.GuiType = 5;
+            break;
+        case 4:
+        	GuiHandler.GuiType = 6;
+            break;
+        case 5:
+        	GuiHandler.GuiType = 7;
+            break;
+    }
     }
 	
 	@Override

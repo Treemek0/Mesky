@@ -106,8 +106,8 @@ public class AngelWings extends ModelBase
 			float f11 = (System.currentTimeMillis() % 1000) / 1000F * (float) Math.PI * 2.0F;
 			this.wing.rotateAngleX = (float) Math.toRadians(-92F);
 			this.wing.rotateAngleZ = (float) Math.toRadians(20F);
-			this.wing.rotateAngleY = (float) Math.toRadians(yRotation) + (((float) Math.sin(f11) * 0.1F));
-			this.wingTip.rotateAngleZ = -((float)(Math.sin((double)(f11 + 2.0F)) + 0.5D)) * 0.25F;
+			this.wing.rotateAngleY = (float) Math.toRadians(yRotation) + (((float) Math.sin(f11) * 0.15F));
+			this.wingTip.rotateAngleZ = -((float)(Math.sin((double)(f11 + 2.0F)) + 0.5D)) * 0.1F;
 			this.wing.render(0.0625F);
 			GL11.glScalef(-1.0F, 1.0F, 1.0F);
 

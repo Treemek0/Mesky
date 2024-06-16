@@ -4,6 +4,8 @@ import java.util.Collection;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.network.NetworkPlayerInfo;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 
 public class Locations {
 
@@ -66,5 +68,11 @@ public class Locations {
 		}
 	    
 	}
+	
+	
+	@SubscribeEvent
+    public void onPlayerJoin(PlayerLoggedInEvent event) {
+        Location.checkTabLocation();
+    }
 
 }

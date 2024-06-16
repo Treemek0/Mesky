@@ -58,7 +58,7 @@ public class MaskTimer extends GuiScreen {
 						}
 				    	
 				    	BonzoMaskActivated = true;
-				    	Alerts.DisplayCustomAlerts("Bonzo Mask", 1000);
+				    	Alerts.DisplayCustomAlerts("Bonzo Mask", 1000, new int[] {50,50}, 4);
 				    	return;
 				    }
 				}
@@ -70,7 +70,7 @@ public class MaskTimer extends GuiScreen {
 			if (mask != null) {
 				SpiritCooldownSeconds = 30;
 				SpiritMaskActivated = true;
-				Alerts.DisplayCustomAlerts("Spirit Mask", 1000);
+				Alerts.DisplayCustomAlerts("Spirit Mask", 1000, new int[] {50,50}, 4);
 			}
 		}
 	}

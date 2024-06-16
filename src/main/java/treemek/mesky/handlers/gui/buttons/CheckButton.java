@@ -43,17 +43,13 @@ public class CheckButton extends GuiButton{
 		float scaleFactor = (float) (height / defaultFontHeight) / 2;
 		
 		float textY = y + ((height / 2) - ((defaultFontHeight * scaleFactor) / 2));
-		RenderHandler.drawText(buttonText, x + width + 10, textY, scaleFactor, true, 0x3e91b5);
+		RenderHandler.drawText(buttonText, x + (width*1.25), textY, scaleFactor, true, 0x3e91b5);
 	}
 
 	@Override
 	public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
 		if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height) {
-			if(isFull) { 
-				isFull = false;
-			}else {
-				isFull = true;
-			}
+			isFull = !isFull;
 		}
 		return super.mousePressed(mc, mouseX, mouseY);
 	}

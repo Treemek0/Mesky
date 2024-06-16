@@ -12,29 +12,39 @@ import treemek.mesky.utils.Locations.Location;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
+
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.lang.reflect.Type;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Map;
 
 public class FriendsLocations {
 	
 	@SubscribeEvent(priority = EventPriority.HIGH)
-	public void onChat(ClientChatReceivedEvent event) {
+	public void onChat(ClientChatReceivedEvent event) throws Exception {
 		String message = StringUtils.stripControlCodes(event.message.getUnformattedText());
 		
 		if(message.contains(": ")) return;
 		if(message.startsWith("You are now friends with")){
-		String HypixelNickname = message.substring(25);
-		String nick = HypixelNickname;
-		if(HypixelNickname.contains("[") && HypixelNickname.contains("]")) {
-			nick = HypixelNickname.substring(HypixelNickname.indexOf("]") + 2);
-		}
-		
-		Location.checkTabLocation();
-		setLocationForPlayer(nick, Locations.currentLocation);
+			String HypixelNickname = message.substring(25);
+			String nick = HypixelNickname;
+			if(HypixelNickname.contains("[") && HypixelNickname.contains("]")) {
+				nick = HypixelNickname.substring(HypixelNickname.indexOf("]") + 1);
+			}
+			
+			String htmlJson = getHTML("https://api.mojang.com/users/profiles/minecraft/" + nick);
+			String id = extractIdFromJson(htmlJson);
+			
+			Location.checkTabLocation();
+			setLocationForPlayer(id, Locations.currentLocation);
 		}
 		
 		if(message.endsWith("removed you from their friends list!")){
@@ -44,7 +54,10 @@ public class FriendsLocations {
 				nick = HypixelNickname.substring(HypixelNickname.indexOf("]") + 2);
 			}
 			
-			removePlayer(nick);
+			String htmlJson = getHTML("https://api.mojang.com/users/profiles/minecraft/" + nick);
+			String id = extractIdFromJson(htmlJson);
+			
+			removePlayer(id);
 		}
 		
 		if(message.startsWith("You removed") && message.endsWith("from your friends list!")){
@@ -54,15 +67,17 @@ public class FriendsLocations {
 				nick = HypixelNickname.substring(HypixelNickname.indexOf("]") + 2);
 			}
 			
-			removePlayer(nick);
+			String htmlJson = getHTML("https://api.mojang.com/users/profiles/minecraft/" + nick);
+			String id = extractIdFromJson(htmlJson);
+			
+			removePlayer(id);
 		}
 		
 	}
-	
-	public static void removePlayer(String nick) {
+	public static void removePlayer(String uuid) {
 		Map<String, Location> playerLocationMap = loadPlayerLocationsFromFile();
-		if(playerLocationMap.containsKey(nick)) {
-			playerLocationMap.remove(nick);
+		if(playerLocationMap.containsKey(uuid)) {
+			playerLocationMap.remove(uuid);
 			savePlayerLocationsToFile(playerLocationMap);
 		}
 	}
@@ -75,16 +90,20 @@ public class FriendsLocations {
     }
 
     // Method to retrieve the location for a player
-    public static Location getLocationForPlayer(String playerNickname) {
+    public static Location getLocationForPlayer(String playerNickname) throws Exception {
     	Map<String, Location> playerLocationMap = loadPlayerLocationsFromFile();
     	if(playerLocationMap == null) return Location.NONE;
     	if(playerLocationMap.get(playerNickname) == null) return Location.NONE;
     	
-    	return playerLocationMap.get(playerNickname);
+    	String htmlJson = getHTML("https://api.mojang.com/users/profiles/minecraft/" + playerNickname);
+		String id = extractIdFromJson(htmlJson);
+    	
+    	return playerLocationMap.get(id);
     }
 
     
-    public static Map<String, Location> loadPlayerLocationsFromFile() {
+
+	public static Map<String, Location> loadPlayerLocationsFromFile() {
         File file = new File(Mesky.configDirectory + "/mesky/utils/meskyFriendsLocations.json");
         if (file.exists()) {
             try (FileReader reader = new FileReader(file)) {
@@ -110,4 +129,26 @@ public class FriendsLocations {
             ex.printStackTrace();
         }
     }
+    
+    public static String getHTML(String urlToRead) throws Exception {
+        StringBuilder result = new StringBuilder();
+        URL url = new URL(urlToRead);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+            for (String line; (line = reader.readLine()) != null; ) {
+                result.append(line);
+            }
+        }
+        return result.toString();
+     }
+    
+ // Method to manually extract the "id" field from a JSON string
+    public static String extractIdFromJson(String jsonString) {
+        String idKey = "\"id\" : \"";
+        int startIndex = jsonString.indexOf(idKey) + idKey.length();
+        int endIndex = jsonString.indexOf("\",", startIndex);
+        return jsonString.substring(startIndex, endIndex);
+    }
+
 }

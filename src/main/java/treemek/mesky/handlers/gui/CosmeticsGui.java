@@ -39,15 +39,18 @@ public class CosmeticsGui extends GuiScreen {
 	public void initGui() {
 	    super.initGui();
 	    
-	    int inputHeight = ((height / 25) < 12)?12:(height / 25);
+	    int checkSize = ((height / 25) < 12)?12:(height / 25);
         
         int checkX = 5;
-        int centerY = height / 3;
+        int previewSize = checkSize*4;
+        int firstY = height / 3;
+        int secondY = firstY + previewSize + 20;
+
         
-        int previewSize = inputHeight*4;
+        this.buttonList.add(new CosmeticCheckButton(0, checkX, firstY, previewSize, previewSize, "Dragon Wings", (CosmeticHandler.WingsType == 1)?true:false, new ResourceLocation(Reference.MODID, "textures/fireWings_preview.png"), checkSize));
+        this.buttonList.add(new CosmeticCheckButton(1, checkX + ((previewSize+5)), firstY, previewSize, previewSize, "Angel Wings", (CosmeticHandler.WingsType == 2)?true:false, new ResourceLocation(Reference.MODID, "textures/angelWings_preview.png"), checkSize));
         
-        this.buttonList.add(new CosmeticCheckButton(0, checkX + (previewSize/2), centerY, inputHeight, inputHeight, "Dragon Wings", (CosmeticHandler.WingsType == 1)?true:false, new ResourceLocation(Reference.MODID, "textures/fireWings_preview.png")));
-        this.buttonList.add(new CosmeticCheckButton(1, checkX + ((previewSize * 2)), centerY, inputHeight, inputHeight, "Angel Wings", (CosmeticHandler.WingsType == 2)?true:false, new ResourceLocation(Reference.MODID, "textures/angelWings_preview.png")));
+        this.buttonList.add(new CosmeticCheckButton(11, checkX, secondY, previewSize, previewSize, "Gentelmen Hat", (CosmeticHandler.HatType == 1)?true:false, new ResourceLocation(Reference.MODID, "textures/gentelmenHat_preview.png"), checkSize));
 	}
 	
 	@Override
@@ -60,6 +63,10 @@ public class CosmeticsGui extends GuiScreen {
             case 1:
                 if(CosmeticHandler.WingsType == 2) CosmeticHandler.WingsType = 0;
                 else CosmeticHandler.WingsType = 2;
+                break;
+            case 11:
+                if(CosmeticHandler.HatType == 1) CosmeticHandler.HatType = 0;
+                else CosmeticHandler.HatType = 1;
                 break;
         }
         refreshGui();

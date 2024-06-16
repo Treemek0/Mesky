@@ -25,7 +25,6 @@ import treemek.mesky.config.SettingsConfig;
 public class GhostPickaxe {
 
 	public static final KeyBinding GKEY = GhostBlock.GKEY;
-	public static int slotID = 5;
 	boolean hasBeenClicked = false;
 	
 	@SideOnly(Side.CLIENT)
@@ -35,9 +34,8 @@ public class GhostPickaxe {
             InventoryPlayer inventory = Minecraft.getMinecraft().thePlayer.inventory;
             for (int i = 0; i < inventory.mainInventory.length; i++) {
                 ItemStack item = inventory.mainInventory[i];
-                if (item != null && item.getItem() == Items.golden_pickaxe && i != slotID) {
-                    System.out.println("Found golden pickaxe");
-                    inventory.setInventorySlotContents(slotID, item.copy());
+                if (item != null && item.getItem() == Items.golden_pickaxe && i != SettingsConfig.GhostPickaxeSlot) {
+                    inventory.setInventorySlotContents(SettingsConfig.GhostPickaxeSlot, item.copy());
                     break; // Exit loop after transferring the pickaxe
                 }
             }

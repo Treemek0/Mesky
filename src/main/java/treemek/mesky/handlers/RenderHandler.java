@@ -63,7 +63,7 @@ public class RenderHandler {
 	}
 	
 	// https://github.com/bowser0000/SkyblockMod/blob/master/src/main/java/me/Danker/utils/RenderUtils.java
-	public static void drawTitle(String text, ScaledResolution resolution, int Color) {
+	public static void drawTitle(String text, ScaledResolution resolution, int Color, int orgScale) {
         Minecraft mc = Minecraft.getMinecraft();
 
         int height = resolution.getScaledHeight();
@@ -73,17 +73,39 @@ public class RenderHandler {
         for (String title : splitText) {
             int textLength = mc.fontRendererObj.getStringWidth(title);
 
-            double scale = 4;
+            double scale = orgScale;
             if (textLength * scale > (width * 0.9F)) {
                 scale = (width * 0.9F) / (float) textLength;
             }
 
             int titleX = (int) ((width / 2) - (textLength * scale / 2));
-            int titleY = (int) ((height * 0.45) / scale) + (int) (drawHeight * scale);
+            int titleY = (int) ((height * 0.55)) + (int) (drawHeight * scale);
             drawHUDText(title, titleX, titleY, scale, true, Color);
             drawHeight += mc.fontRendererObj.FONT_HEIGHT;
         }
     }
+
+		public static void drawAlertText(String text, ScaledResolution resolution, int Color, double orgScale, int posX, int posY) {
+	        Minecraft mc = Minecraft.getMinecraft();
+
+	        int height = resolution.getScaledHeight();
+	        int width = resolution.getScaledWidth();
+	        int drawHeight = 0;
+	        String[] splitText = text.split("\n");
+	        for (String title : splitText) {
+	            int textLength = mc.fontRendererObj.getStringWidth(title);
+
+	            double scale = Math.max(orgScale, 1);
+	            if (textLength * scale > (width * 0.9F)) {
+	                scale = (width * 0.9F) / (float) textLength;
+	            }
+
+	            int titleX = (int) (posX - (textLength * scale / 2));
+	            int titleY = (int) (posY + (int) (drawHeight * scale));
+	            drawHUDText(title, titleX, titleY, scale, true, Color);
+	            drawHeight += mc.fontRendererObj.FONT_HEIGHT;
+	        }
+	    }
 	
 	 public static void draw3DString(BlockPos pos, String text, int colour, float partialTicks) {
 	        Minecraft mc = Minecraft.getMinecraft();
@@ -161,7 +183,7 @@ public class RenderHandler {
     }
 	
 	 // https://github.com/Moulberry/NotEnoughUpdates/blob/master/src/main/java/io/github/moulberry/notenoughupdates/miscfeatures/DwarvenMinesWaypoints.java#L261
-    public static void draw3DWaypointString(Waypoint waypoint, float partialTicks) {
+    public static void draw3DWaypointString(String name, String color, float[] coord, float partialTicks, float scale) {
         GlStateManager.alphaFunc(516, 0.1F);
 
         
@@ -173,7 +195,7 @@ public class RenderHandler {
         double viewerY = viewer.lastTickPosY + (viewer.posY - viewer.lastTickPosY) * partialTicks;
         double viewerZ = viewer.lastTickPosZ + (viewer.posZ - viewer.lastTickPosZ) * partialTicks;
 
-        float[] coords = (float[]) waypoint.getCoords();
+        float[] coords = coord;
         
         double x = coords[0]-viewerX;
         double y = coords[1]-viewerY-viewer.getEyeHeight();
@@ -186,10 +208,16 @@ public class RenderHandler {
             y *= 12/dist;
             z *= 12/dist;
         }
+        
+        if (dist < 50) {
+            scale = (float)Math.max(1, scale * (dist / 50)); // Adjust scale based on distance
+        }
+        
         GlStateManager.translate(x, y, z);
         GlStateManager.translate(0, viewer.getEyeHeight(), 0);
-
-        renderNametag(waypoint.getName().toString(), waypoint.getColor());
+        GlStateManager.scale(scale, scale, scale);
+        
+        renderNametag(name, color);
 
         GlStateManager.rotate(-Minecraft.getMinecraft().getRenderManager().playerViewY, 0.0F, 1.0F, 0.0F);
         GlStateManager.rotate(Minecraft.getMinecraft().getRenderManager().playerViewX, 1.0F, 0.0F, 0.0F);
@@ -198,8 +226,14 @@ public class RenderHandler {
         GlStateManager.rotate(Minecraft.getMinecraft().getRenderManager().playerViewY, 0.0F, 1.0F, 0.0F);
         
         EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
-        String distance = Math.round(player.getDistance(coords[0], coords[1], coords[2])) + "m";
-        renderNametag(distance, "#ffffff");
+        double distance = player.getDistance(coords[0], coords[1], coords[2]);
+        String distanceString;
+        if(distance >= 1) {
+        	distanceString = Math.round(distance) + "m"; // X
+        }else {
+        	distanceString = String.format("%.1f", distance).replace(",", ".") + "m"; // X.X 
+        }
+        renderNametag(distanceString, "#ffffff");
         
         GlStateManager.popMatrix();
 
@@ -250,7 +284,31 @@ public class RenderHandler {
 			e.printStackTrace();
 		}
     }
+    
+    public static void drawRectWithFrame(int left, int top, int right, int bottom, int color, int frameWidth)
+    {
+        Minecraft.getMinecraft().ingameGUI.drawRect(left, top, right, bottom, new Color(0, 0, 0,255).getRGB());
+        Minecraft.getMinecraft().ingameGUI.drawRect(left+frameWidth, top+frameWidth, right-frameWidth, bottom-frameWidth, color);
+    }
+    
 	
+ // Calculate opacity based on elapsed time
+    public static float getlinearInterpolation(long elapsedTime, long totalTime) {
+        float progress = (float) elapsedTime / totalTime;
+        return progress;
+    }
 	
-	
+ // Calculate opacity based on elapsed time and the total time for the animation
+    public static float calculateOpacity(long elapsedTime, long totalTime, long maxOpacityTime, long maxOpacityEnd) {
+        if (elapsedTime < maxOpacityTime) {
+            // Increase opacity gradually
+            return (float) elapsedTime / maxOpacityTime;
+        } 
+        if(elapsedTime > maxOpacityEnd) {
+            // Decrease opacity gradually towards the end of the display duration
+            long remainingTime = totalTime - elapsedTime;
+            return (float) remainingTime / (totalTime - maxOpacityEnd);
+        }
+		return 1;
+    }
 }

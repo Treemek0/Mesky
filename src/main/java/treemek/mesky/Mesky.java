@@ -1,5 +1,6 @@
 package treemek.mesky;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiIngame;
 import net.minecraft.client.gui.GuiIngameMenu;
 import net.minecraftforge.client.ClientCommandHandler;
@@ -11,14 +12,17 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import treemek.mesky.config.ConfigHandler;
+import treemek.mesky.cosmetics.hat.testHat;
 import treemek.mesky.cosmetics.wings.AngelWings;
 import treemek.mesky.cosmetics.wings.FireWings;
+import treemek.mesky.features.AntyGhostBlocks;
 import treemek.mesky.features.BlockFlowerPlacing;
 import treemek.mesky.features.FishingTimer;
 import treemek.mesky.features.HidePlayers;
 import treemek.mesky.features.MaskTimer;
 import treemek.mesky.features.illegal.GhostBlock;
 import treemek.mesky.features.illegal.GhostPickaxe;
+import treemek.mesky.features.illegal.JawbusDetector;
 import treemek.mesky.features.illegal.macro.PumpkinFarm;
 import treemek.mesky.handlers.GuiHandler;
 import treemek.mesky.proxy.CommonProxy;
@@ -28,6 +32,7 @@ import treemek.mesky.utils.FriendsLocations;
 import treemek.mesky.utils.HypixelCheck;
 import treemek.mesky.utils.Waypoints;
 import treemek.mesky.utils.chat.CoordsDetector;
+import treemek.mesky.utils.chat.NickMentionDetector;
 
 @Mod(modid = Reference.MODID, name = Reference.NAME, version = Reference.VERSION, clientSideOnly = true)
 public class Mesky {
@@ -57,9 +62,13 @@ public class Mesky {
 		MinecraftForge.EVENT_BUS.register(new MaskTimer());
 		MinecraftForge.EVENT_BUS.register(new FireWings());
 		MinecraftForge.EVENT_BUS.register(new AngelWings());
+		MinecraftForge.EVENT_BUS.register(new testHat());
 		MinecraftForge.EVENT_BUS.register(new PumpkinFarm());
 		MinecraftForge.EVENT_BUS.register(new HidePlayers());
 		MinecraftForge.EVENT_BUS.register(new CoordsDetector());
+		MinecraftForge.EVENT_BUS.register(new AntyGhostBlocks());
+		MinecraftForge.EVENT_BUS.register(new NickMentionDetector());
+		MinecraftForge.EVENT_BUS.register(new JawbusDetector());
 		
 		ClientRegistry.registerKeyBinding(PumpkinFarm.L_KEY);
 		ClientRegistry.registerKeyBinding(PumpkinFarm.R_KEY);

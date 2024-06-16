@@ -75,6 +75,7 @@ public class ChatFunctions {
 	@SubscribeEvent(priority = EventPriority.HIGH)
 	public void onChat(ClientChatReceivedEvent event) {
 		// Alerts
+		if(Minecraft.getMinecraft().thePlayer == null) return;
 		String message = event.message.getUnformattedText();
 		String nickname = Minecraft.getMinecraft().thePlayer.getName();
 		String nonColorMessage = StringUtils.stripControlCodes(message);
@@ -99,6 +100,7 @@ public class ChatFunctions {
 					if(chatFunctionsList.get(i).getIgnorePlayers() && nonColorMessage.contains(": ")) return;
 					if(autor) return;
 					Minecraft.getMinecraft().thePlayer.sendChatMessage(chatFunctionsList.get(i).function);
+					System.out.println("[Mesky] Executed from chatFunction: " + chatFunctionsList.get(i).function);
 				}
 			}else {
 				if(message.contains(chatFunctionsList.get(i).getTrigger())) {
@@ -106,6 +108,7 @@ public class ChatFunctions {
 					if(chatFunctionsList.get(i).getIgnorePlayers() && nonColorMessage.contains(": ")) return;
 					if(autor) return; // ignores messages written by yourself
 					Minecraft.getMinecraft().thePlayer.sendChatMessage(chatFunctionsList.get(i).function);
+					System.out.println("[Mesky] Executed from chatFunction: " + chatFunctionsList.get(i).function);
 				}
 			}
 		}

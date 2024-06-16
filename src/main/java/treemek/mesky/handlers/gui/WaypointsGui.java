@@ -22,6 +22,7 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainerCreative;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.ResourceLocation;
@@ -119,11 +120,11 @@ public class WaypointsGui extends GuiScreen {
 	        int scrollbar_positionY = (int)(scrollbar_startPosition + (scrollbar_percent * (scrollbar_endPosition - scrollbar_startPosition)));
 	        scrollbar_positionY = (int) Math.max(scrollbar_startPosition, Math.min(scrollbar_positionY, scrollbar_endPosition)); // scrollbar cant go past start and end positions (its because of bugs when changing resolution)
 	       
-        	drawRect((int)(width * 0.9), (int)scrollbar_startPosition, (int)((width * 0.9) + scrollbar_width), (int)(scrollbar_startPosition + scrollbarBg_height), new Color(8, 7, 10, 150).getRGB());
+        	drawRect((int)(width * 0.95), (int)scrollbar_startPosition, (int)((width * 0.95) + scrollbar_width), (int)(scrollbar_startPosition + scrollbarBg_height), new Color(8, 7, 10, 150).getRGB());
         	
         	ResourceLocation scrollbar = new ResourceLocation(Reference.MODID, "/gui/scrollbar.png");
         	mc.getTextureManager().bindTexture(scrollbar);
-        	drawModalRectWithCustomSizedTexture((int)(width * 0.9), scrollbar_positionY, 0, 0, (int) scrollbar_width, scrollbar_height, scrollbar_width, scrollbar_height);
+        	drawModalRectWithCustomSizedTexture((int)(width * 0.95), scrollbar_positionY, 0, 0, (int) scrollbar_width, scrollbar_height, scrollbar_width, scrollbar_height);
         }
         
         
@@ -200,7 +201,7 @@ public class WaypointsGui extends GuiScreen {
             
             // color text input
         	GuiTextField waypointColor = new GuiTextField(1 + (5 * i), this.fontRendererObj, waypointColor_X, inputFullPosition, width / 10, inputHeight);
-            waypointColor.setMaxStringLength(7);
+            waypointColor.setMaxStringLength(12);
             waypointColor.setCanLoseFocus(true);
             waypointColor.setText(Waypoints.GetLocationWaypoints().get(i).getColor());
             allFields.add(waypointColor);
@@ -241,7 +242,11 @@ public class WaypointsGui extends GuiScreen {
 		if(button.id == -2) {
 			// Add waypoint button
 			EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
-			Waypoints.addWaypoint("Name", "ffffff", (int)player.posX, (int)player.posY, (int)player.posZ);
+			float x = Float.parseFloat(String.format("%.2f", player.posX).replace(",", "."));
+			float y = Float.parseFloat(String.format("%.2f", player.posY).replace(",", "."));
+			float z = Float.parseFloat(String.format("%.2f", player.posZ).replace(",", "."));
+
+			Waypoints.addWaypoint("Name", "ffffff", x, y, z);
 			int waypointColor_X = width / 20;
 	        int waypointName_X = waypointColor_X + width / 8;
 			int coords_X = waypointName_X + (width/4) + 15;
@@ -265,26 +270,26 @@ public class WaypointsGui extends GuiScreen {
             GuiTextField waypointZ = new GuiTextField(4 + (5 * i), this.fontRendererObj, coords_X + (width / 5) + 10, inputFullPosition, coord_Width, inputHeight);
             waypointZ.setMaxStringLength(16);
             waypointZ.setCanLoseFocus(true);
-            waypointZ.setText(Integer.toString((int)player.posZ));
+            waypointZ.setText(Float.toString(z));
             allFields.add(0, waypointZ);
             
             // Y coordinate input
             GuiTextField waypointY = new GuiTextField(3 + (5 * i), this.fontRendererObj, coords_X + coord_Width + 5, inputFullPosition, coord_Width, inputHeight);
             waypointY.setMaxStringLength(16);
             waypointY.setCanLoseFocus(true);
-            waypointY.setText(Integer.toString((int)player.posY));
+            waypointY.setText(Float.toString(y));
             allFields.add(0, waypointY);
             
             // X coordinate input
             GuiTextField waypointX = new GuiTextField(2 + (5 * i), this.fontRendererObj, coords_X, inputFullPosition, coord_Width, inputHeight);
             waypointX.setMaxStringLength(16);
             waypointX.setCanLoseFocus(true);
-            waypointX.setText(Integer.toString((int)player.posX));
+            waypointX.setText(Float.toString(x));
             allFields.add(0, waypointX);
             
             // color text input
         	GuiTextField waypointColor = new GuiTextField(1 + (5 * i), this.fontRendererObj, waypointColor_X, inputFullPosition, width / 10, inputHeight);
-            waypointColor.setMaxStringLength(7);
+            waypointColor.setMaxStringLength(12);
             waypointColor.setCanLoseFocus(true);
             waypointColor.setText("ffffff");
             allFields.add(0, waypointColor);

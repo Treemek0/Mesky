@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.lwjgl.input.Mouse;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
@@ -14,6 +16,8 @@ import treemek.mesky.config.GuiLocationConfig;
 import treemek.mesky.cosmetics.CosmeticHandler;
 import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.handlers.gui.buttons.CheckButton;
+import treemek.mesky.utils.Alerts;
+import treemek.mesky.utils.Alerts.Alert;
 
 public class GuiLocations extends GuiScreen {
 	
@@ -47,6 +51,14 @@ public class GuiLocations extends GuiScreen {
 		renderBonzoMask();
 		renderSpiritMask();
         
+		if(currentlyDragged != null) {
+			int x = Math.round(width * (currentlyDragged.position[0] / 100));
+            int y = Math.round(height * (currentlyDragged.position[1] / 100));
+			int fontHeight = fontRendererObj.FONT_HEIGHT;
+            
+			RenderHandler.drawText("x: " + x + ", y: " + y, x, y - fontHeight - 10, 0.7, true, 0xffffff);
+		}
+		
 	    super.drawScreen(mouseX, mouseY, partialTicks);
 	}
 	
@@ -68,8 +80,8 @@ public class GuiLocations extends GuiScreen {
 	@Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         for (GuiLocation location : locations) {
-            int x = (int) (width * (location.position[0] / 100));
-            int y = (int) (height * (location.position[1] / 100));
+            float x = (width * (location.position[0] / 100));
+            float y = (height * (location.position[1] / 100));
             
             if (mouseX >= x && mouseX <= x + location.width && mouseY >= y && mouseY <= y + location.height) {
                 currentlyDragged = location;

@@ -1,11 +1,16 @@
 package treemek.mesky.handlers.gui;
 
+import java.io.IOException;
+
 import org.fusesource.jansi.Ansi.Color;
 import org.lwjgl.opengl.GL11;
+
+import com.google.gson.JsonSyntaxException;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.shader.ShaderGroup;
 import net.minecraft.util.ResourceLocation;
 import treemek.mesky.handlers.GuiHandler;
 import treemek.mesky.handlers.RenderHandler;
@@ -16,10 +21,12 @@ import treemek.mesky.utils.Locations.Location;
 
 public class GUI extends GuiScreen {
 	
+	 private ShaderGroup blurShader;
+	
 	@Override
 	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
 		drawDefaultBackground();
-        
+		
         double scale = 3;
         int textLength = mc.fontRendererObj.getStringWidth("Mesky");
         int titleX = (int) ((width / 2) - (textLength * scale / 2));
@@ -39,12 +46,21 @@ public class GUI extends GuiScreen {
         int buttonWidth = 150;
         int buttonHeight = 20;
         
+        try {
+            blurShader = new ShaderGroup(Minecraft.getMinecraft().getTextureManager(), Minecraft.getMinecraft().getResourceManager(), Minecraft.getMinecraft().getFramebuffer(), new net.minecraft.util.ResourceLocation("minecraft", "shaders/post/blur.json"));
+            blurShader.createBindFramebuffers(Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight);
+            Minecraft.getMinecraft().entityRenderer.loadShader(new net.minecraft.util.ResourceLocation("minecraft", "shaders/post/blur.json"));
+        } catch (JsonSyntaxException | IOException e) {
+            e.printStackTrace();
+        }
+        
         this.buttonList.add(new MeskyButton(0, centerX - buttonWidth / 2, centerY - 20, buttonWidth, buttonHeight, "Settings"));
         this.buttonList.add(new MeskyButton(1, centerX - buttonWidth / 2, centerY + 10, buttonWidth, buttonHeight, "Waypoints"));
         this.buttonList.add(new MeskyButton(2, centerX - buttonWidth / 2, centerY + 40, buttonWidth, buttonHeight, "Alerts"));
         this.buttonList.add(new MeskyButton(4, centerX - buttonWidth / 2, centerY + 70, buttonWidth, buttonHeight, "Chat Functions"));
-        this.buttonList.add(new MeskyButton(5, 0, height - buttonHeight, buttonWidth, buttonHeight, "Gui Locations"));
         
+        
+        this.buttonList.add(new MeskyButton(5, 0, height - buttonHeight, buttonWidth, buttonHeight, "Gui Locations"));
         this.buttonList.add(new MeskyButton(3, width - buttonWidth, height - buttonHeight, buttonWidth, buttonHeight, "Cosmetics"));
 	}
 	
@@ -79,7 +95,13 @@ public class GUI extends GuiScreen {
 		return false;
 	}
 	
-	
+	   @Override
+	    public void onGuiClosed() {
+	        if (blurShader != null) {
+	            Minecraft.getMinecraft().entityRenderer.stopUseShader();
+	        }
+	        super.onGuiClosed();
+	    }
 	
 	
 }

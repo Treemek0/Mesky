@@ -3,25 +3,27 @@ package treemek.mesky.config;
 import com.google.gson.annotations.SerializedName;
 
 public class SettingsConfig {
-	@SerializedName("Ghost Pickaxe")
 	public static boolean GhostPickaxe = false;
 
-	@SerializedName("BlockFlowerPlacing")
+    public static int GhostPickaxeSlot = 5;
+
     public static boolean BlockFlowerPlacing = false;
 
-    @SerializedName("FishingTimer")
     public static boolean FishingTimer = false;
 
-    @SerializedName("BonzoTimer")
     public static boolean BonzoTimer = false;
 
-    @SerializedName("SpiritTimer")
     public static boolean SpiritTimer = false;
 
-    @SerializedName("GhostBlocks")
     public static boolean GhostBlocks = false;
-    
-    @SerializedName("HidePlayers")
+
+    public static boolean AntyGhostBlocks = false;
+
     public static boolean HidePlayers = false;
+
+    public static boolean CoordsDetection = true;
     
+    public static boolean NickMentionDetection = false;
+
+	public static boolean JawbusDetection = false;
 }

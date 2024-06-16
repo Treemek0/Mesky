@@ -78,6 +78,8 @@ public class ConfigHandler {
             Object[] alerts = initJsonArray(directory + "/mesky/utils/meskyAlerts.json", Alerts.Alert[].class);
             if (alerts != null) Alerts.alertsList = new ArrayList<>(Arrays.asList((Alerts.Alert[]) alerts));
         
+            Alerts.putAllImagesToCache();
+            
             // Chat Functions
             Object[] chatFunctions = initJsonArray(directory + "/mesky/utils/meskyChatFunctions.json", ChatFunctions.ChatFunction[].class);
             if (chatFunctions != null) ChatFunctions.chatFunctionsList = new ArrayList<>(Arrays.asList((ChatFunctions.ChatFunction[]) chatFunctions));
@@ -191,10 +193,16 @@ public class ConfigHandler {
         SettingsConfig.SpiritTimer = config.getBoolean("SpiritTimer", Configuration.CATEGORY_GENERAL, false, "SpiritMask Timer");
         SettingsConfig.GhostBlocks = config.getBoolean("GhostBlocks", Configuration.CATEGORY_GENERAL, false, "Ghost Blocks");
         SettingsConfig.GhostPickaxe = config.getBoolean("GhostPickaxe", Configuration.CATEGORY_GENERAL, false, "Ghost Pickaxe");
-        SettingsConfig.GhostPickaxe = config.getBoolean("HidePlayers", Configuration.CATEGORY_GENERAL, false, "Hides Players");
+        SettingsConfig.HidePlayers = config.getBoolean("HidePlayers", Configuration.CATEGORY_GENERAL, false, "Hides Players");
+        SettingsConfig.GhostPickaxeSlot = config.getInt("GhostPickaxeSlot", Configuration.CATEGORY_GENERAL, 5, 0, 36, "Ghost Pickaxe Slot");
+        SettingsConfig.AntyGhostBlocks = config.getBoolean("AntyGhostBlocks", Configuration.CATEGORY_GENERAL, false, "Removes Ghost Blocks");
+        SettingsConfig.CoordsDetection = config.getBoolean("CoordsDetection", Configuration.CATEGORY_GENERAL, true, "Coords Detection");
+        SettingsConfig.NickMentionDetection = config.getBoolean("NickMentionDetection", Configuration.CATEGORY_GENERAL, false, "Username mentioning detection");
+        SettingsConfig.JawbusDetection = config.getBoolean("JawbusDetection", Configuration.CATEGORY_GENERAL, false, "");
         
         // cosmetics
         CosmeticHandler.WingsType = config.getInt("WingsType", Configuration.CATEGORY_GENERAL, 0, 0, 10, "Type of wings (0 == null)");
+        CosmeticHandler.HatType = config.getInt("HatType", Configuration.CATEGORY_GENERAL, 0, 0, 10, "Type of hat (0 == null)");
         
         
     }
@@ -208,13 +216,16 @@ public class ConfigHandler {
         config.get(Configuration.CATEGORY_GENERAL, "GhostBlocks", false, "Ghost Blocks").set(SettingsConfig.GhostBlocks);
         config.get(Configuration.CATEGORY_GENERAL, "GhostPickaxe", false, "Ghost Pickaxe").set(SettingsConfig.GhostPickaxe);
         config.get(Configuration.CATEGORY_GENERAL, "HidePlayers", false, "Hides Players").set(SettingsConfig.HidePlayers);
+        config.get(Configuration.CATEGORY_GENERAL, "GhostPickaxeSlot", 5, "Ghost Pickaxe Slot").set(SettingsConfig.GhostPickaxeSlot);
+        config.get(Configuration.CATEGORY_GENERAL, "AntyGhostBlocks", false, "Removes Ghost Blocks").set(SettingsConfig.AntyGhostBlocks);
+        config.get(Configuration.CATEGORY_GENERAL, "CoordsDetection", false, "Coords Detection").set(SettingsConfig.CoordsDetection);
+        config.get(Configuration.CATEGORY_GENERAL, "NickMentionDetection", false, "Username mentioning detection").set(SettingsConfig.NickMentionDetection);
+        config.get(Configuration.CATEGORY_GENERAL, "JawbusDetection", false, "").set(SettingsConfig.JawbusDetection);
         
         // cosmetics
         config.get(Configuration.CATEGORY_GENERAL, "WingsType", 0, "Type of wings (0 == null)").set(CosmeticHandler.WingsType);
-        
-        config.get(Configuration.CATEGORY_GENERAL, "HidePlayers", false, "Hides Players").set(SettingsConfig.HidePlayers);
-        
-        
+        config.get(Configuration.CATEGORY_GENERAL, "HatType", 0, "Type of hat (0 == null)").set(CosmeticHandler.HatType);
+         
         config.save();
     }
 	

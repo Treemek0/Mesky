@@ -19,15 +19,16 @@ public class CosmeticCheckButton extends GuiButton{
 	String buttonText;
 	public boolean isFull;
 	ResourceLocation image;
+	int checkSize;
 	
-	
-	public CosmeticCheckButton(int buttonId, int x, int y, int width, int height, String buttonText, boolean isFull, ResourceLocation image) {
+	public CosmeticCheckButton(int buttonId, int x, int y, int width, int height, String buttonText, boolean isFull, ResourceLocation image, int checkSize) {
 		super(buttonId, x, y, width, height, buttonText);
 		this.x = x;
 		this.y = y;
 		this.buttonText = buttonText;
 		this.isFull = isFull;
 		this.image = image;
+		this.checkSize = checkSize;
 	}
 	
 	
@@ -40,15 +41,11 @@ public class CosmeticCheckButton extends GuiButton{
 	
 	@Override
 	public void drawButton(Minecraft mc, int mouseX, int mouseY) {
-		
-		
-		// Query the texture width
-        int imageSize = width * 4;
         
-        int left = (x + width/2) - (imageSize/2) - 10;
-        int top = y - 10;
-		int right = (x + width/2) + (imageSize/2) + 10;
-        int bottom = y + imageSize + 10;
+        int left = x;
+        int top = y;
+		int right = x + width;
+        int bottom = y + height;
 		
         if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height) {
             hovered = true;
@@ -71,15 +68,15 @@ public class CosmeticCheckButton extends GuiButton{
 		}else {
 			mc.renderEngine.bindTexture(empty);
 		}
-		drawModalRectWithCustomSizedTexture(x, y, 0, 0, width, height, width, height);
+		// drawing button
+		int checkX = x + (width/2) - (checkSize/2);
+		int checkY = (int)(y + (height*0.1));
+		drawModalRectWithCustomSizedTexture(checkX, checkY, 0, 0, checkSize, checkSize, checkSize, checkSize);
 		
+		
+		// drawing image
 		mc.renderEngine.bindTexture(image);
-		
-		
-        
-
-		drawModalRectWithCustomSizedTexture(x + width/2 - imageSize/2, y, 0, 0, imageSize, imageSize, imageSize, imageSize);
-		
+		drawModalRectWithCustomSizedTexture(x, y, 0, 0, width, height, width, height);
 	}
 	
 

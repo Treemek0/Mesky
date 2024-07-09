@@ -4,7 +4,7 @@ QoL (*Quality of Life*) for Hypixel Skyblock
 **• Version: forge 1.8.9**
 (*I use it and it works fine so it shouldn't cause any bad frame impact or crashes*)
 
-
+Idk why but it doesn't work on pojavlauncher (trying to fix)
 
 ⪢ Features: 
 - [x] Stops flower weapons from placing on blocks (*Flower of Truth & Spirit Sceptre*)

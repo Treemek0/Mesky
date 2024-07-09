@@ -14,8 +14,13 @@ import net.minecraft.client.shader.ShaderGroup;
 import net.minecraft.util.ResourceLocation;
 import treemek.mesky.handlers.GuiHandler;
 import treemek.mesky.handlers.RenderHandler;
-import treemek.mesky.handlers.gui.buttons.CheckButton;
-import treemek.mesky.handlers.gui.buttons.MeskyButton;
+import treemek.mesky.handlers.gui.alerts.AlertsGui;
+import treemek.mesky.handlers.gui.chatfunctions.ChatFunctionsGui;
+import treemek.mesky.handlers.gui.elements.buttons.CheckButton;
+import treemek.mesky.handlers.gui.elements.buttons.MeskyButton;
+import treemek.mesky.handlers.gui.macrowaypoints.MacroWaypointsGui;
+import treemek.mesky.handlers.gui.settings.SettingsGUI;
+import treemek.mesky.handlers.gui.waypoints.WaypointsGui;
 import treemek.mesky.utils.Locations;
 import treemek.mesky.utils.Locations.Location;
 
@@ -46,45 +51,50 @@ public class GUI extends GuiScreen {
         int buttonWidth = 150;
         int buttonHeight = 20;
         
-        try {
-            blurShader = new ShaderGroup(Minecraft.getMinecraft().getTextureManager(), Minecraft.getMinecraft().getResourceManager(), Minecraft.getMinecraft().getFramebuffer(), new net.minecraft.util.ResourceLocation("minecraft", "shaders/post/blur.json"));
-            blurShader.createBindFramebuffers(Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight);
-            Minecraft.getMinecraft().entityRenderer.loadShader(new net.minecraft.util.ResourceLocation("minecraft", "shaders/post/blur.json"));
-        } catch (JsonSyntaxException | IOException e) {
-            e.printStackTrace();
+        if (blurShader == null) {
+	        try {
+	            blurShader = new ShaderGroup(Minecraft.getMinecraft().getTextureManager(), Minecraft.getMinecraft().getResourceManager(), Minecraft.getMinecraft().getFramebuffer(), new net.minecraft.util.ResourceLocation("minecraft", "shaders/post/blur.json"));
+	            blurShader.createBindFramebuffers(Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight);
+	            Minecraft.getMinecraft().entityRenderer.loadShader(new net.minecraft.util.ResourceLocation("minecraft", "shaders/post/blur.json"));
+	        } catch (JsonSyntaxException | IOException e) {
+	            e.printStackTrace();
+	        }
         }
         
         this.buttonList.add(new MeskyButton(0, centerX - buttonWidth / 2, centerY - 20, buttonWidth, buttonHeight, "Settings"));
         this.buttonList.add(new MeskyButton(1, centerX - buttonWidth / 2, centerY + 10, buttonWidth, buttonHeight, "Waypoints"));
         this.buttonList.add(new MeskyButton(2, centerX - buttonWidth / 2, centerY + 40, buttonWidth, buttonHeight, "Alerts"));
-        this.buttonList.add(new MeskyButton(4, centerX - buttonWidth / 2, centerY + 70, buttonWidth, buttonHeight, "Chat Functions"));
+        this.buttonList.add(new MeskyButton(3, centerX - buttonWidth / 2, centerY + 70, buttonWidth, buttonHeight, "Chat Functions"));
+        this.buttonList.add(new MeskyButton(4, centerX - buttonWidth / 2, centerY + 100, buttonWidth, buttonHeight, "Macro Waypoints"));
         
         
-        this.buttonList.add(new MeskyButton(5, 0, height - buttonHeight, buttonWidth, buttonHeight, "Gui Locations"));
-        this.buttonList.add(new MeskyButton(3, width - buttonWidth, height - buttonHeight, buttonWidth, buttonHeight, "Cosmetics"));
+        this.buttonList.add(new MeskyButton(-1, 0, height - buttonHeight, buttonWidth, buttonHeight, "Gui Locations"));
+        this.buttonList.add(new MeskyButton(-2, width - buttonWidth, height - buttonHeight, buttonWidth, buttonHeight, "Cosmetics"));
 	}
 	
 	@Override
     protected void actionPerformed(GuiButton button) {
         switch (button.id) {
+        case -1:
+        	GuiHandler.GuiType = new GuiLocations();
+            break;
+        case -2:
+        	GuiHandler.GuiType = new CosmeticsGui();
+            break;
         case 0:
-        	// Button 1 clicked
-        	GuiHandler.GuiType = 2;
+        	GuiHandler.GuiType = new SettingsGUI();
             break;
         case 1:
-            GuiHandler.GuiType = 3;
+            GuiHandler.GuiType = new WaypointsGui();
             break;
         case 2:
-        	GuiHandler.GuiType = 4;
+        	GuiHandler.GuiType = new AlertsGui();
             break;
         case 3:
-        	GuiHandler.GuiType = 5;
-            break;
+        	GuiHandler.GuiType = new ChatFunctionsGui();
+            break;     
         case 4:
-        	GuiHandler.GuiType = 6;
-            break;
-        case 5:
-        	GuiHandler.GuiType = 7;
+        	GuiHandler.GuiType = new MacroWaypointsGui();
             break;
     }
     }
@@ -95,13 +105,13 @@ public class GUI extends GuiScreen {
 		return false;
 	}
 	
-	   @Override
-	    public void onGuiClosed() {
-	        if (blurShader != null) {
-	            Minecraft.getMinecraft().entityRenderer.stopUseShader();
-	        }
-	        super.onGuiClosed();
-	    }
+   @Override
+    public void onGuiClosed() {
+        if (blurShader != null) {
+            Minecraft.getMinecraft().entityRenderer.stopUseShader();
+        }
+        super.onGuiClosed();
+    }
 	
 	
 }

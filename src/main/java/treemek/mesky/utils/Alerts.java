@@ -38,6 +38,7 @@ import treemek.mesky.Reference;
 import treemek.mesky.config.ConfigHandler;
 import treemek.mesky.handlers.GuiHandler;
 import treemek.mesky.handlers.RenderHandler;
+import treemek.mesky.handlers.gui.alerts.AlertElement;
 import treemek.mesky.handlers.gui.alerts.AlertPosition;
 import treemek.mesky.utils.Waypoints.Waypoint;
 
@@ -47,7 +48,7 @@ public class Alerts extends GuiScreen {
 		private String triggerMessage;
         private String displayedMessage;
         private float time; // [ms]
-        private boolean onlyParty;
+        public boolean onlyParty;
         public boolean ignorePlayers;
         public boolean isEqual; // will be added but it requires fixing all code in AlertGui (and i dont have time for that rn)
         public int[] position = new int[] {50,50};
@@ -150,7 +151,7 @@ public class Alerts extends GuiScreen {
 
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onChat(ClientChatReceivedEvent event) {
-		if(Minecraft.getMinecraft().theWorld.isRemote && event.type == 0) {
+		if(Minecraft.getMinecraft().theWorld != null && Minecraft.getMinecraft().theWorld.isRemote && event.type == 0) {
 			// Alerts
 			if(event.isCanceled()) return;
 			
@@ -209,24 +210,26 @@ public class Alerts extends GuiScreen {
 	}
 	
 	
-	public static void DisplayCustomAlerts(String display, int dur, int[] position, float scale) {
+	public static void DisplayCustomAlerts(String display, int dur, int soundIteration, int[] position, float scale) {
 		AlertRenderInfo info = new AlertRenderInfo(display, dur, System.currentTimeMillis(), null, null, position, scale);
 		renderingQueue.add(info);
 		ResourceLocation soundLocation = new ResourceLocation("minecraft", "random.anvil_land");
-        Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.create(soundLocation));
+		for (int i = 0; i < soundIteration; i++) {
+			 Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.create(soundLocation));
+		}      
 	}
 	
 	 @SubscribeEvent
 	    public void onRenderOverlay(RenderGameOverlayEvent.Text event) {
 		 // its done this way because u cant remove element from list while its iterating
-		 Iterator<AlertRenderInfo> iterator = renderingQueue.iterator();
+		 Iterator<AlertRenderInfo> iterator = new ArrayList<>(renderingQueue).iterator();
 		 while (iterator.hasNext()) {
 			 	AlertRenderInfo info = iterator.next();
 		        String alert = info.message;
 		        
 			    // Check if the delay duration has passed and delete alert from renderingQueue
 		        if (System.currentTimeMillis() - info.startTime >= info.time) {
-		            iterator.remove();
+		            renderingQueue.remove(info);
 		        }
 			    
 	        	if((alert.endsWith(".png") || alert.endsWith(".jpg") || alert.endsWith(".jpeg")) && (alert.contains("/") || alert.contains("\\"))) { // rendering images
@@ -375,7 +378,7 @@ public class Alerts extends GuiScreen {
 	            	renderingQueue.add(new AlertRenderInfo(alert.displayedMessage, alert.time, System.currentTimeMillis(), location, buff, alert.position, alert.scale));
 	            }
 	        }else {
-	        	DisplayCustomAlerts("Alert is still downloading...", 3000, new int[] {50, 50}, 2);
+	        	DisplayCustomAlerts("Alert is still downloading...", 3000, 0, new int[] {50, 50}, 2);
 	        }
 	    }
 	    
@@ -409,7 +412,9 @@ public class Alerts extends GuiScreen {
 	    	}
 	    }
 	    
-	    public static void editAlertPositionAndScale(String alert, int[] position, float scale, int i) {
+	    public static void editAlertPositionAndScale(int[] position, float scale, int i, List<AlertElement> alerts) {
+	    	String alert = alerts.get(i).display.getText();
+	    	
     		if((alert.endsWith(".png") || alert.endsWith(".jpg") || alert.endsWith(".jpeg")) && (alert.contains("/") || alert.contains("\\"))) {
     			if(!bufferedTextureCache.containsKey(alert)) {
 					if(alert.contains("https://")) {
@@ -427,12 +432,14 @@ public class Alerts extends GuiScreen {
 	        	ResourceLocation location = resourceLocationCache.getOrDefault(buff, null);
 	        	
 	        	AlertPosition.alertInfo = new AlertRenderInfo(alert, 0, 0, location, buff, position, scale);
-	        	AlertPosition.alert = alertsList.get(i);
-	        	GuiHandler.GuiType = 8;
+	        	AlertPosition.alert = alerts.get(i);
+	        	AlertPosition.alertsGUI = alerts;
+	        	GuiHandler.GuiType = new AlertPosition();
 	        }else {
 	        	AlertPosition.alertInfo = new AlertRenderInfo(alert, 0, 0, null, null, position, scale);
-	        	AlertPosition.alert = alertsList.get(i);
-	        	GuiHandler.GuiType = 8;
+	        	AlertPosition.alert =  alerts.get(i);
+	        	AlertPosition.alertsGUI = alerts;
+	        	GuiHandler.GuiType = new AlertPosition();
 	        }
 
 	    }

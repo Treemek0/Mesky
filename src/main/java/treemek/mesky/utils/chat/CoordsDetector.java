@@ -18,7 +18,7 @@ public class CoordsDetector {
 	
 	@SubscribeEvent
     public void onChat(ClientChatReceivedEvent event) {
-		if(Minecraft.getMinecraft().theWorld.isRemote && event.type == 0) {
+		if(Minecraft.getMinecraft().theWorld != null && Minecraft.getMinecraft().theWorld.isRemote && event.type == 0) {
 	        String message = StringUtils.stripControlCodes(event.message.getUnformattedText());
 	        
 	        String sender = getSender(message);
@@ -26,7 +26,7 @@ public class CoordsDetector {
 	        if(sender != null) {
 	        	if(sender.equals(Minecraft.getMinecraft().thePlayer.getName())) return;
 	        }
-	        if(!SettingsConfig.CoordsDetection) return;
+	        if(!SettingsConfig.CoordsDetection.isOn) return;
 	    	
 	        if (message.contains("x:") && message.contains("y:") && message.contains("z:")) {
 	            String[] messageWords = message.split(" ");
@@ -143,7 +143,7 @@ public class CoordsDetector {
     private String getSender(String message) {
         // Extract sender's name from the message (assuming it's at the start before ":")
     	String regex = "[ቾ⚒️]";
-    	 message = message.replaceAll(regex, "");
+    	message = message.replaceAll(regex, "");
         int colonIndex = message.indexOf(':');
         if (colonIndex != -1) {
         	int spaceIndexBeforeColon = message.lastIndexOf(' ', colonIndex);

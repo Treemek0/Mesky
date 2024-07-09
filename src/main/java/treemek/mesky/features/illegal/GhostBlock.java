@@ -24,7 +24,7 @@ public class GhostBlock {
 	@SideOnly(Side.CLIENT)
 	@SubscribeEvent
     public void onRenderWorld(RenderWorldLastEvent event) {
-		if(SettingsConfig.GhostBlocks) {
+		if(SettingsConfig.GhostBlocks.isOn) {
 	        if (GKEY.isKeyDown()) {
 	        	if(!hasBeenClicked) {
 	        		hasBeenClicked = true;

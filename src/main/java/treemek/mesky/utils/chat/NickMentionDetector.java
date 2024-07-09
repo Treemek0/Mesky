@@ -18,22 +18,21 @@ import treemek.mesky.config.SettingsConfig;
 
 public class NickMentionDetector {
 	
-	// /pl doesnt work
+	// crimson isle doestroys everything
 	
-	@SubscribeEvent(priority = EventPriority.LOWEST)
-	public void onChat(ClientChatReceivedEvent event) {
-//		if(Minecraft.getMinecraft().theWorld.isRemote && event.type == 0) {
-//			Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("was message"));
+//	@SubscribeEvent(priority = EventPriority.LOWEST)
+//	public void onChat(ClientChatReceivedEvent event) {
+//		if(Minecraft.getMinecraft().theWorld != null && Minecraft.getMinecraft().theWorld.isRemote && (event.type == 0 || event.type == 1)) {
 //			if(event.isCanceled()) return;
 //			if(!SettingsConfig.NickMentionDetection) return;
-//			
 //			
 //	        String message = event.message.getFormattedText();
 //	        IChatComponent chatComponent = event.message;
 //	        
+//	        
+//	        if(!message.contains(":")) return;
 //	        String[] splitMessage = splitMessageAndAuthor(message);
 //	        
-//	        System.out.println(Minecraft.getMinecraft().thePlayer.getGameProfile().getName().toString());
 //	        
 //	        if(splitMessage[1].contains(Minecraft.getMinecraft().thePlayer.getGameProfile().getName())) {
 //		        List<IChatComponent> siblings = chatComponent.getSiblings();
@@ -43,58 +42,61 @@ public class NickMentionDetector {
 //		        if(siblings.size() > 0) {
 //		        	newChatComponent = getMessageWithNickMention(siblings, chatComponent);
 //		        }else {
-//		        	ChatStyle click = new ChatStyle();
-//		            click.setChatClickEvent(chatComponent.getChatStyle().getChatClickEvent());
-//		            newChatComponent = getMessageWithNickMention(message).setChatStyle(click);
-//		            System.out.println(newChatComponent);		        }
-//		        
+//		        	newChatComponent = getMessageWithNickMention(splitMessage[1]);
+//		        	
+//		        	if(chatComponent.getChatStyle().getChatClickEvent() != null) {
+//			        	ChatStyle click = new ChatStyle();
+//			            click.setChatClickEvent(chatComponent.getChatStyle().getChatClickEvent());
+//			            newChatComponent = newChatComponent.setChatStyle(click);
+//		        	}	        
+//	        	}
+//      	
 //		        if(!newChatComponent.equals(new ChatComponentText(""))) {
 //			        event.setCanceled(true);
-//					Minecraft.getMinecraft().thePlayer.addChatMessage(newChatComponent);
+////					Minecraft.getMinecraft().thePlayer.addChatMessage(newChatComponent);
+//					Minecraft.getMinecraft().thePlayer.addChatComponentMessage(newChatComponent);
 //		        }
 //	        }
 //		}
-	}
+//	}
 	
 	public IChatComponent getMessageWithNickMention(String message){
 		// without siblings
 		String author = splitMessageAndAuthor(message)[0];
 		String onlyMessage = splitMessageAndAuthor(message)[1];
 		
-		Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("onlyString"));
-		
 		String nick = Minecraft.getMinecraft().thePlayer.getGameProfile().getName();
 		
-		ChatComponentText component = new ChatComponentText(author);
+		String componentText = author;
 		for (Integer i : findWordPositions(onlyMessage, nick)) {
-			component.appendText(onlyMessage.substring(0, i));
-			component.appendText(EnumChatFormatting.DARK_AQUA + nick);
+			componentText += onlyMessage.substring(0, i) + EnumChatFormatting.DARK_AQUA + nick;
 			onlyMessage = onlyMessage.substring(i + nick.length());
 		}
 
 		if(onlyMessage.length() > 0) {
-			component.appendText(onlyMessage);
+			componentText += onlyMessage;
 		}
 		
+		IChatComponent component = new ChatComponentText(componentText);
 		return component;
 	}
 	
 	public IChatComponent getMessageWithNickMention(List<IChatComponent> siblings, IChatComponent messageComponent){
 		IChatComponent chatComponent = new ChatComponentText("");
 		
-		Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("siblings"));
 		
 		String nick = Minecraft.getMinecraft().thePlayer.getGameProfile().getName();
 		boolean hadColon = false;
 		String fullMessage = messageComponent.getFormattedText();
 		
+		
 		for (int i = 0; i < siblings.size(); i++) {
 			IChatComponent current = siblings.get(i);
-				
+			Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(current.getFormattedText()));
 			String message = current.getFormattedText();
-			ChatComponentText component = new ChatComponentText("");
+			EnumChatFormatting color = EnumChatFormatting.RESET;
 			
-			
+			String componentText = "";
 			
 			if(i == 0 && !fullMessage.startsWith(message)) {
 				// idk why it skipped first part of message lul
@@ -103,8 +105,7 @@ public class NickMentionDetector {
 				if(!positions.isEmpty()) {
 					for (Integer p : positions) {
 						if(hadColon || !fullMessage.contains(":")) {
-							component.appendText(skippedPart.substring(0, p));
-							component.appendText(EnumChatFormatting.DARK_AQUA + skippedPart.substring(p + nick.length()));
+							componentText += color + skippedPart.substring(0, p) + EnumChatFormatting.DARK_AQUA + nick;
 							skippedPart = skippedPart.substring(p + nick.length());
 						}else {
 							hadColon = true;
@@ -112,10 +113,10 @@ public class NickMentionDetector {
 					}
 					
 					if(skippedPart.length() > 0) {
-						component.appendText(skippedPart);
+						componentText += color + skippedPart;
 					}
 				}else {
-					component.appendText(skippedPart);
+					componentText += color + skippedPart;
 				}
 			}
 			
@@ -124,8 +125,7 @@ public class NickMentionDetector {
 				for (Integer p : positions) {
 					if(hadColon || !fullMessage.contains(":")) {
 						// idk how tf does that work when i substring from message and then try to get position from already substringed message IT SHOULD GIVE DIFFERENT RESOULT
-						component.appendText(message.substring(0, p));
-						component.appendText(EnumChatFormatting.DARK_AQUA + message.substring(p + nick.length()));
+						componentText += color + message.substring(0, p) + EnumChatFormatting.DARK_AQUA + nick;
 						message = message.substring(p + nick.length());
 					}else {
 						hadColon = true;
@@ -133,17 +133,20 @@ public class NickMentionDetector {
 				}
 				
 				if(message.length() > 0) {
-					component.appendText(message);
+					componentText += color + message;
 				}
 			}else {
-				component.appendText(message);
+				componentText += color + message;
 			}
 		
+			IChatComponent component = new ChatComponentText(componentText);
 			
+			if(current.getChatStyle().getChatClickEvent() != null) {
+				ChatStyle click = new ChatStyle();
+	            click.setChatClickEvent(current.getChatStyle().getChatClickEvent());
+	            component.setChatStyle(click);
+			}
 			
-			ChatStyle click = new ChatStyle();
-            click.setChatClickEvent(current.getChatStyle().getChatClickEvent());
-            component.setChatStyle(click);
             chatComponent.appendSibling(component);
 		}
 		
@@ -177,7 +180,7 @@ public class NickMentionDetector {
 		if(haveSender(message)) {
 			Integer p = (message.indexOf(":")+1 > 0)? message.indexOf(":")+1 : 0;
 			String author = message.substring(0, p);
-			String onlyMessage = message.substring(p);
+			String onlyMessage = message.substring(p - 1);
 			return new String[] {author,onlyMessage};
 		}else {
 			return new String[] {"", message};

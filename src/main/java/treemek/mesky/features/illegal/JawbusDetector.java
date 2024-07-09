@@ -2,6 +2,7 @@ package treemek.mesky.features.illegal;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.Map.Entry;
 import java.util.UUID;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.monster.EntityIronGolem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -22,14 +24,18 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatStyle;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.world.World;
+import net.minecraftforge.client.event.ClientChatReceivedEvent;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
+import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientDisconnectionFromServerEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.utils.Alerts;
 import treemek.mesky.utils.Locations;
 import treemek.mesky.utils.Locations.Location;
@@ -39,7 +45,7 @@ import treemek.mesky.utils.Waypoints.Waypoint;
 
 public class JawbusDetector {
 	
-	Map<TemporaryWaypoint, Entity> detectedJawbuses = new HashMap<>();
+	public static Map<TemporaryWaypoint, Entity> detectedJawbuses = new HashMap<>();
 	Long waypointLifeTime = 300 * 1000L; // seconds * 1000 [ms]
 	
 	
@@ -51,6 +57,7 @@ public class JawbusDetector {
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
 		if (event.phase == TickEvent.Phase.START) {
+			if(!SettingsConfig.JawbusDetection.isOn) return;
 			Minecraft mc = Minecraft.getMinecraft();
 			if (mc.thePlayer == null || mc.theWorld == null) return;
 			if(Locations.currentLocation == Location.CRIMSON_ISLE) {
@@ -66,7 +73,7 @@ public class JawbusDetector {
 	                    if(!detectedJawbuses.containsValue(entity)) {
 	                    	TemporaryWaypoint waypoint = Waypoints.addTemporaryWaypoint(EnumChatFormatting.RED + "! " + EnumChatFormatting.BLUE + "Lord Jawbus" + EnumChatFormatting.RED + " !", "9cbed7", x, y, z, 3, waypointLifeTime);
 		                    detectedJawbuses.put(waypoint, entity);
-		                    Alerts.DisplayCustomAlerts(EnumChatFormatting.GOLD + "Detected" + EnumChatFormatting.BLUE + "Lord Jawbus", 1500, new int[] {50,40}, 3);
+		                    Alerts.DisplayCustomAlerts(EnumChatFormatting.GOLD + "Detected " + EnumChatFormatting.BLUE + "Lord Jawbus", 3000, 10, new int[] {50,40}, 3);
 		                    mc.thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BLUE + "Detected Jawbus: " + EnumChatFormatting.GOLD + x + " " + y + " " + z));
 	                    }
 	                }
@@ -103,61 +110,60 @@ public class JawbusDetector {
     private void updatePlayerLocations(List<EntityPlayer> playerEntities) {
         for (EntityPlayer player : playerEntities) {
             String playerName = player.getName();
-            BlockPos coords = player.playerLocation;
+            BlockPos coords = player.getPosition();
             
-            if(!playerLocations.containsKey(playerName)) {
-            	playerLocations.put(playerName, coords);
-            }else {
-            	playerLocations.replace(playerName, coords);
+            
+            if(!Minecraft.getMinecraft().thePlayer.getName().equals(playerName)) {
+	            if(!playerLocations.containsKey(playerName)) {
+	            	playerLocations.put(playerName, coords);
+	            }else {
+	            	playerLocations.replace(playerName, coords);
+	            }
             }
         }
     }
 
     @SubscribeEvent
-    public void onPlayerDeath(LivingDeathEvent event) {
-        if (event.entityLiving instanceof EntityPlayerMP) {
-            EntityPlayerMP player = (EntityPlayerMP) event.entityLiving;
-            if (event.source.getDeathMessage(player) != null && event.source.getDeathMessage(player).getUnformattedText().contains("was killed by Lord Jawbus.")) {
-                String playerName = player.getName();
-                BlockPos playerLocation = playerLocations.get(playerName);
-                
-                if(playerLocation.getZ() > -430 && playerLocation.getX() > -365 && playerLocation.getX() < -355) playerLocation = null; // player location is at spawn
-                
-                if (playerLocation != null) {
-                    ChatStyle temp = new ChatStyle();
-                    temp.setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/mesky tempwaypoint " + playerName + " E66758 " + playerLocation.getX() + " " + playerLocation.getY() + " " + playerLocation.getZ() + " " + 30));
-                    temp.setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("Create a temporary waypoint (3min)")));
-                    temp.setColor(EnumChatFormatting.RED); // Set the color of the button text
-                    
-                    ChatComponentText clickableMessage = new ChatComponentText(" [Quick mark]");
-                    clickableMessage.setChatStyle(temp); 
-                    
-                    
-                	
-                    player.addChatMessage(new ChatComponentText(player.getDisplayNameString() + " last loaded player location (can be wrong): " + playerLocation.toString()).appendSibling(clickableMessage));
-                }
-            }
-        }
-    }
-	
-    
-	@SubscribeEvent
-    public void onPlayerJoin(PlayerLoggedInEvent event) {
-		if(event.player != null && Minecraft.getMinecraft().thePlayer != null && event.player.getName().equals(Minecraft.getMinecraft().thePlayer.getName())) {
-	        detectedJawbuses.clear();
-	        playerLocations.clear();
+    public void onChat(ClientChatReceivedEvent event) {
+    	try {
+	    	String message = event.message.getUnformattedText();
+	    	if(message.contains(":")) return;
+	    	if(!SettingsConfig.JawbusDetection.isOn) return;
+	    	
+	        if (message.contains("was killed by Lord Jawbus.")) {
+	            String playerName = message.substring(2, message.indexOf("was killed by")).trim();
+	            BlockPos playerLocation = playerLocations.get(playerName);
+	            
+	            if(!detectedJawbuses.isEmpty()) return;
+	            
+	            if (playerLocation != null) {
+	            	if(playerLocation.getZ() > -430 && playerLocation.getX() > -365 && playerLocation.getX() < -355) return; // player location is at spawn
+	            	
+	                ChatStyle temp = new ChatStyle();
+	                temp.setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/mesky tempwaypoint " + playerName + " E66758 " + playerLocation.getX() + " " + playerLocation.getY() + " " + playerLocation.getZ() + " " + 30));
+	                temp.setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("Create a temporary waypoint (3min)")));
+	                temp.setColor(EnumChatFormatting.RED); // Set the color of the button text
+	                
+	                ChatComponentText clickableMessage = new ChatComponentText(" [Quick mark]");
+	                clickableMessage.setChatStyle(temp); 
+	                
+	                Alerts.DisplayCustomAlerts("", 1, 3, new int[] {50, 50}, 3);
+	                Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_AQUA + playerName + EnumChatFormatting.AQUA + " last rendered position: " + EnumChatFormatting.GOLD + playerLocation.getX() + " " + playerLocation.getY() + " " + playerLocation.getZ()).appendSibling(clickableMessage));
+	            }else {
+	            	Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "No data about location of: " + EnumChatFormatting.DARK_AQUA + playerName));
+	            }
+	        }
+    	} catch (Exception e) {
+    		if(Minecraft.getMinecraft().thePlayer != null) {
+    			Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(e.toString()));
+    			e.printStackTrace();
+    		}
 		}
     }
 
-	@SubscribeEvent
-    public void onPlayerLoggedOut(PlayerLoggedOutEvent event) {
-		if(event.player != null && Minecraft.getMinecraft().thePlayer != null && event.player.getName().equals(Minecraft.getMinecraft().thePlayer.getName())) {
-	        detectedJawbuses.clear();
-	        playerLocations.clear();
-		}else {
-			if(playerLocations.containsKey(event.player.getName())) {
-				playerLocations.remove(event.player.getName());
-			}
-		}
+    @SubscribeEvent
+    public void onClientDisconnect(ClientDisconnectionFromServerEvent event) {
+        detectedJawbuses.clear();
+        playerLocations.clear();
     }
 }

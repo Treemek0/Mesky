@@ -16,7 +16,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import treemek.mesky.config.ConfigHandler;
 import treemek.mesky.handlers.GuiHandler;
 import treemek.mesky.handlers.RenderHandler;
-import treemek.mesky.handlers.gui.buttons.MeskyButton;
+import treemek.mesky.handlers.gui.elements.buttons.MeskyButton;
 import treemek.mesky.utils.Alerts;
 import treemek.mesky.utils.Alerts.Alert;
 import treemek.mesky.utils.Alerts.AlertRenderInfo;
@@ -24,7 +24,8 @@ import treemek.mesky.utils.Alerts.AlertRenderInfo;
 public class AlertPosition extends GuiScreen{
 
 	public static AlertRenderInfo alertInfo;
-	public static Alert alert;
+	public static AlertElement alert;
+	public static List<AlertElement> alertsGUI;
 	public static List<Alert> alertsList;
 	private boolean currentlyDragged = false;
 	
@@ -127,9 +128,9 @@ public class AlertPosition extends GuiScreen{
     {
         if(currentlyDragged) {
         	currentlyDragged = false;
-        	Alert newAlert = alert;
-            newAlert.position = alertInfo.position;
-        	Alerts.alertsList.set(Alerts.alertsList.indexOf(alert), newAlert);
+        	AlertElement newAlert = alertsGUI.get(alertsGUI.indexOf(alert));
+        	newAlert.position = alertInfo.position;
+        	alertsGUI.set(alertsGUI.indexOf(alert), newAlert);
         }
     }
 	
@@ -138,29 +139,24 @@ public class AlertPosition extends GuiScreen{
     public void handleMouseInput() throws IOException {
         super.handleMouseInput();
         int scroll = Mouse.getEventDWheel();
-        float SCROLL_SPEED = 0.05f;
+        AlertElement newAlert = alertsGUI.get(alertsGUI.indexOf(alert));
         
         if (scroll != 0 && currentlyDragged) {
-        	Alert newAlert = alert;
+        	float SCROLL_SPEED = (newAlert.scale < 3f)?0.05f:0.1f;
         	newAlert.scale -= scroll > 0 ? -SCROLL_SPEED : SCROLL_SPEED;
-        	alertInfo.scale = newAlert.scale;
-            Alerts.alertsList.set(Alerts.alertsList.indexOf(alert), newAlert);
         }
         
-        if(alertInfo.bufferedImage != null && alertInfo.scale < 0.05f) { // image
-        	Alert newAlert = alert;
+        if(alertInfo.bufferedImage != null && newAlert.scale < 0.05f) { // image
         	newAlert.scale = 0.05f;
-        	alertInfo.scale = newAlert.scale;
-            Alerts.alertsList.set(Alerts.alertsList.indexOf(alert), newAlert);
         }
         
-        if(alertInfo.bufferedImage == null && alertInfo.scale < 1f) { // image
-        	Alert newAlert = alert;
+        if(alertInfo.bufferedImage == null && newAlert.scale < 1f) { // image
         	newAlert.scale = 1f;
-        	alertInfo.scale = newAlert.scale;
-            Alerts.alertsList.set(Alerts.alertsList.indexOf(alert), newAlert);
         }
         
+        newAlert.scale = (float)Math.round(newAlert.scale * 100) / 100;
+        alertsGUI.set(alertsGUI.indexOf(alert), newAlert);
+        alertInfo.scale = newAlert.scale;
 	}
 	
 	@Override
@@ -168,8 +164,8 @@ public class AlertPosition extends GuiScreen{
 		alertInfo = null;
 		alert = null;
 		currentlyDragged = false;
-		GuiHandler.GuiType = 4;
-		ConfigHandler.SaveAlert(Alerts.alertsList);
+		GuiHandler.GuiType = new AlertsGui();
+		AlertsGui.alerts = alertsGUI;
     }
 	
 	@Override

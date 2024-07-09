@@ -3,6 +3,7 @@ package treemek.mesky.cosmetics.wings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderPlayerEvent;
@@ -20,12 +21,11 @@ public class FireWings extends ModelBase
 	private ModelRenderer wing;
 	private ModelRenderer wingTip;
 	private boolean playerUsesFullHeight;
-	int WingsScale = 70;
 	float yRotation = 20;
 
 	public FireWings(){
 		this.mc = Minecraft.getMinecraft();
-		this.location = new ResourceLocation("mesky", "textures/wings.png");
+		this.location = new ResourceLocation("mesky", "textures/models/wings/wings.png");
 		this.playerUsesFullHeight = Loader.isModLoaded("animations");
 
 		// Set texture offsets.
@@ -56,23 +56,21 @@ public class FireWings extends ModelBase
 		EntityPlayer player = event.entityPlayer;
 
 		if (player.equals(mc.thePlayer) && !player.isInvisible()){
-			if(CosmeticHandler.WingsType == 1) {
-				renderWings(player, event.partialRenderTick);
+			if(CosmeticHandler.WingsType.number == 1) {
+				float scale = (event.renderer.getMainModel().isChild)?0.5f:1;
+				renderWings(player, event.partialRenderTick, scale);
 			}
 		}
 	}
 
-	private void renderWings(EntityPlayer player, float partialTicks)
+	private void renderWings(EntityPlayer player, float partialTicks, float scaleFactor)
 	{
-		double scale = WingsScale / 100D;
+		double scale = 0.7f;
 		double rotate = interpolate(player.prevRenderYawOffset, player.renderYawOffset, partialTicks);
-
-		int SpeedYRotation = 75;
-		int WalkYRotation = 50;
-		int TargetYRotation = 20;
 		
 		
 		GL11.glPushMatrix();
+		GlStateManager.scale(scaleFactor, scaleFactor, scaleFactor);
 		GL11.glScaled(-scale, -scale, scale);
 		GL11.glRotated(0, 1, 0, 0);
 		GL11.glRotated(180 + rotate, 0, 1, 0); // Rotate the wings to be with the player.
@@ -84,24 +82,6 @@ public class FireWings extends ModelBase
 			GL11.glRotated(30, 1, 0, 0);
 		}
 		
-		
-//		float acceleration = 0.1f; // Adjust this value for the desired acceleration
-//		if (player.moveForward > 0) {
-//		    if (player.isSprinting()) {
-//		        TargetYRotation = 70;
-//		    } else {
-//		        TargetYRotation = 50;
-//		    }
-//		} else {
-//		    TargetYRotation = 20;
-//		}
-//
-//		// Calculate the new yRotation using linear interpolation (lerp)
-//		if (yRotation < TargetYRotation) {
-//		    yRotation = Math.min(yRotation + acceleration, TargetYRotation);
-//		} else if (yRotation > TargetYRotation) {
-//		    yRotation = Math.max(yRotation - acceleration, TargetYRotation);
-//		}
 
 		mc.getTextureManager().bindTexture(location);
 

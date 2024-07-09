@@ -11,25 +11,28 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.reflect.TypeToken;
 import com.google.gson.*;
 
 import net.minecraftforge.common.config.Configuration;
 import scala.util.parsing.input.Reader;
 import treemek.mesky.Mesky;
+import treemek.mesky.config.SettingsConfig.Setting;
 import treemek.mesky.cosmetics.CosmeticHandler;
 import treemek.mesky.utils.Alerts;
 import treemek.mesky.utils.Waypoints;
 import treemek.mesky.utils.Alerts.Alert;
 import treemek.mesky.utils.Locations.Location;
+import treemek.mesky.utils.MacroWaypoints;
 import treemek.mesky.utils.ChatFunctions;
 import treemek.mesky.utils.FriendsLocations;
 import treemek.mesky.utils.Waypoints.Waypoint;
 
 public class ConfigHandler {
-    private static Configuration config = new Configuration(new File(Mesky.configDirectory + "/mesky/meskySettings.cfg"));
 	
     public static void createNewJsonObject(String file) throws IOException {
         FileWriter fileWriter = new FileWriter(file);
@@ -73,24 +76,34 @@ public class ConfigHandler {
             File directory = new File(Mesky.configDirectory);
             if (!directory.exists()) directory.mkdir();
 
+            loadSettings();
 
             // Alerts
-            Object[] alerts = initJsonArray(directory + "/mesky/utils/meskyAlerts.json", Alerts.Alert[].class);
-            if (alerts != null) Alerts.alertsList = new ArrayList<>(Arrays.asList((Alerts.Alert[]) alerts));
-        
-            Alerts.putAllImagesToCache();
-            
+            if(new File(directory + "/mesky/utils/meskyAlerts.json").exists()) {
+	            Object[] alerts = initJsonArray(directory + "/mesky/utils/meskyAlerts.json", Alerts.Alert[].class);
+	            if (alerts != null) Alerts.alertsList = new ArrayList<>(Arrays.asList((Alerts.Alert[]) alerts));
+	        
+	        	Alerts.putAllImagesToCache();
+            }
             // Chat Functions
-            Object[] chatFunctions = initJsonArray(directory + "/mesky/utils/meskyChatFunctions.json", ChatFunctions.ChatFunction[].class);
-            if (chatFunctions != null) ChatFunctions.chatFunctionsList = new ArrayList<>(Arrays.asList((ChatFunctions.ChatFunction[]) chatFunctions));
-        
+            if(new File(directory + "/mesky/utils/meskyChatFunctions.json").exists()) {
+	            Object[] chatFunctions = initJsonArray(directory + "/mesky/utils/meskyChatFunctions.json", ChatFunctions.ChatFunction[].class);
+	            if (chatFunctions != null) ChatFunctions.chatFunctionsList = new ArrayList<>(Arrays.asList((ChatFunctions.ChatFunction[]) chatFunctions));
+            }
+            
             // Waypoints
-            Object[] waypoints = initJsonArray(directory + "/mesky/utils/meskyWaypoints.json", Waypoints.Waypoint[].class);
-            if (waypoints != null) Waypoints.waypointsList = new ArrayList<>(Arrays.asList((Waypoints.Waypoint[]) waypoints));
+            if(new File(directory + "/mesky/utils/meskyWaypoints.json").exists()) {
+	            Object[] waypoints = initJsonArray(directory + "/mesky/utils/meskyWaypoints.json", Waypoints.Waypoint[].class);
+	            if (waypoints != null) Waypoints.waypointsList = new ArrayList<>(Arrays.asList((Waypoints.Waypoint[]) waypoints));
+            }
             
+            // Macro Waypoints
+            if(new File(directory + "/mesky/utils/meskyMacroWaypoints.json").exists()) {
+	            Object[] waypoints = initJsonArray(directory + "/mesky/utils/meskyMacroWaypoints.json", MacroWaypoints.MacroWaypoint[].class);
+	            if (waypoints != null) MacroWaypoints.waypointsList = new ArrayList<>(Arrays.asList((MacroWaypoints.MacroWaypoint[]) waypoints));
+            }
+
             
-            loadSettingsLocations();
-            loadSettings();
             
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -130,103 +143,100 @@ public class ConfigHandler {
         }
     }
     
+    public static void SaveMacroWaypoint(List<MacroWaypoints.MacroWaypoint> waypoints) {
+    	// saves correctly
+    	new File(Mesky.configDirectory + "/mesky/utils/").mkdirs();
+    	try (FileWriter writer = new FileWriter(Mesky.configDirectory + "/mesky/utils/meskyMacroWaypoints.json")) {
+            new GsonBuilder().setPrettyPrinting().create().toJson(waypoints, writer);
+            writer.flush();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+    
     // !!!
     // Saving friends locations is in FriendsLocations file
     // !!!
 
-    
-    public static void saveSettingsLocations() {
-    	// Create an instance of Gson
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-
-     // Create an instance of GuiLocationConfig
-        GuiLocationConfig config = new GuiLocationConfig();
-        
-     // Create a JSON object containing the float arrays
-        JsonObject json = new JsonObject();
-        json.add("fishingTimer", gson.toJsonTree(GuiLocationConfig.fishingTimer));
-        json.add("bonzoMaskTimer", gson.toJsonTree(GuiLocationConfig.bonzoMaskTimer));
-        json.add("spiritMaskTimer", gson.toJsonTree(GuiLocationConfig.spiritMaskTimer));
-        // Ensure the directory exists
-        new File(Mesky.configDirectory + "/mesky/gui/").mkdirs();
-
-        // Write the JSON string to a file
-        try (FileWriter writer = new FileWriter(Mesky.configDirectory + "/mesky/gui/guiLocations.json")) {
-        	gson.toJson(json, writer);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-    
-    public static void loadSettingsLocations() throws FileNotFoundException {
-    	// Create an instance of Gson
-        Gson gson = new Gson();
-
-        try {
-            // Read JSON data from the file
-            FileReader reader = new FileReader(Mesky.configDirectory + "/mesky/gui/guiLocations.json");
-
-         // Deserialize JSON data into a JsonObject
-            JsonObject json = gson.fromJson(reader, JsonObject.class);
-
-            GuiLocationConfig.fishingTimer = gson.fromJson(json.get("fishingTimer"), float[].class);
-            GuiLocationConfig.bonzoMaskTimer = gson.fromJson(json.get("bonzoMaskTimer"), float[].class);
-            GuiLocationConfig.spiritMaskTimer =gson.fromJson(json.get("spiritMaskTimer"), float[].class);
-
-            // Close the reader
-            reader.close();
-
-        } catch (FileNotFoundException e) {
-        } catch (IOException e) {
-            // Handle other IO exceptions
-            e.printStackTrace();
-        }
-    }
-    
-
 
     private static void loadSettings(){
-    	config.load();
-    	SettingsConfig.BlockFlowerPlacing = config.getBoolean("BlockFlowerPlacing", Configuration.CATEGORY_GENERAL, false, "Block Flower from Placing");
-        SettingsConfig.FishingTimer = config.getBoolean("FishingTimer", Configuration.CATEGORY_GENERAL, false, "FishingTimer");
-        SettingsConfig.BonzoTimer = config.getBoolean("BonzoTimer", Configuration.CATEGORY_GENERAL, false, "BonzoMask Timer");
-        SettingsConfig.SpiritTimer = config.getBoolean("SpiritTimer", Configuration.CATEGORY_GENERAL, false, "SpiritMask Timer");
-        SettingsConfig.GhostBlocks = config.getBoolean("GhostBlocks", Configuration.CATEGORY_GENERAL, false, "Ghost Blocks");
-        SettingsConfig.GhostPickaxe = config.getBoolean("GhostPickaxe", Configuration.CATEGORY_GENERAL, false, "Ghost Pickaxe");
-        SettingsConfig.HidePlayers = config.getBoolean("HidePlayers", Configuration.CATEGORY_GENERAL, false, "Hides Players");
-        SettingsConfig.GhostPickaxeSlot = config.getInt("GhostPickaxeSlot", Configuration.CATEGORY_GENERAL, 5, 0, 36, "Ghost Pickaxe Slot");
-        SettingsConfig.AntyGhostBlocks = config.getBoolean("AntyGhostBlocks", Configuration.CATEGORY_GENERAL, false, "Removes Ghost Blocks");
-        SettingsConfig.CoordsDetection = config.getBoolean("CoordsDetection", Configuration.CATEGORY_GENERAL, true, "Coords Detection");
-        SettingsConfig.NickMentionDetection = config.getBoolean("NickMentionDetection", Configuration.CATEGORY_GENERAL, false, "Username mentioning detection");
-        SettingsConfig.JawbusDetection = config.getBoolean("JawbusDetection", Configuration.CATEGORY_GENERAL, false, "");
-        
-        // cosmetics
-        CosmeticHandler.WingsType = config.getInt("WingsType", Configuration.CATEGORY_GENERAL, 0, 0, 10, "Type of wings (0 == null)");
-        CosmeticHandler.HatType = config.getInt("HatType", Configuration.CATEGORY_GENERAL, 0, 0, 10, "Type of hat (0 == null)");
-        
-        
+    	File file = new File(Mesky.configDirectory + "/mesky/meskySettings.json");
+        if (file.exists()) {
+            try (FileReader reader = new FileReader(file)) {
+                Gson gson = new Gson();
+                Type type = new TypeToken<Map<String, Setting>>(){}.getType();
+                Map<String, Setting> settings = gson.fromJson(reader, type);
+
+                if(settings != null) {
+	                SettingsConfig.BlockFlowerPlacing = safelyGetInfo(settings.get("BlockFlowerPlacing"), SettingsConfig.BlockFlowerPlacing);
+	                SettingsConfig.FishingTimer = safelyGetInfo(settings.get("FishingTimer"), SettingsConfig.FishingTimer);
+	                SettingsConfig.BonzoTimer = safelyGetInfo(settings.get("BonzoTimer"), SettingsConfig.BonzoTimer);
+	                SettingsConfig.SpiritTimer = safelyGetInfo(settings.get("SpiritTimer"), SettingsConfig.SpiritTimer);
+	                SettingsConfig.GhostBlocks = safelyGetInfo(settings.get("GhostBlocks"), SettingsConfig.GhostBlocks);
+	                SettingsConfig.GhostPickaxe = safelyGetInfo(settings.get("GhostPickaxe"), SettingsConfig.GhostPickaxe);
+	                SettingsConfig.HidePlayers = safelyGetInfo(settings.get("HidePlayers"), SettingsConfig.HidePlayers);
+	                SettingsConfig.GhostPickaxeSlot = safelyGetInfo(settings.get("GhostPickaxeSlot"), SettingsConfig.GhostPickaxeSlot);
+	                SettingsConfig.AntyGhostBlocks = safelyGetInfo(settings.get("AntyGhostBlocks"), SettingsConfig.AntyGhostBlocks);
+	                SettingsConfig.CoordsDetection = safelyGetInfo(settings.get("CoordsDetection"), SettingsConfig.CoordsDetection);
+	                SettingsConfig.NickMentionDetection = safelyGetInfo(settings.get("NickMentionDetection"), SettingsConfig.NickMentionDetection);
+	                SettingsConfig.JawbusDetection = safelyGetInfo(settings.get("JawbusDetection"), SettingsConfig.JawbusDetection);
+	                SettingsConfig.AutoFish = safelyGetInfo(settings.get("AutoFish"), SettingsConfig.AutoFish);
+	                SettingsConfig.KillSeaCreatures = safelyGetInfo(settings.get("KillSeaCreatures"), SettingsConfig.KillSeaCreatures);
+	                SettingsConfig.AutoThrowHook = safelyGetInfo(settings.get("AutoThrowHook"), SettingsConfig.AutoThrowHook);
+	                
+	                // cosmetics
+	                CosmeticHandler.AuraType = safelyGetInfo(settings.get("AuraType"), CosmeticHandler.AuraType);
+	                CosmeticHandler.HatType = safelyGetInfo(settings.get("HatType"), CosmeticHandler.HatType);
+	                CosmeticHandler.WingsType = safelyGetInfo(settings.get("WingsType"), CosmeticHandler.WingsType);
+	                CosmeticHandler.PetType = safelyGetInfo(settings.get("PetType"), CosmeticHandler.PetType);
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }     
+    }
+    
+    private static Setting safelyGetInfo(Setting objectFromFile, Setting oldSetting) {
+    	if(objectFromFile != null) {
+    		return objectFromFile;
+    	}else {
+    		return oldSetting;
+    	}
     }
 
     public static void saveSettings(){
       // features
-    	config.get(Configuration.CATEGORY_GENERAL, "BlockFlowerPlacing", false, "Block Flower from Placing").set(SettingsConfig.BlockFlowerPlacing);
-        config.get(Configuration.CATEGORY_GENERAL, "FishingTimer", false, "FishingTimer").set(SettingsConfig.FishingTimer);
-        config.get(Configuration.CATEGORY_GENERAL, "BonzoTimer", false, "BonzoMask Timer").set(SettingsConfig.BonzoTimer);
-        config.get(Configuration.CATEGORY_GENERAL, "SpiritTimer", false, "SpiritMask Timer").set(SettingsConfig.SpiritTimer);
-        config.get(Configuration.CATEGORY_GENERAL, "GhostBlocks", false, "Ghost Blocks").set(SettingsConfig.GhostBlocks);
-        config.get(Configuration.CATEGORY_GENERAL, "GhostPickaxe", false, "Ghost Pickaxe").set(SettingsConfig.GhostPickaxe);
-        config.get(Configuration.CATEGORY_GENERAL, "HidePlayers", false, "Hides Players").set(SettingsConfig.HidePlayers);
-        config.get(Configuration.CATEGORY_GENERAL, "GhostPickaxeSlot", 5, "Ghost Pickaxe Slot").set(SettingsConfig.GhostPickaxeSlot);
-        config.get(Configuration.CATEGORY_GENERAL, "AntyGhostBlocks", false, "Removes Ghost Blocks").set(SettingsConfig.AntyGhostBlocks);
-        config.get(Configuration.CATEGORY_GENERAL, "CoordsDetection", false, "Coords Detection").set(SettingsConfig.CoordsDetection);
-        config.get(Configuration.CATEGORY_GENERAL, "NickMentionDetection", false, "Username mentioning detection").set(SettingsConfig.NickMentionDetection);
-        config.get(Configuration.CATEGORY_GENERAL, "JawbusDetection", false, "").set(SettingsConfig.JawbusDetection);
+    	Map<String, Setting> settings = new HashMap<>();
+    	
+    	settings.put("BlockFlowerPlacing", SettingsConfig.BlockFlowerPlacing);
+    	settings.put("FishingTimer", SettingsConfig.FishingTimer);
+    	settings.put("BonzoTimer", SettingsConfig.BonzoTimer);
+    	settings.put("SpiritTimer", SettingsConfig.SpiritTimer);
+    	settings.put("GhostBlocks", SettingsConfig.GhostBlocks);
+    	settings.put("GhostPickaxe", SettingsConfig.GhostPickaxe);
+    	settings.put("HidePlayers", SettingsConfig.HidePlayers);
+    	settings.put("GhostPickaxeSlot", SettingsConfig.GhostPickaxeSlot);
+    	settings.put("AntyGhostBlocks", SettingsConfig.AntyGhostBlocks);
+    	settings.put("CoordsDetection", SettingsConfig.CoordsDetection);
+    	settings.put("NickMentionDetection", SettingsConfig.NickMentionDetection);
+    	settings.put("JawbusDetection", SettingsConfig.JawbusDetection);
+        settings.put("AutoFish", SettingsConfig.AutoFish);
+        settings.put("KillSeaCreatures", SettingsConfig.KillSeaCreatures);
+        settings.put("AutoThrowHook", SettingsConfig.AutoThrowHook);
         
-        // cosmetics
-        config.get(Configuration.CATEGORY_GENERAL, "WingsType", 0, "Type of wings (0 == null)").set(CosmeticHandler.WingsType);
-        config.get(Configuration.CATEGORY_GENERAL, "HatType", 0, "Type of hat (0 == null)").set(CosmeticHandler.HatType);
-         
-        config.save();
+    	//cosmetics
+    	settings.put("AuraType", CosmeticHandler.AuraType);
+    	settings.put("HatType", CosmeticHandler.HatType);
+    	settings.put("WingsType", CosmeticHandler.WingsType);
+    	settings.put("PetType", CosmeticHandler.PetType);
+        
+    	new File(Mesky.configDirectory + "/mesky/").mkdirs();
+    	try (FileWriter writer = new FileWriter(Mesky.configDirectory + "/mesky/meskySettings.json")) {
+            new GsonBuilder().setPrettyPrinting().create().toJson(settings, writer);
+            writer.flush();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 	
 }

@@ -30,12 +30,13 @@ public class GhostPickaxe {
 	@SideOnly(Side.CLIENT)
 	@SubscribeEvent
 	public void onKeyPress(InputEvent.KeyInputEvent event) {
-        if (GKEY.isPressed() && SettingsConfig.GhostPickaxe) {
+        if (GKEY.isPressed() && SettingsConfig.GhostPickaxe.isOn) {
             InventoryPlayer inventory = Minecraft.getMinecraft().thePlayer.inventory;
             for (int i = 0; i < inventory.mainInventory.length; i++) {
                 ItemStack item = inventory.mainInventory[i];
-                if (item != null && item.getItem() == Items.golden_pickaxe && i != SettingsConfig.GhostPickaxeSlot) {
-                    inventory.setInventorySlotContents(SettingsConfig.GhostPickaxeSlot, item.copy());
+                if (item != null && item.getItem() == Items.golden_pickaxe && i != SettingsConfig.GhostPickaxeSlot.number) {
+                	if(SettingsConfig.GhostPickaxeSlot.number < 1) SettingsConfig.GhostPickaxeSlot.number = 1;
+                    inventory.setInventorySlotContents(SettingsConfig.GhostPickaxeSlot.number-1, item.copy());
                     break; // Exit loop after transferring the pickaxe
                 }
             }

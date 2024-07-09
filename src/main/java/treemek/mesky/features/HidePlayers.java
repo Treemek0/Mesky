@@ -24,23 +24,27 @@ public class HidePlayers {
 	
 	@SubscribeEvent
     public void onPreRenderLiving(RenderLivingEvent.Pre event) {
-	
-        if (event.entity instanceof EntityPlayer && SettingsConfig.HidePlayers) {
+        if (event.entity instanceof EntityPlayer && SettingsConfig.HidePlayers.isOn) {
         	if(event.entity.getName().equals(Minecraft.getMinecraft().thePlayer.getName())) return;
         	if(!playerList.contains(event.entity)) playerList.add(event.entity);
             // Cancel hitbox rendering for player entities
-        	event.entity.height = 0;
-        	event.entity.width = 0;
+        	setSize(event.entity, 0, 0);
             event.setCanceled(true);
         }
     }
 	
-	public static void resetHeight() {
+	public static void resetPlayersSize() {
 		for (Entity player : playerList) {
-			player.height = 1.8f;
-			player.width = 0.6f;
+			setSize(player, 1.8f, 0.6f);
 		}
 		
+	}
+	
+	public static void setSize(Entity entity, float width, float height) {
+		entity.height = height;
+		entity.width = width;
+		entity.setEntityBoundingBox(new AxisAlignedBB(entity.getEntityBoundingBox().minX, entity.getEntityBoundingBox().minY, entity.getEntityBoundingBox().minZ, entity.getEntityBoundingBox().minX + (double)entity.width, entity.getEntityBoundingBox().minY + (double)entity.height, entity.getEntityBoundingBox().minZ + (double)entity.width));
+
 	}
 	
 	

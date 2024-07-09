@@ -5,17 +5,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.lwjgl.input.Mouse;
+import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ResourceLocation;
 import treemek.mesky.Reference;
-import treemek.mesky.config.GuiLocationConfig;
+import treemek.mesky.config.ConfigHandler;
+import treemek.mesky.config.SettingsConfig;
+import treemek.mesky.config.SettingsConfig.Setting;
 import treemek.mesky.cosmetics.CosmeticHandler;
 import treemek.mesky.handlers.RenderHandler;
-import treemek.mesky.handlers.gui.buttons.CheckButton;
+import treemek.mesky.handlers.gui.elements.buttons.CheckButton;
 import treemek.mesky.utils.Alerts;
 import treemek.mesky.utils.Alerts.Alert;
 
@@ -25,18 +29,39 @@ public class GuiLocations extends GuiScreen {
 	GuiLocation currentlyDragged;
 	
 	public class GuiLocation {
-		float[] position;
-		int width;
-		int height;
+		Setting setting;
+		Float[] position;
+		Float scale;
+		private float orgWidth;
+		private float orgHeight;
+		float width;
+		float height;
 		
-		public GuiLocation(float[] positon, int width, int height) {
-			this.position = positon;
-			this.width = width;
-			this.height = height;
+		public GuiLocation(Setting setting, int width, int height) {
+			this.setting = setting;
+			this.scale = setting.scale;
+			this.position = setting.position;
+			this.orgWidth = width;
+			this.orgHeight = height;
+			this.width = width * this.scale;
+			this.height = height * this.scale;
+			
 		}
 		
-		public void setPosition(float[] newPosition) {
-			System.arraycopy(newPosition, 0, this.position, 0, newPosition.length);
+		public void setPosition(Float[] newPosition) {
+			if(newPosition != null) {
+				setting.position = newPosition;
+				position = newPosition;
+			}
+		}
+		
+		public void setScale(Float newScale) {
+			if(newScale != null) {
+				setting.scale = scale;
+				scale = newScale;
+				width = orgWidth * newScale;
+				height = orgHeight * newScale;
+			}
 		}
 		
 	}
@@ -54,9 +79,11 @@ public class GuiLocations extends GuiScreen {
 		if(currentlyDragged != null) {
 			int x = Math.round(width * (currentlyDragged.position[0] / 100));
             int y = Math.round(height * (currentlyDragged.position[1] / 100));
+            Float scale = (float)Math.round(currentlyDragged.scale * 100) / 100;
 			int fontHeight = fontRendererObj.FONT_HEIGHT;
             
-			RenderHandler.drawText("x: " + x + ", y: " + y, x, y - fontHeight - 10, 0.7, true, 0xffffff);
+			RenderHandler.drawText("x: " + x + ", y: " + y, x, y - (2*fontHeight) - 10, 0.7, true, 0xffffff);
+			RenderHandler.drawText("scale: " + scale, x, y - fontHeight - 5, 0.7, true, 0xffffff);
 		}
 		
 	    super.drawScreen(mouseX, mouseY, partialTicks);
@@ -67,9 +94,9 @@ public class GuiLocations extends GuiScreen {
 	    super.initGui();
 	    FontRenderer fontRenderer = Minecraft.getMinecraft().fontRendererObj;
 	    
-	    locations.add(new GuiLocation(GuiLocationConfig.fishingTimer, fontRenderer.getStringWidth("99.9s") + 15, 17));
-        locations.add(new GuiLocation(GuiLocationConfig.bonzoMaskTimer, fontRenderer.getStringWidth("320s") + 17, 17));
-        locations.add(new GuiLocation(GuiLocationConfig.spiritMaskTimer, fontRenderer.getStringWidth("30s") + 17, 17));
+	    locations.add(new GuiLocation(SettingsConfig.FishingTimer, fontRenderer.getStringWidth("99.9s") + 15, 17));
+        locations.add(new GuiLocation(SettingsConfig.BonzoTimer, fontRenderer.getStringWidth("320s") + 17, 17));
+        locations.add(new GuiLocation(SettingsConfig.SpiritTimer, fontRenderer.getStringWidth("30s") + 17, 17));
 	}
 	
 	@Override
@@ -88,14 +115,19 @@ public class GuiLocations extends GuiScreen {
             }
         }
     }
-	
+
 	@Override
 	protected void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton, long timeSinceLastClick)
     {
 		if (currentlyDragged != null) {
-            float[] newPosition = { (mouseX / (float) width) * 100, (mouseY / (float) height) * 100 };
+			mouseX = (int) Math.min(mouseX, width - currentlyDragged.width);
+			mouseY = (int) Math.min(mouseY, height - currentlyDragged.height);
+			
+			Float x = (mouseX / (float) width) * 100;
+			Float y = (mouseY / (float) height) * 100;
+			
+            Float[] newPosition = { x, y};
             currentlyDragged.setPosition(newPosition);
-
 		}
     }
 	
@@ -103,33 +135,48 @@ public class GuiLocations extends GuiScreen {
     {
         if(currentlyDragged != null) {
         	locations.set(locations.indexOf(currentlyDragged), currentlyDragged);
+        	ConfigHandler.saveSettings();
         	currentlyDragged = null;
         }
     }
 
-	public void renderFishingTimer() {
-		float x = width * (GuiLocationConfig.fishingTimer[0] / 100);
-		float y = height * (GuiLocationConfig.fishingTimer[1] / 100);
-		FontRenderer fontRenderer = Minecraft.getMinecraft().fontRendererObj;
-		fontRenderer.drawStringWithShadow("99.9s", x + 15, y, 0xFFFFFF);
-        Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(Reference.MODID, "textures/bobber.png"));
-        drawModalRectWithCustomSizedTexture((int)x, (int)(y - 5), 0, 0, 12, 17, 12, 17);
+	@Override
+    public void handleMouseInput() throws IOException {
+        super.handleMouseInput();
+        int scroll = Mouse.getEventDWheel();
+        
+        if (scroll != 0 && currentlyDragged != null) {
+            float SCROLL_SPEED = (currentlyDragged.scale < 3)?0.05f:0.1f;
+        	Float newScale = Math.max(0.5f, currentlyDragged.scale - (scroll > 0 ? -SCROLL_SPEED : SCROLL_SPEED));
+        	currentlyDragged.setScale(((float)Math.round(newScale * 100)) / 100);
+        }
 	}
 	
-	public void renderBonzoMask() {
-		float x = width * (GuiLocationConfig.bonzoMaskTimer[0] / 100);
-		float y = height * (GuiLocationConfig.bonzoMaskTimer[1] / 100);
-		RenderHandler.drawText("320s", x + 17, y, 1, false, 0xFFFFFF);
+	public void renderFishingTimer() {
+		Float scale = SettingsConfig.FishingTimer.scale;
+		float x = width * (SettingsConfig.FishingTimer.position[0] / 100);
+		float y = height * (SettingsConfig.FishingTimer.position[1] / 100);
+		RenderHandler.drawText("99.9s", x + (15*scale), y + (5*scale), scale, true, 0xFFFFFF);
+        Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(Reference.MODID, "textures/bobber.png"));
+        drawModalRectWithCustomSizedTexture((int)x, (int)(y), 0, 0, (int)(12 * scale), (int)(17 * scale), (int)(12 * scale), (int)(17 * scale));
+	}
+	
+	public void renderBonzoMask(){
+		Float scale = SettingsConfig.BonzoTimer.scale;
+		float x = width * (SettingsConfig.BonzoTimer.position[0] / 100);
+		float y = height * (SettingsConfig.BonzoTimer.position[1] / 100);
+		RenderHandler.drawText("320s", x + (17*scale), y + (5*scale), scale, true, 0xFFFFFF);
         Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(Reference.MODID, "textures/Bonzo_Head.png"));
-        drawModalRectWithCustomSizedTexture((int)x, (int)y - 5, 0, 0, 17, 17, 17, 17);
+        drawModalRectWithCustomSizedTexture((int)x, (int)y, 0, 0, (int)(17*scale), (int)(17*scale), (int)(17*scale), (int)(17*scale));
 	}
 	
 	public void renderSpiritMask() {
-		float x = width * (GuiLocationConfig.spiritMaskTimer[0] / 100);
-		float y = height * (GuiLocationConfig.spiritMaskTimer[1] / 100);
-		RenderHandler.drawText("30s", x + 17, y, 1, false, 0xFFFFFF);
+		Float scale = SettingsConfig.SpiritTimer.scale;
+		float x = width * (SettingsConfig.SpiritTimer.position[0] / 100);
+		float y = height * (SettingsConfig.SpiritTimer.position[1] / 100);
+		RenderHandler.drawText("30s", x + (17*scale), y + (5*scale), scale, true, 0xFFFFFF);
         Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(Reference.MODID, "textures/Spirit_Mask.png"));
-        drawModalRectWithCustomSizedTexture((int)x, (int)y - 5, 0, 0, 17, 17, 17, 17);
+        drawModalRectWithCustomSizedTexture((int)x, (int)y, 0, 0, (int)(17*scale), (int)(17*scale), (int)(17*scale), (int)(17*scale));
 	}
 	
 }

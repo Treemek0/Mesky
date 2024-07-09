@@ -21,7 +21,6 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import treemek.mesky.Reference;
-import treemek.mesky.config.GuiLocationConfig;
 import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.utils.Alerts;
@@ -38,11 +37,12 @@ public class MaskTimer extends GuiScreen {
 	public void onChat(ClientChatReceivedEvent event) {
 		
         String message = net.minecraft.util.StringUtils.stripControlCodes(event.message.getUnformattedText());
+        if(Minecraft.getMinecraft().thePlayer == null) return;
         ItemStack mask = Minecraft.getMinecraft().thePlayer.getCurrentArmor(3);
         
         if(message.contains(":")) return; // only from server not players
         
-		if(message.contains("Bonzo's Mask") && message.contains("saved your life!") && SettingsConfig.BonzoTimer) {
+		if(message.contains("Bonzo's Mask") && message.contains("saved your life!") && SettingsConfig.BonzoTimer.isOn) {
 			if(mask != null) {
 				String bonzoLore = StringUtils.join(Utils.getItemLore(mask), " ");
 				String[] bonzoLoreSplit = bonzoLore.split(" ");
@@ -58,7 +58,7 @@ public class MaskTimer extends GuiScreen {
 						}
 				    	
 				    	BonzoMaskActivated = true;
-				    	Alerts.DisplayCustomAlerts("Bonzo Mask", 1000, new int[] {50,50}, 4);
+				    	Alerts.DisplayCustomAlerts("Bonzo Mask", 1000, 3, new int[] {50,50}, 4);
 				    	return;
 				    }
 				}
@@ -66,11 +66,13 @@ public class MaskTimer extends GuiScreen {
 		}
 		
 		
-		if(message.contains("Your Spirit Mask saved your life!") && SettingsConfig.SpiritTimer) {
+		if(message.contains("Your Spirit Mask saved your life!") && SettingsConfig.SpiritTimer.isOn) {
 			if (mask != null) {
 				SpiritCooldownSeconds = 30;
 				SpiritMaskActivated = true;
-				Alerts.DisplayCustomAlerts("Spirit Mask", 1000, new int[] {50,50}, 4);
+				Alerts.DisplayCustomAlerts("Spirit Mask", 1000, 3, new int[] {50,50}, 4);
+			}else {
+				System.out.println("Somehow you had activated Spirit Mask ability without having it on");
 			}
 		}
 	}
@@ -107,32 +109,25 @@ public class MaskTimer extends GuiScreen {
 		String cooldownTimer = Math.round(BonzoCooldownSeconds) + "s";
 		
 		// Calculate the position to render the timer
-		float x = resolution.getScaledWidth() * (GuiLocationConfig.bonzoMaskTimer[0]/100);
-        float y = resolution.getScaledHeight() * (GuiLocationConfig.bonzoMaskTimer[1]/100);
-		
-        RenderHandler.drawText(cooldownTimer, x + 17, y, 1, false, 0xFFFFFF);
+		Float scale = SettingsConfig.BonzoTimer.scale;
+		float x = resolution.getScaledWidth() * (SettingsConfig.BonzoTimer.position[0]/100);
+        float y = resolution.getScaledHeight() * (SettingsConfig.BonzoTimer.position[1]/100);
         
-		ResourceLocation textureLocation = new ResourceLocation(Reference.MODID, "textures/Bonzo_Head.png");
-        Minecraft.getMinecraft().renderEngine.bindTexture(textureLocation);
-        drawModalRectWithCustomSizedTexture((int)x, (int)y - 5, 0, 0, 17, 17, 17, 17);
-        
-        
+        RenderHandler.drawText(cooldownTimer, x + (17*scale), y + (5*scale), scale, true, 0xFFFFFF);
+        Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(Reference.MODID, "textures/Bonzo_Head.png"));
+        drawModalRectWithCustomSizedTexture((int)x, (int)y, 0, 0, (int)(17*scale), (int)(17*scale), (int)(17*scale), (int)(17*scale));
 	}
 	
 	private void renderSpiritMaskTimer(ScaledResolution resolution, float partialTicks) {
 		String cooldownTimer = Math.round(SpiritCooldownSeconds) + "s";
 		
 		// Calculate the position to render the timer
-		float x = resolution.getScaledWidth() * (GuiLocationConfig.spiritMaskTimer[0]/100);
-        float y = resolution.getScaledHeight() * (GuiLocationConfig.spiritMaskTimer[1]/100);
+		Float scale = SettingsConfig.SpiritTimer.scale;
+		float x = resolution.getScaledWidth() * (SettingsConfig.SpiritTimer.position[0]/100);
+        float y = resolution.getScaledHeight() * (SettingsConfig.SpiritTimer.position[1]/100);
 		
-		
-        RenderHandler.drawText(cooldownTimer, x + 17, y, 1, false, 0xFFFFFF);
-        
-		ResourceLocation textureLocation = new ResourceLocation(Reference.MODID, "textures/Spirit_Mask.png");
-        Minecraft.getMinecraft().renderEngine.bindTexture(textureLocation);
-        drawModalRectWithCustomSizedTexture((int)x, (int)y - 5, 0, 0, 17, 17, 17, 17);
-        
-        
+        RenderHandler.drawText(cooldownTimer, x + (17*scale), y + (5*scale), scale, true, 0xFFFFFF);
+        Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(Reference.MODID, "textures/Spirit_Mask.png"));
+        drawModalRectWithCustomSizedTexture((int)x, (int)y, 0, 0, (int)(17*scale), (int)(17*scale), (int)(17*scale), (int)(17*scale));
 	}
 }

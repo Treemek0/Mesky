@@ -23,27 +23,29 @@ import treemek.mesky.config.ConfigHandler;
 import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.features.BlockFlowerPlacing;
 import treemek.mesky.handlers.RenderHandler;
-import treemek.mesky.handlers.gui.buttons.CheckButton;
-import treemek.mesky.handlers.gui.buttons.DeleteButton;
-import treemek.mesky.handlers.gui.buttons.EditButton;
-import treemek.mesky.handlers.gui.buttons.MeskyButton;
+import treemek.mesky.handlers.gui.elements.CloseWarning;
+import treemek.mesky.handlers.gui.elements.ScrollBar;
+import treemek.mesky.handlers.gui.elements.buttons.CheckButton;
+import treemek.mesky.handlers.gui.elements.buttons.DeleteButton;
+import treemek.mesky.handlers.gui.elements.buttons.EditButton;
+import treemek.mesky.handlers.gui.elements.buttons.MeskyButton;
+import treemek.mesky.handlers.gui.waypoints.WaypointElement;
 import treemek.mesky.utils.Alerts;
+import treemek.mesky.utils.HypixelCheck;
+import treemek.mesky.utils.Locations;
 import treemek.mesky.utils.Alerts.Alert;
+import treemek.mesky.utils.Locations.Location;
 import treemek.mesky.utils.Waypoints;
 import treemek.mesky.utils.Waypoints.Waypoint;
 
 public class AlertsGui extends GuiScreen {
-	ArrayList<GuiTextField> alertsFields;
-	ArrayList<GuiTextField> timeFields;
 
-	List<GuiButton> deleteButtonList = Lists.<GuiButton>newArrayList();
-	List<GuiButton> editButtonList = Lists.<GuiButton>newArrayList();
-	List<GuiButton> checksButtonList = Lists.<GuiButton>newArrayList();
-	private GuiButton selectedButton; // something from GuiScreen for mouseClicked()
-	float ScrollOffset = 0;
-	float maxBottomScroll;
-	// old input is saved because, when saving and other things region is cleared and i can't just get text from current location, since you can change region text while not being in this location
-	String oldRegion;
+	public static List<AlertElement> alerts = new ArrayList<>();
+	
+	ScrollBar scrollbar = new ScrollBar(0,0,0,0,0);
+	AlertElement holdingElement;
+	CloseWarning closeWarning = new CloseWarning();
+	
 	int inputMargin;
 	int inputHeight;
 	private float scrollbar_startPosition;
@@ -56,8 +58,15 @@ public class AlertsGui extends GuiScreen {
 		drawRect(0, height/3 - 1, width, height, new Color(33, 33, 33,255).getRGB());
 		
 		// Draw text fields first
-	    for (GuiTextField input : alertsFields) {
-	        input.drawTextBox();
+		for (int i = 0; i < alerts.size(); i++) {
+			AlertElement alert = alerts.get(i);
+			if(alert == holdingElement) continue;
+			
+			List<GuiTextField> inputs = alert.getListOfTextFields();
+			
+			for (GuiTextField input : inputs) {
+				input.drawTextBox();
+			}
 	    }
 
 	    // Reset color and blending state before drawing buttons
@@ -66,20 +75,50 @@ public class AlertsGui extends GuiScreen {
 	    GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
 
 	    // Draw delete buttons
-	    for (GuiButton button : deleteButtonList) {
-	        button.drawButton(mc, mouseX, mouseY);
-	    }
-	    
-	 // Draw delete buttons
-	    for (GuiButton button : editButtonList) {
-	        button.drawButton(mc, mouseX, mouseY);
-	    }
-	    
-	    // Draw delete buttons
-	    for (GuiButton button : checksButtonList) {
-	        button.drawButton(mc, mouseX, mouseY);
+	    for (int i = 0; i < alerts.size(); i++) {
+			AlertElement alert = alerts.get(i);
+			if(alert == holdingElement) continue;
+			
+			for (GuiButton button : alert.getListOfButtons()) {
+				if(button instanceof EditButton) {
+					if(alert.display.getText().length() > 0) { // if theres nothing to display then theres no need to edit
+						button.enabled = true;
+					}else {
+						button.enabled = false;
+					}
+				}
+					
+				button.drawButton(mc, mouseX, mouseY);
+			}
+	        
 	    }
 		
+	    if(holdingElement != null) {
+	    	
+	    	drawRect(holdingElement.xPosition, holdingElement.yPosition, holdingElement.xPosition + holdingElement.getWidth(), holdingElement.yPosition + holdingElement.getHeight(), new Color(33, 33, 33,255).getRGB());
+	    	
+	    	List<GuiTextField> inputs = holdingElement.getListOfTextFields();
+			for (GuiTextField input : inputs) {
+				input.drawTextBox();
+			}
+			
+			GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
+		    GlStateManager.enableBlend();
+		    GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
+			
+			for (GuiButton button : holdingElement.getListOfButtons()) {
+				if(button instanceof EditButton) {
+					if(holdingElement.display.getText().length() > 0) { // if theres nothing to display then theres no need to edit
+						button.enabled = true;
+					}else {
+						button.enabled = false;
+					}
+				}
+					
+				button.drawButton(mc, mouseX, mouseY);
+			}
+	    }
+	    
 		drawRect(0, 0, width, height/3 - 1, new Color(33, 33, 33,255).getRGB());
 		
         double scale = 3;
@@ -104,46 +143,23 @@ public class AlertsGui extends GuiScreen {
         RenderHandler.drawText("Display", display_X, positionY, 1, true, 0x7a7a7a);
         RenderHandler.drawText("Time [seconds]", time_X + 10, positionY, 1, true, 0x7a7a7a);
         
-        if(maxBottomScroll != 0) { // dont render if doesnt needed
-	        // Scrollbar background
-	        scrollbar_startPosition = height/3;
-	        scrollbarBg_height = (height - (height / 3) - 10); // scrollbar end position is just scrollbar background height
-	        
-	        scrollbar_width = (int) Math.min(20, (width * 0.025));
-	        
-	        // Scrollbar
-	        int scrollbar_height = (int) Math.max(scrollbar_width * 2.857, Math.abs((scrollbarBg_height - (height / 20)) / Math.max(1, Math.abs(maxBottomScroll) / 10)));
-	        
-	        int scrollbar_endPosition = height - 10 - scrollbar_height;
-
-	        float scrollbar_percent = (maxBottomScroll != 0)?ScrollOffset / maxBottomScroll:0; // if maxBottom scroll is 0 then it cant be divided because x/0 = NaN
-	        int scrollbar_positionY = (int)(scrollbar_startPosition + (scrollbar_percent * (scrollbar_endPosition - scrollbar_startPosition)));
-	        scrollbar_positionY = (int) Math.max(scrollbar_startPosition, Math.min(scrollbar_positionY, scrollbar_endPosition)); // scrollbar cant go past start and end positions (its because of bugs when changing resolution)
-	       
-        	drawRect((int)(width * 0.95), (int)scrollbar_startPosition, (int)((width * 0.95) + scrollbar_width), (int)(scrollbar_startPosition + scrollbarBg_height), new Color(8, 7, 10, 150).getRGB());
-        	
-        	ResourceLocation scrollbar = new ResourceLocation(Reference.MODID, "/gui/scrollbar.png");
-        	mc.getTextureManager().bindTexture(scrollbar);
-        	drawModalRectWithCustomSizedTexture((int)(width * 0.95), scrollbar_positionY, 0, 0, (int) scrollbar_width, scrollbar_height, scrollbar_width, scrollbar_height);
-        }
-        
+        scrollbar.updateScrollBar((int) Math.min(20, (width * 0.025)), (height - (height / 3) - 10), (int)(width * 0.95), height/3);
+        updateAlertsY();
+        scrollbar.renderScrollBar();
         
 	    super.drawScreen(mouseX, mouseY, partialTicks);
+	    
+	    closeWarning.drawElement(mc, mouseX, mouseY);
 	}
 	
 	@Override
 	public void initGui() {
 	    super.initGui();
-	    
-	    alertsFields = new ArrayList<GuiTextField>();
-	    deleteButtonList.clear();
-	    checksButtonList.clear();
-	    editButtonList.clear();
+	    buttonList.clear();
+	    closeWarning = new CloseWarning();
 	    
 	    inputHeight = ((height / 25) < 12)?12:(height / 25);
 		inputMargin = ((height / 40) < 5)?5:(height / 40);
-	    
-		this.fontRendererObj.FONT_HEIGHT = (int)(height / 56.5);
 		
         int positionY = height / 3;
         int trigger_X = width / 6;
@@ -158,55 +174,100 @@ public class AlertsGui extends GuiScreen {
         this.buttonList.add(new MeskyButton(-2, 0, (height/15), (int)(width * 0.2f), 20, "New alert"));
         
     	// This is so you cant scroll limitless, it takes every waypoint height with their margin and removes visible inputs height so you can scroll max to how much of inputs isnt visible
- 		maxBottomScroll = Math.min(0, -(((Alerts.alertsList.size() * (inputHeight + inputMargin))) - (height - (height/3))));
- 		ScrollOffset = Math.max(ScrollOffset, maxBottomScroll); // so scrolloffset doesnt go below maxbottomscroll
+ 		scrollbar.updateMaxBottomScroll(Math.min(0, -(((Alerts.alertsList.size() * (inputHeight + inputMargin))) - (height - (height/3)))));
+ 		int ScrollOffset = scrollbar.getOffset();
  		
-        
-        for (int i = 0; i < Alerts.alertsList.size(); i++) {
-        	// Position 0 for inputs + every input height and their bottom margin
-        	int inputFullPosition = positionY + ((inputHeight + inputMargin) * i);
-        	
-        	// Check if any part of the text field is within the visible area (stop rendering inputs that go over text)
-            if (inputFullPosition <= ((height / 3) - 20)) {
-                continue;
-            }
-        	
-        	// Delete button
-        	this.deleteButtonList.add(new DeleteButton(0 + (10*i), (int)(width * 0.9f), inputFullPosition, inputHeight, inputHeight, ""));
-
-        	editButtonList.add(new EditButton(5 + (10*i), (int)(width * 0.85f), inputFullPosition, inputHeight, inputHeight, ""));
-        	
-        	// onlyParty button
-        	this.checksButtonList.add(new CheckButton(1 + (10*i), (int) (trigger_X * 0.1), inputFullPosition, inputHeight, inputHeight, "", Alerts.alertsList.get(i).getOnlyParty()));
-        	
-        	// ignorePlayers button
-        	this.checksButtonList.add(new CheckButton(2 + (10*i), (int) (trigger_X * 0.4), inputFullPosition, inputHeight, inputHeight, "", Alerts.alertsList.get(i).getIgnorePlayers()));
-        	
-        	// isEqual button
-        	this.checksButtonList.add(new CheckButton(3 + (10*i), (int) (trigger_X * 0.7), inputFullPosition, inputHeight, inputHeight, "", Alerts.alertsList.get(i).getIsEqual()));
-        	
-        	// trigger text input
-        	GuiTextField alertTrigger = new GuiTextField(1, this.fontRendererObj, trigger_X, inputFullPosition, width / 4, inputHeight);
-        	alertTrigger.setMaxStringLength(512);
-            alertTrigger.setCanLoseFocus(true);
-            alertTrigger.setText(Alerts.alertsList.get(i).getTrigger());
-            alertsFields.add(alertTrigger);
-            
-            // display text input
-            GuiTextField alertDisplay = new GuiTextField(1, this.fontRendererObj, display_X, inputFullPosition, width / 4, inputHeight);
-            alertDisplay.setMaxStringLength(512);
-            alertDisplay.setCanLoseFocus(true);
-            alertDisplay.setText(Alerts.alertsList.get(i).getDisplay());
-            alertsFields.add(alertDisplay);
-
-            // time text input
-            GuiTextField alertTime = new GuiTextField(2, this.fontRendererObj, time_X + 10, inputFullPosition, width / 10, inputHeight);
-            alertTime.setMaxStringLength(16);
-            alertTime.setCanLoseFocus(true);
-            alertTime.setText(Float.toString(Alerts.alertsList.get(i).getTime() / 1000));
-            alertsFields.add(alertTime);
-        }
+ 		if(alerts.isEmpty()) {	
+	        for (int i = 0; i < Alerts.alertsList.size(); i++) {
+	        	// Position 0 for inputs + every input height and their bottom margin
+	        	int inputFullPosition = positionY + ((inputHeight + inputMargin) * i);
+	        	
+	        	// Check if any part of the text field is within the visible area (stop rendering inputs that go over text)
+	            if (inputFullPosition <= ((height / 3) - 20)) {
+	                continue;
+	            }
+	        	
+	        	// Delete button
+	        	DeleteButton deleteButton = new DeleteButton(0, (int)(width * 0.9f), inputFullPosition, inputHeight, inputHeight, "");
+	
+	        	EditButton editButton = new EditButton(1, (int)(width * 0.85f), inputFullPosition, inputHeight, inputHeight, "");
+	        	
+	        	// onlyParty button
+	        	CheckButton onlyParty = new CheckButton(2, (int) (trigger_X * 0.1), inputFullPosition, inputHeight, inputHeight, "", Alerts.alertsList.get(i).getOnlyParty());
+	        	
+	        	// ignorePlayers button
+	        	CheckButton ignorePlayers = new CheckButton(3, (int) (trigger_X * 0.4), inputFullPosition, inputHeight, inputHeight, "", Alerts.alertsList.get(i).getIgnorePlayers());
+	        	
+	        	// isEqual button
+	        	CheckButton isEqual = new CheckButton(4, (int) (trigger_X * 0.7), inputFullPosition, inputHeight, inputHeight, "", Alerts.alertsList.get(i).getIsEqual());
+	        	
+	        	// trigger text input
+	        	GuiTextField alertTrigger = new GuiTextField(1, this.fontRendererObj, trigger_X, inputFullPosition, width / 4, inputHeight);
+	        	alertTrigger.setMaxStringLength(512);
+	            alertTrigger.setCanLoseFocus(true);
+	            alertTrigger.setText(Alerts.alertsList.get(i).getTrigger());
+	            
+	            // display text input
+	            GuiTextField alertDisplay = new GuiTextField(1, this.fontRendererObj, display_X, inputFullPosition, width / 4, inputHeight);
+	            alertDisplay.setMaxStringLength(512);
+	            alertDisplay.setCanLoseFocus(true);
+	            alertDisplay.setText(Alerts.alertsList.get(i).getDisplay());
+	
+	            // time text input
+	            GuiTextField alertTime = new GuiTextField(2, this.fontRendererObj, time_X + 10, inputFullPosition, width / 10, inputHeight);
+	            alertTime.setMaxStringLength(16);
+	            alertTime.setCanLoseFocus(true);
+	            alertTime.setText(Float.toString(Alerts.alertsList.get(i).getTime() / 1000));
+	
+	            alerts.add(new AlertElement(alertTrigger, alertDisplay, alertTime, deleteButton, editButton, onlyParty, ignorePlayers, isEqual, Alerts.alertsList.get(i).position, Alerts.alertsList.get(i).scale));
+	        }
+ 		}else {
+	 		for (int i = 0; i < alerts.size(); i++) {
+	        	// Position 0 for inputs + every input height and their bottom margin
+	        	int inputFullPosition = positionY + ((inputHeight + inputMargin) * i);
+	        	
+	        	// Check if any part of the text field is within the visible area (stop rendering inputs that go over text)
+	            if (inputFullPosition <= ((height / 3) - 20)) {
+	                continue;
+	            }
+	        	
+	        	// Delete button
+	        	DeleteButton deleteButton = new DeleteButton(0, (int)(width * 0.9f), inputFullPosition, inputHeight, inputHeight, "");
+	
+	        	EditButton editButton = new EditButton(1, (int)(width * 0.85f), inputFullPosition, inputHeight, inputHeight, "");
+	        	
+	        	// onlyParty button
+	        	CheckButton onlyParty = new CheckButton(2, (int) (trigger_X * 0.1), inputFullPosition, inputHeight, inputHeight, "", alerts.get(i).onlyParty.isFull);
+	        	
+	        	// ignorePlayers button
+	        	CheckButton ignorePlayers = new CheckButton(3, (int) (trigger_X * 0.4), inputFullPosition, inputHeight, inputHeight, "", alerts.get(i).ignorePlayers.isFull);
+	        	
+	        	// isEqual button
+	        	CheckButton isEqual = new CheckButton(4, (int) (trigger_X * 0.7), inputFullPosition, inputHeight, inputHeight, "", alerts.get(i).isEqual.isFull);
+	        	
+	        	// trigger text input
+	        	GuiTextField alertTrigger = new GuiTextField(1, this.fontRendererObj, trigger_X, inputFullPosition, width / 4, inputHeight);
+	        	alertTrigger.setMaxStringLength(512);
+	            alertTrigger.setCanLoseFocus(true);
+	            alertTrigger.setText(alerts.get(i).trigger.getText());
+	            
+	            // display text input
+	            GuiTextField alertDisplay = new GuiTextField(1, this.fontRendererObj, display_X, inputFullPosition, width / 4, inputHeight);
+	            alertDisplay.setMaxStringLength(512);
+	            alertDisplay.setCanLoseFocus(true);
+	            alertDisplay.setText(alerts.get(i).display.getText());
+	
+	            // time text input
+	            GuiTextField alertTime = new GuiTextField(2, this.fontRendererObj, time_X + 10, inputFullPosition, width / 10, inputHeight);
+	            alertTime.setMaxStringLength(16);
+	            alertTime.setCanLoseFocus(true);
+	            alertTime.setText(alerts.get(i).time.getText());
+	            
+	            alerts.set(i, new AlertElement(alertTrigger, alertDisplay, alertTime, deleteButton, editButton, onlyParty, ignorePlayers, isEqual, alerts.get(i).position, alerts.get(i).scale));
+	        }
+ 		}
 	}
+	
 	
 	@Override
     protected void actionPerformed(GuiButton button) {
@@ -216,110 +277,65 @@ public class AlertsGui extends GuiScreen {
 			return;
 		}
 		if(button.id == -2) {
-			// New alert button
-			Alerts.addAlert("", "", 1, new int[] {50,50}, 1);
+			// New alert button	
 	        int trigger_X = width / 6;
 	    	int display_X = trigger_X + (width / 4) + 10;
 	    	int time_X = display_X + (width / 4);
-			this.fontRendererObj.FONT_HEIGHT = (int)(height / 56.5);
-			int i = (alertsFields.size() / 3);
-			int positionY = (int) (height / 3 + ScrollOffset);
-			int inputFullPosition = positionY + ((inputHeight + inputMargin) * i);
-        	
-			// I did that instead of just initGui() so that it doesnt change back other inputs if theyre not saved
-			maxBottomScroll = Math.min(0, -(((Alerts.alertsList.size() * (inputHeight + inputMargin))) - (height - (height/3))));
-    		ScrollOffset = Math.max(ScrollOffset, maxBottomScroll); // so scrolloffset doesnt go below maxbottomscroll
 			
-    		deleteButtonList.add(new DeleteButton(0 + (10*i), (int)(width * 0.9f), inputFullPosition, inputHeight, inputHeight, ""));
-    		editButtonList.add(new EditButton(5 + (10*i), (int)(width * 0.85f), inputFullPosition, inputHeight, inputHeight, ""));
+			
+			DeleteButton deleteButton = new DeleteButton(0, (int)(width * 0.9f), 0, inputHeight, inputHeight, "");
+			
+			EditButton editButton = new EditButton(1, (int)(width * 0.85f), 0, inputHeight, inputHeight, "");
         	
-        	this.checksButtonList.add(new CheckButton(1 + (10*i), (int) (trigger_X * 0.1), inputFullPosition, inputHeight, inputHeight, "", false));
+			CheckButton onlyParty = new CheckButton(2, (int) (trigger_X * 0.1), 0, inputHeight, inputHeight, "", false);
         	
-        	this.checksButtonList.add(new CheckButton(2 + (10*i), (int) (trigger_X * 0.4), inputFullPosition, inputHeight, inputHeight, "", false));
+			CheckButton ignorePlayers = new CheckButton(3, (int) (trigger_X * 0.4), 0, inputHeight, inputHeight, "", false);
 
-        	this.checksButtonList.add(new CheckButton(3 + (10*i), (int) (trigger_X * 0.7), inputFullPosition, inputHeight, inputHeight, "", false));
+			CheckButton isEqual = new CheckButton(4, (int) (trigger_X * 0.7), 0, inputHeight, inputHeight, "", false);
         	
         	// trigger text input
-        	GuiTextField alertTrigger = new GuiTextField(1, this.fontRendererObj, trigger_X, inputFullPosition, width / 4, inputHeight);
+        	GuiTextField alertTrigger = new GuiTextField(1, this.fontRendererObj, trigger_X, 0, width / 4, inputHeight);
         	alertTrigger.setMaxStringLength(512);
             alertTrigger.setCanLoseFocus(true);
             alertTrigger.setText("");
-            alertsFields.add(alertTrigger);
             
             // display text input
-            GuiTextField alertDisplay = new GuiTextField(1, this.fontRendererObj, display_X, inputFullPosition, width / 4, inputHeight);
+            GuiTextField alertDisplay = new GuiTextField(1, this.fontRendererObj, display_X, 0, width / 4, inputHeight);
             alertDisplay.setMaxStringLength(512);
             alertDisplay.setCanLoseFocus(true);
             alertDisplay.setText("");
-            alertsFields.add(alertDisplay);
 
             // time text input
-            GuiTextField alertTime = new GuiTextField(2, this.fontRendererObj, time_X + 10, inputFullPosition, width / 10, inputHeight);
+            GuiTextField alertTime = new GuiTextField(2, this.fontRendererObj, time_X + 10, 0, width / 10, inputHeight);
             alertTime.setMaxStringLength(16);
             alertTime.setCanLoseFocus(true);
             alertTime.setText("1");
-            alertsFields.add(alertTime);
+            
+            
+            alerts.add(new AlertElement(alertTrigger, alertDisplay, alertTime, deleteButton, editButton, onlyParty, ignorePlayers, isEqual, new int[] {50,50}, 1f));
             return;
 		}
 		
 		
-		// Every delete button
-        for (GuiButton guiButton : deleteButtonList) {
-			if(guiButton.id == button.id) {
+		for (int i = 0; i < alerts.size(); i++) {
+			AlertElement alert = alerts.get(i);
+        	GuiButton deleteButton = alert.deleteButton;
+        	GuiButton editButton = alert.editButton;
+        	
+			if(deleteButton == button) {
 				// Removing alert from list
-				int listId = button.id/10;
-				Alerts.deleteAlert(listId);
-	            alertsFields.remove(listId*3); // removing trigger
-	            alertsFields.remove(listId*3); // removing display
-	            alertsFields.remove(listId*3); // removing time
-	            checksButtonList.remove(listId*3);
-	            checksButtonList.remove(listId*3);
-	            checksButtonList.remove(listId*3);
-	            deleteButtonList.remove(listId);
-	            editButtonList.remove(listId);
-	            ScrollOffset += 0;
-	            
-	            // putting all inputs and buttons in place so theres no blank spot
-	            maxBottomScroll = Math.min(0, -(((Alerts.alertsList.size() * (inputHeight + inputMargin))) - (height - (height/3))));
-	    		ScrollOffset = Math.max(ScrollOffset, maxBottomScroll); // so scrolloffset doesnt go below maxbottomscroll
-	    		int positionY = (int) (height / 3 + ScrollOffset);
-	    		List<GuiButton> oldChecksList = new ArrayList<>(checksButtonList);
-	    		deleteButtonList.clear();
-	    		checksButtonList.clear();
-	    		editButtonList.clear();
-	    		for (int i = 0; i < alertsFields.size(); i+=3) {
-	    			int whichAlert = i/3;
-	    			int inputFullPosition = positionY + ((inputHeight + inputMargin) * whichAlert);
-	    			alertsFields.get(i).yPosition = inputFullPosition;
-	    			alertsFields.get(i+1).yPosition = inputFullPosition;
-	    			alertsFields.get(i+2).yPosition = inputFullPosition;
-	    			DeleteButton deleteButton = new DeleteButton(0 + (10*whichAlert), (int)(width * 0.9f), inputFullPosition, inputHeight, inputHeight, "");
-	            	deleteButtonList.add(deleteButton);
-	            	
-	            	editButtonList.add(new EditButton(5 + (10*whichAlert), (int)(width * 0.85f), inputFullPosition, inputHeight, inputHeight, ""));
-	            	
-	            	int trigger_X = width/6;
-	            	// np. i=3 so wchichAlert = 1, id = 11, oldChecksList.get(3) [because there are 3 checks in one alerts, so first one in second alert is 3]
-	            	checksButtonList.add(new CheckButton(1 + (10*whichAlert), (int) (trigger_X * 0.1), inputFullPosition, inputHeight, inputHeight, "", ((CheckButton)oldChecksList.get(whichAlert*3)).isFull()));
-	            	
-	            	checksButtonList.add(new CheckButton(2 + (10*whichAlert), (int) (trigger_X * 0.4), inputFullPosition, inputHeight, inputHeight, "", ((CheckButton)oldChecksList.get((whichAlert*3)+1)).isFull()));
-				
-	            	checksButtonList.add(new CheckButton(3 + (10*whichAlert), (int) (trigger_X * 0.7), inputFullPosition, inputHeight, inputHeight, "", ((CheckButton)oldChecksList.get((whichAlert*3)+2)).isFull()));
-	    		}
-	    		oldChecksList.clear();
+				alerts.remove(i);
 	            return;
+			}
+			
+			if(editButton == button && editButton.enabled) {
+        		int[] position = (alert.position != null)?alert.position : new int[] {50,50};
+        		Float scale = (alert.scale != null)?alert.scale : 1;
+        		List<AlertElement> copiedList = new ArrayList<>(alerts);
+        		Alerts.editAlertPositionAndScale(position, scale, i, copiedList);
 			}
 		}
         
-        for (GuiButton guiButton : editButtonList) { // edit position and scale
-        	if(guiButton.id == button.id) {
-        		int listId = button.id/10;
-        		SaveAlerts();
-        		int[] position = (Alerts.alertsList.get(listId).position != null)?Alerts.alertsList.get(listId).position : new int[] {50,50};
-        		Float scale = (Alerts.alertsList.get(listId).scale != null)?Alerts.alertsList.get(listId).scale : 1;
-        		Alerts.editAlertPositionAndScale(alertsFields.get((listId*3)+1).getText(), position, Alerts.alertsList.get(listId).scale, listId);
-			}
-        }
 			
     }
 	
@@ -328,115 +344,123 @@ public class AlertsGui extends GuiScreen {
 	protected void keyTyped(char typedChar, int keyCode) throws IOException {
 		if(keyCode == 1) {
 			// Esc
-			Minecraft.getMinecraft().thePlayer.closeScreen();
+			CloseGui();
 			return;
 		}
 		
-		for (GuiTextField input : alertsFields) {
-			if(input.isFocused()) {
-				// Numerical (time input)
-				if(input.getId() == 2) {
-					// Backspace / leftArrow / rightArrow / . / delete
-					if(keyCode == 14 || keyCode == 203 || keyCode == 205 || keyCode == 211) input.textboxKeyTyped(typedChar, keyCode);
-					
-					// disallows more than one "." in coords 
-					if(keyCode == 52 && !input.getText().contains(".")) input.textboxKeyTyped(typedChar, keyCode);
-						
-					// CTRL + A/C/V
-					if((keyCode == Keyboard.KEY_A || keyCode == Keyboard.KEY_C || keyCode == Keyboard.KEY_V) && isCtrlKeyDown()) input.textboxKeyTyped(typedChar, keyCode);
-					
-					try {
-		                float isNumber = Integer.parseInt(String.valueOf(typedChar));
-		                input.textboxKeyTyped(typedChar, keyCode);
-					} catch (NumberFormatException ex) { return; }
-
-				}else {
-					// Trigger and display inputs
-					input.textboxKeyTyped(typedChar, keyCode);
+		if(!closeWarning.showElement) {
+			for (int i = 0; i < alerts.size(); i++) {
+				AlertElement alert = alerts.get(i);
+				List<GuiTextField> inputs = alert.getListOfTextFields();
+				
+				for (GuiTextField input : inputs) {
+					if(input.isFocused()) {
+						if(input.getId() == 2) { // Numerical (time input)
+							// Backspace / leftArrow / rightArrow / . / delete
+							if(keyCode == 14 || keyCode == 203 || keyCode == 205 || keyCode == 211) input.textboxKeyTyped(typedChar, keyCode);
+							
+							// disallows more than one "." in coords 
+							if(keyCode == 52 && !input.getText().contains(".")) input.textboxKeyTyped(typedChar, keyCode);
+								
+							// CTRL + A/C/V
+							if((keyCode == Keyboard.KEY_A || keyCode == Keyboard.KEY_C || keyCode == Keyboard.KEY_V) && isCtrlKeyDown()) input.textboxKeyTyped(typedChar, keyCode);
+							
+							try {
+				                float isNumber = Integer.parseInt(String.valueOf(typedChar));
+				                input.textboxKeyTyped(typedChar, keyCode);
+							} catch (NumberFormatException ex) { return; }
+		
+						}else {
+							// Trigger and display inputs
+							input.textboxKeyTyped(typedChar, keyCode);
+						}
+					}
 				}
 			}
 		}
-		super.keyTyped(typedChar, keyCode);
 	}
 	
 	@Override
 	protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
-		for (GuiTextField input : alertsFields) {
-			if (mouseX >= input.xPosition && mouseX <= input.xPosition + input.width && mouseY >= input.yPosition && mouseY <= input.yPosition + input.height) {
-				input.mouseClicked(mouseX, mouseY, mouseButton);
-			}else {
-				input.setFocused(false);
-			}
-		}
+		closeWarning.mouseClicked(mouseX, mouseY, mouseButton);
 		
-		// some shit from GuiScreen probably (just override)
-		if (mouseButton == 0)
-        {
-            for (int i = 0; i < this.deleteButtonList.size(); ++i)
-            {
-                GuiButton guibutton = (GuiButton)this.deleteButtonList.get(i);
-
-                if (guibutton.mousePressed(this.mc, mouseX, mouseY))
-                {
-                    net.minecraftforge.client.event.GuiScreenEvent.ActionPerformedEvent.Pre event = new net.minecraftforge.client.event.GuiScreenEvent.ActionPerformedEvent.Pre(this, guibutton, this.deleteButtonList);
-                    if (net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(event))
-                        break;
-                    guibutton = event.button;
-                    this.selectedButton = guibutton;
-                    guibutton.playPressSound(this.mc.getSoundHandler());
-                    this.actionPerformed(guibutton);
-                    if (this.equals(this.mc.currentScreen))
-                        net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.GuiScreenEvent.ActionPerformedEvent.Post(this, event.button, this.deleteButtonList));
-                }
-            }
-        }
-		
-		// some shit from GuiScreen probably (just override)
-		if (mouseButton == 0)
-        {
-            for (int i = 0; i < this.checksButtonList.size(); ++i)
-            {
-                GuiButton guibutton = (GuiButton)this.checksButtonList.get(i);
-
-                if (guibutton.mousePressed(this.mc, mouseX, mouseY))
-                {
-                    net.minecraftforge.client.event.GuiScreenEvent.ActionPerformedEvent.Pre event = new net.minecraftforge.client.event.GuiScreenEvent.ActionPerformedEvent.Pre(this, guibutton, this.checksButtonList);
-                    if (net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(event))
-                        break;
-                    guibutton = event.button;
-                    this.selectedButton = guibutton;
-                    guibutton.playPressSound(this.mc.getSoundHandler());
-                    this.actionPerformed(guibutton);
-                    if (this.equals(this.mc.currentScreen))
-                        net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.GuiScreenEvent.ActionPerformedEvent.Post(this, event.button, this.checksButtonList));
-                }
-            }
-        }
-		
-		// some shit from GuiScreen probably (just override)
+		if(!closeWarning.showElement) {
+			for (int i = 0; i < alerts.size(); i++) {
+				AlertElement alert = alerts.get(i);
+				boolean isAnythingPressed = false;
+				List<GuiTextField> inputs = alert.getListOfTextFields();
+				
+				for (GuiTextField input : inputs) {
+					if (mouseX >= input.xPosition && mouseX <= input.xPosition + input.width && mouseY >= input.yPosition && mouseY <= input.yPosition + input.height) {
+						input.mouseClicked(mouseX, mouseY, mouseButton);
+						isAnythingPressed = true;
+					}else {
+						input.setFocused(false);
+					}
+				}
+				
 				if (mouseButton == 0)
 		        {
-		            for (int i = 0; i < this.editButtonList.size(); ++i)
-		            {
-		                GuiButton guibutton = (GuiButton)this.editButtonList.get(i);
-
-		                if (guibutton.mousePressed(this.mc, mouseX, mouseY))
-		                {
-		                    net.minecraftforge.client.event.GuiScreenEvent.ActionPerformedEvent.Pre event = new net.minecraftforge.client.event.GuiScreenEvent.ActionPerformedEvent.Pre(this, guibutton, this.editButtonList);
-		                    if (net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(event))
-		                        break;
-		                    guibutton = event.button;
-		                    this.selectedButton = guibutton;
-		                    guibutton.playPressSound(this.mc.getSoundHandler());
-		                    this.actionPerformed(guibutton);
-		                    if (this.equals(this.mc.currentScreen))
-		                        net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.GuiScreenEvent.ActionPerformedEvent.Post(this, event.button, this.editButtonList));
-		                }
-		            }
+		            for (GuiButton guiButton : alert.getListOfButtons()) {
+		            	if (guiButton.mousePressed(Minecraft.getMinecraft(), mouseX, mouseY) && guiButton.enabled)
+			            {
+		            		isAnythingPressed = true;
+			                guiButton.playPressSound(Minecraft.getMinecraft().getSoundHandler());
+			                this.actionPerformed(guiButton);
+			            }
+					}
+		            
 		        }
-		
-		super.mouseClicked(mouseX, mouseY, mouseButton);
+				
+				if(alert.isHovered(mouseX, mouseY)) {
+					if(!isAnythingPressed) {
+						holdingElement = alert;
+					}
+				}
+			}
+			
+			if(mouseX >= scrollbar.x && mouseX <= scrollbar.x + scrollbar.scrollbarWidth && mouseY >= scrollbar.y && mouseY <= scrollbar.y + scrollbar.scrollbarHeight) {
+				scrollbar.updateOffsetToMouseClick(mouseY);
+			}
+			
+			super.mouseClicked(mouseX, mouseY, mouseButton);
+		}
 	}
+	
+	@Override
+	protected void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton, long timeSinceLastClick)
+    {
+		if (holdingElement != null) {
+			mouseY = Math.min(Math.max(mouseY, height/3 - 1), height - holdingElement.getHeight());
+            holdingElement.updateYposition(mouseY);
+		}
+    }
+	
+	protected void mouseReleased(int mouseX, int mouseY, int state)
+    {
+		if (holdingElement != null) {
+            
+			for (int i = 0; i < alerts.size(); i++) {
+				AlertElement element = alerts.get(i);
+				
+				if(holdingElement == element) continue;
+				if(element.isHovered(mouseX, mouseY)) {
+					int elementIndex = i;
+					int holdingIndex = alerts.indexOf(holdingElement);
+					
+					alerts.remove(holdingElement);
+					if(elementIndex > holdingIndex) {
+						alerts.add(alerts.indexOf(element)+1, holdingElement);
+						break;
+					}else {
+						alerts.add(alerts.indexOf(element), holdingElement);
+						break;
+					}
+				}
+			}
+			holdingElement = null;
+		}
+    }
 	
 	@Override
     public void handleMouseInput() throws IOException {
@@ -444,46 +468,20 @@ public class AlertsGui extends GuiScreen {
         int scroll = Mouse.getEventDWheel();
         int SCROLL_SPEED = height / 50;
         
-        if (scroll != 0) {
-        	if(ScrollOffset < maxBottomScroll && scroll < 0) return;
-            ScrollOffset -= scroll > 0 ? -SCROLL_SPEED : SCROLL_SPEED;
-            
-            ScrollOffset = Math.min(0, ScrollOffset); // cant go over 0, so you cant scroll up when at first waypoint 
-            // This is so you cant scroll limitless, it takes every waypoint height with their margin and removes visible inputs height so you can scroll max to how much of inputs isnt visible
-    		maxBottomScroll = Math.min(0, -(((Alerts.alertsList.size() * (inputHeight + inputMargin))) - (height - (height/3))));
-    		ScrollOffset = Math.max(ScrollOffset, maxBottomScroll); // so scrolloffset doesnt go below maxbottomscroll
-            
-    		int positionY = (int) (height / 3 + ScrollOffset);
-    		List<GuiButton> oldChecksList = new ArrayList<>(checksButtonList);
-    		deleteButtonList.clear();
-    		checksButtonList.clear();
-    		editButtonList.clear();
-    		for (int i = 0; i < alertsFields.size(); i+=3) {
-    			int whichAlert = i/3;
-    			int inputFullPosition = positionY + ((inputHeight + inputMargin) * whichAlert);
-    			alertsFields.get(i).yPosition = inputFullPosition;
-    			alertsFields.get(i+1).yPosition = inputFullPosition;
-    			alertsFields.get(i+2).yPosition = inputFullPosition;
-    			DeleteButton deleteButton = new DeleteButton(0 + (10*whichAlert), (int)(width * 0.9f), inputFullPosition, inputHeight, inputHeight, "");
-            	deleteButtonList.add(deleteButton);
-            	
-            	editButtonList.add(new EditButton(5 + (10*whichAlert), (int)(width * 0.85f), inputFullPosition, inputHeight, inputHeight, ""));
-            	
-            	int trigger_X = width/6;
-            	checksButtonList.add(new CheckButton(1 + (10*whichAlert), (int) (trigger_X * 0.1), inputFullPosition, inputHeight, inputHeight, "", ((CheckButton)oldChecksList.get(whichAlert*3)).isFull()));
-            	
-            	checksButtonList.add(new CheckButton(2 + (10*whichAlert), (int) (trigger_X * 0.4), inputFullPosition, inputHeight, inputHeight, "", ((CheckButton)oldChecksList.get((whichAlert*3)+1)).isFull()));
-			
-            	checksButtonList.add(new CheckButton(3 + (10*whichAlert), (int) (trigger_X * 0.7), inputFullPosition, inputHeight, inputHeight, "", ((CheckButton)oldChecksList.get((whichAlert*3)+2)).isFull()));
-    		}
-    		oldChecksList.clear();
+        if (scroll != 0 && !closeWarning.showElement) {
+        	scrollbar.handleMouseInput(scroll);
         }
     }
 	
 	@Override
 	public void updateScreen() {
-		for (GuiTextField input : alertsFields) {
-			input.updateCursorCounter();
+		for (int i = 0; i < alerts.size(); i++) {
+			AlertElement alert = alerts.get(i);
+			List<GuiTextField> inputs = alert.getListOfTextFields();
+			
+			for (GuiTextField input : inputs) {
+				input.updateCursorCounter();
+			}
 		}
 	}
 	
@@ -495,25 +493,29 @@ public class AlertsGui extends GuiScreen {
 	private void SaveAlerts() {
 		List<Alert> alertsList = new ArrayList<Alert>();
 		// idk why i did it like this with alertsFields.size(), but because of it we have to do "i +=3" since we have 3 input fields per alert
-	    for (int i = 0; i < alertsFields.size(); i += 3) {
-	    	alertsFields.get(i + 2).setTextColor(14737632);
+	    for (int i = 0; i < alerts.size(); i++) {
+	    	AlertElement alert = alerts.get(i);
 	    	
-	        String trigger = alertsFields.get(i).getText();
-	        String display = alertsFields.get(i+1).getText();
-	        int[] position = Alerts.alertsList.get(i/3).position;
-	        float scale = Alerts.alertsList.get(i/3).scale;
+	    	alert.time.setTextColor(14737632);
+	    	
+	        String trigger = alert.trigger.getText();
+	        String display = alert.display.getText();
+	        
+	        // TODO this shit also have to be independent
+	        int[] position = alerts.get(i).position;
+	        float scale = alerts.get(i).scale;
 	        float time = 0;
 	        try {
-	            time = Float.parseFloat(alertsFields.get(i + 2).getText()) * 1000;
+	            time = Float.parseFloat(alert.time.getText()) * 1000;
 	        } catch (NumberFormatException e) {
 	            System.out.println(e);
-	            alertsFields.get(i + 2).setTextColor(11217193);
+	            alert.time.setTextColor(11217193);
 	            saveButton.packedFGColour = 14258834;
 	            return;
 	        }
-	        boolean onlyParty = ((CheckButton)checksButtonList.get((i/3)*3)).isFull();
-	        boolean ignorePlayers = ((CheckButton)checksButtonList.get(((i/3)*3)+1)).isFull();
-	        boolean isEqual = ((CheckButton)checksButtonList.get((((i/3)*3))+2)).isFull();
+	        boolean onlyParty = ((CheckButton)alert.onlyParty).isFull();
+	        boolean ignorePlayers = ((CheckButton)alert.ignorePlayers).isFull();
+	        boolean isEqual = ((CheckButton)alert.isEqual).isFull();
 	        alertsList.add(new Alert(trigger, display, time, onlyParty, ignorePlayers, isEqual, position, scale));
 	    }
 	    
@@ -521,5 +523,67 @@ public class AlertsGui extends GuiScreen {
 	    Alerts.alertsList = alertsList;
 	    Alerts.putAllImagesToCache();
 	    ConfigHandler.SaveAlert(alertsList);
+	}
+	
+	public void updateAlertsY() {
+		scrollbar.updateMaxBottomScroll(Math.min(0, -(((alerts.size() * (inputHeight + inputMargin))) - (height - (height/3)))));
+		int ScrollOffset = scrollbar.getOffset();
+		
+		int positionY = (int) (height / 3 + ScrollOffset);
+		
+		for (int i = 0; i < alerts.size(); i++) {
+			if(alerts.get(i) == holdingElement) continue;
+			int inputFullPosition = positionY + ((inputHeight + inputMargin) * i);
+			alerts.get(i).updateYposition(inputFullPosition);
+		}
+	}
+	
+	private void CloseGui() {
+		if(closeWarning.showElement == true) return;
+		
+		Location.checkTabLocation();
+		// its to prevent removing waypoints from other regions, so i just remove waypoints from my region and add them updated
+		List<Alert> alertsList = Alerts.alertsList;
+		boolean isntEqual = false;
+		
+		if(alerts.size() != alertsList.size()) {
+			 isntEqual = true;
+		}else {
+			for (int i = alerts.size() - 1; i >= 0; i--) {
+				AlertElement alert = alerts.get(i);
+		    	
+		        String trigger = alert.trigger.getText();
+		        String display = alert.display.getText(); 
+		        
+		        int[] position = alert.position;
+		        float scale = alert.scale;
+		        float time = 0;
+		        try {
+		            time = Float.parseFloat(alert.time.getText()) * 1000;
+		        } catch (NumberFormatException e) { isntEqual = true; break; }
+	
+		        if(Float.compare(alertsList.get(i).position[0], position[0]) != 0) { isntEqual = true; break; }
+		        if(Float.compare(alertsList.get(i).position[1], position[1]) != 0) { isntEqual = true; break; }
+		        if(Float.compare(alertsList.get(i).scale, scale) != 0) { isntEqual = true; break; }
+		        if(Float.compare(alertsList.get(i).getTime(), time) != 0) { isntEqual = true; break; }
+		        if(!trigger.equals(alertsList.get(i).getTrigger())) { isntEqual = true; break; }
+		        if(!display.equals(alertsList.get(i).getDisplay())) { isntEqual = true; break; }
+		        if(alert.ignorePlayers.isFull != alertsList.get(i).ignorePlayers) { isntEqual = true; break; }
+		        if(alert.isEqual.isFull != alertsList.get(i).isEqual) { isntEqual = true; break; }
+		        if(alert.onlyParty.isFull != alertsList.get(i).onlyParty) { isntEqual = true; break; }
+			}
+		}
+		
+		if(isntEqual) {
+			closeWarning.changeElementActive(true);
+		}else {
+			Minecraft.getMinecraft().thePlayer.closeScreen();
+		}
+	}
+	
+	@Override
+    public void onGuiClosed() {
+		holdingElement = null;
+		alerts.clear();
 	}
 }

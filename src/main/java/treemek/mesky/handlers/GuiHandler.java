@@ -18,59 +18,29 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import treemek.mesky.Commands;
 import treemek.mesky.features.FishingTimer;
-import treemek.mesky.handlers.gui.ChatFunctionsGui;
 import treemek.mesky.handlers.gui.CosmeticsGui;
 import treemek.mesky.handlers.gui.GUI;
 import treemek.mesky.handlers.gui.GuiLocations;
-import treemek.mesky.handlers.gui.Settings;
-import treemek.mesky.handlers.gui.WaypointsGui;
 import treemek.mesky.handlers.gui.alerts.AlertPosition;
 import treemek.mesky.handlers.gui.alerts.AlertsGui;
+import treemek.mesky.handlers.gui.chatfunctions.ChatFunctionsGui;
+import treemek.mesky.handlers.gui.macrowaypoints.MacroWaypointsGui;
+import treemek.mesky.handlers.gui.settings.SettingsGUI;
+import treemek.mesky.handlers.gui.waypoints.WaypointsGui;
 import treemek.mesky.utils.Locations;
 import treemek.mesky.utils.Locations.Location;
 
 public class GuiHandler{
 	
-	public static int GuiType = 0;
+	public static GuiScreen GuiType;
 	
 	@SubscribeEvent
 	public void onClientTick(TickEvent.ClientTickEvent event) {
 		// for opening gui, because i have to wait 1 tick before opening it
-		switch(GuiType) {
-			case 1:
-				Minecraft.getMinecraft().displayGuiScreen(new GUI());
-	            GuiType = 0;
-	            break;
-			case 2:
-	            Minecraft.getMinecraft().displayGuiScreen(new Settings());
-	            GuiType = 0;
-	            break;
-			case 3:
-				Minecraft.getMinecraft().displayGuiScreen(new WaypointsGui());
-				Location.checkTabLocation();
-				WaypointsGui.region.setText(Locations.currentLocationText);
-	            GuiType = 0;
-	            break;
-			case 4:
-				Minecraft.getMinecraft().displayGuiScreen(new AlertsGui());
-	            GuiType = 0;
-	            break;
-			case 5:
-				Minecraft.getMinecraft().displayGuiScreen(new CosmeticsGui());
-	            GuiType = 0;
-	            break;
-			case 6:
-				Minecraft.getMinecraft().displayGuiScreen(new ChatFunctionsGui());
-	            GuiType = 0;
-	            break;
-			case 7:
-				Minecraft.getMinecraft().displayGuiScreen(new GuiLocations());
-	            GuiType = 0;
-	            break;
-			case 8:
-				Minecraft.getMinecraft().displayGuiScreen(new AlertPosition());
-	            GuiType = 0;
-	            break;
+		
+		if(GuiType != null) {
+			Minecraft.getMinecraft().displayGuiScreen(GuiType);
+			GuiType = null;
 		}
 	}
 	
@@ -118,7 +88,7 @@ public class GuiHandler{
         
         if (guiScreen instanceof GuiIngameMenu) {
             if (button.id == CUSTOM_BUTTON_ID) {
-                GuiType = 1;
+                GuiType = new GUI();
             }
         }
     }

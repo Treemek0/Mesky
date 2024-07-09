@@ -3,6 +3,7 @@ package treemek.mesky.cosmetics.wings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderPlayerEvent;
@@ -20,12 +21,10 @@ public class AngelWings extends ModelBase
 	private ModelRenderer wing;
 	private ModelRenderer wingTip;
 	private boolean playerUsesFullHeight;
-	int WingsScale = 120;
-	float yRotation = 40;
 
 	public AngelWings(){
 		this.mc = Minecraft.getMinecraft();
-		this.location = new ResourceLocation("mesky", "textures/angel_wings.png");
+		this.location = new ResourceLocation("mesky", "textures/models/wings/angel_wings.png");
 		this.playerUsesFullHeight = Loader.isModLoaded("animations");
 
 		// Set texture offsets.
@@ -54,21 +53,22 @@ public class AngelWings extends ModelBase
 
 		if (player.equals(mc.thePlayer) && !player.isInvisible()) // Should render wings onto this player?
 		{
-			if(CosmeticHandler.WingsType == 2) {
-				renderWings(player, event.partialRenderTick);
+			if(CosmeticHandler.WingsType.number == 2) {
+				float scale = (event.renderer.getMainModel().isChild)?0.5f:1;
+				renderWings(player, event.partialRenderTick, scale);
 			}
 		}
 	}
 
-	private void renderWings(EntityPlayer player, float partialTicks)
+	private void renderWings(EntityPlayer player, float partialTicks, float scaleFactor)
 	{
-		double scale = WingsScale / 100D;
+		double scale = 1.2f;
+		float yRotation = 40;
 		double rotate = interpolate(player.prevRenderYawOffset, player.renderYawOffset, partialTicks);
-		
-		int TargetYRotation = 20;
 		
 		
 		GL11.glPushMatrix();
+		GlStateManager.scale(scaleFactor, scaleFactor, scaleFactor);
 		GL11.glScaled(-scale, -scale, scale);
 		GL11.glRotated(0, 1, 0, 0);
 		GL11.glRotated(180 + rotate, 0, 1, 0); // Rotate the wings to be with the player.
@@ -77,29 +77,12 @@ public class AngelWings extends ModelBase
 
 		if (player.isSneaking()){
 			GL11.glTranslated(0D, 0.125D / scale, 0D);
-			GL11.glRotated(30, 1, 0, 0);
+			GL11.glRotated(28.6, 1, 0, 0);
 		}
 		
-//		float acceleration = 0.1f; // Adjust this value for the desired acceleration
-//		if (player.moveForward > 0) {
-//		    if (player.isSprinting()) {
-//		        TargetYRotation = 70;
-//		    } else {
-//		        TargetYRotation = 50;
-//		    }
-//		} else {
-//		    TargetYRotation = 30;
-//		}
-//
-//		// Calculate the new yRotation using linear interpolation (lerp)
-//		if (yRotation < TargetYRotation) {
-//		    yRotation = Math.min(yRotation + acceleration, TargetYRotation);
-//		} else if (yRotation > TargetYRotation) {
-//		    yRotation = Math.max(yRotation - acceleration, TargetYRotation);
-//		}
 
 		mc.getTextureManager().bindTexture(location);
-
+		
 		for (int j = 0; j < 2; ++j)
 		{
 			GL11.glEnable(GL11.GL_CULL_FACE);

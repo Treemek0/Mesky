@@ -7,6 +7,7 @@ import org.lwjgl.opengl.GL11;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderGlobal;
@@ -17,7 +18,15 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StringUtils;
+import net.minecraftforge.client.event.EntityViewRenderEvent;
+import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+import treemek.mesky.Mesky;
+import treemek.mesky.Reference;
 import treemek.mesky.utils.Waypoints;
 import treemek.mesky.utils.Waypoints.Waypoint;
 import net.minecraft.entity.Entity;
@@ -25,6 +34,13 @@ import net.minecraft.entity.player.EntityPlayer;
 
 public class RenderHandler {
 
+	private static CameraSetup camera;
+
+	@SideOnly(Side.CLIENT)
+    @SubscribeEvent
+    public void cameraSetup(EntityViewRenderEvent.CameraSetup e) {
+		camera = e;
+    }
 	
 	// https://github.com/bowser0000/SkyblockMod/blob/master/src/main/java/me/Danker/utils/RenderUtils.java
 	public static void drawText(String text, double x, double y, double scale, boolean outline, int Color) {
@@ -156,6 +172,36 @@ public class RenderHandler {
         GlStateManager.popMatrix();
     }
 	
+	public static void draw3DString(String text, float[] coords, String colorString, float partialTicks) {
+        Minecraft mc = Minecraft.getMinecraft();
+        EntityPlayer player = mc.thePlayer;
+        
+        int color = Integer.parseInt(colorString.replace("#", ""), 16);
+        double x = coords[0];
+        double y = coords[1] + 0.5f;
+        double z = coords[2];
+        
+        double realX = (x - player.lastTickPosX) + ((x - player.posX) - (x - player.lastTickPosX)) * partialTicks;
+        double realY = (y - player.lastTickPosY) + ((y - player.posY) - (y - player.lastTickPosY)) * partialTicks;
+        double realZ = (z - player.lastTickPosZ) + ((z - player.posZ) - (z - player.lastTickPosZ)) * partialTicks;
+        RenderManager renderManager = mc.getRenderManager();
+
+        float f = 1.6F;
+        float f1 = 0.016666668F * f;
+        int width = mc.fontRendererObj.getStringWidth(text) / 2;
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(realX, realY, realZ);
+        GL11.glNormal3f(0f, 1f, 0f);
+        GlStateManager.rotate(-renderManager.playerViewY, 0f, 1f, 0f);
+        GlStateManager.rotate(renderManager.playerViewX, 1f, 0f, 0f);
+        GlStateManager.scale(-f1, -f1, -f1);
+        GlStateManager.enableBlend();
+        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+        mc.fontRendererObj.drawString(text, -width, 0, color);
+        GlStateManager.disableBlend();
+        GlStateManager.popMatrix();
+    }
+	
 	public static void draw3DBox(AxisAlignedBB aabb, String color, float partialTicks) {
         Entity render = Minecraft.getMinecraft().getRenderViewEntity();
         Color colour = Color.decode("#" + color);
@@ -183,18 +229,16 @@ public class RenderHandler {
     }
 	
 	 // https://github.com/Moulberry/NotEnoughUpdates/blob/master/src/main/java/io/github/moulberry/notenoughupdates/miscfeatures/DwarvenMinesWaypoints.java#L261
-    public static void draw3DWaypointString(String name, String color, float[] coord, float partialTicks, float scale) {
+	public static void draw3DWaypointString(String name, String color, float[] coord, float partialTicks, float scale) {
         GlStateManager.alphaFunc(516, 0.1F);
-
-        
         
         GlStateManager.pushMatrix();
-
+        
         Entity viewer = Minecraft.getMinecraft().getRenderViewEntity();
         double viewerX = viewer.lastTickPosX + (viewer.posX - viewer.lastTickPosX) * partialTicks;
         double viewerY = viewer.lastTickPosY + (viewer.posY - viewer.lastTickPosY) * partialTicks;
         double viewerZ = viewer.lastTickPosZ + (viewer.posZ - viewer.lastTickPosZ) * partialTicks;
-
+        
         float[] coords = coord;
         
         double x = coords[0]-viewerX;
@@ -204,9 +248,9 @@ public class RenderHandler {
         double distSq = x*x + y*y + z*z;
         double dist = Math.sqrt(distSq);
         if(distSq > 144) {
-            x *= 12/dist;
-            y *= 12/dist;
-            z *= 12/dist;
+    		x *= 12/dist;
+    		y *= 12/dist;
+        	z *= 12/dist;
         }
         
         if (dist < 50) {
@@ -241,7 +285,7 @@ public class RenderHandler {
     }
 
     // https://github.com/Moulberry/NotEnoughUpdates/blob/master/src/main/java/io/github/moulberry/notenoughupdates/miscfeatures/DwarvenMinesWaypoints.java#L300
-    public static void renderNametag(String str, String c) {
+	public static void renderNametag(String str, String c) {
     	int color;
     	try {
     		color = Integer.parseInt(c.replace("#", ""), 16);
@@ -261,7 +305,7 @@ public class RenderHandler {
 	        Tessellator tessellator = Tessellator.getInstance();
 	        WorldRenderer worldrenderer = tessellator.getWorldRenderer();
 	        int i = 0;
-	
+
 	        int j = fontrenderer.getStringWidth(str) / 2;
 	        GlStateManager.disableTexture2D();
 	        worldrenderer.begin(7, DefaultVertexFormats.POSITION_COLOR);
@@ -273,9 +317,9 @@ public class RenderHandler {
 	        GlStateManager.enableTexture2D();
 	        fontrenderer.drawString(str, -fontrenderer.getStringWidth(str) / 2, i, 553648127);
 	        GlStateManager.depthMask(true);
-	
+
 	        fontrenderer.drawString(str, -fontrenderer.getStringWidth(str) / 2, i, color);
-	
+
 	        GlStateManager.enableDepth();
 	        GlStateManager.enableBlend();
 	        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
@@ -291,14 +335,30 @@ public class RenderHandler {
         Minecraft.getMinecraft().ingameGUI.drawRect(left+frameWidth, top+frameWidth, right-frameWidth, bottom-frameWidth, color);
     }
     
+    public static void drawCircle(int x, int y, int radius, int color) {
+    	 float alpha = (color >> 24 & 255) / 255.0F;
+         float red = (color >> 16 & 255) / 255.0F;
+         float green = (color >> 8 & 255) / 255.0F;
+         float blue = (color & 255) / 255.0F;
+
+         GL11.glPushMatrix();
+         GL11.glColor3f(red, green, blue);
+
+         ResourceLocation circle = new ResourceLocation(Reference.MODID, "gui/circle.png");
+         Minecraft.getMinecraft().renderEngine.bindTexture(circle);
+         Gui.drawModalRectWithCustomSizedTexture(x, y, 0, 0, radius, radius, radius, radius);
+         GL11.glColor3f(1, 1, 1);
+         GL11.glPopMatrix();
+    }
+    
 	
- // Calculate opacity based on elapsed time
+    // Calculate opacity based on elapsed time
     public static float getlinearInterpolation(long elapsedTime, long totalTime) {
         float progress = (float) elapsedTime / totalTime;
         return progress;
     }
 	
- // Calculate opacity based on elapsed time and the total time for the animation
+    // Calculate opacity based on elapsed time and the total time for the animation
     public static float calculateOpacity(long elapsedTime, long totalTime, long maxOpacityTime, long maxOpacityEnd) {
         if (elapsedTime < maxOpacityTime) {
             // Increase opacity gradually

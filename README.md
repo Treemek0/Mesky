@@ -4,7 +4,8 @@ QoL (*Quality of Life*) for Hypixel Skyblock
 **• Version: forge 1.8.9**
 (*I use it and it works fine so it shouldn't cause any bad frame impact or crashes*)
 
-Idk why but it doesn't work on pojavlauncher (trying to fix)
+Idk if thats global problem or just mine but when i was trying to move my mod using my android file manager to pojavlauncher directory, pojav couldnt read it.
+The fix for it is just using computer and cable connected to phone to move file to correct directory
 
 ⪢ Features: 
 - [x] Stops flower weapons from placing on blocks (*Flower of Truth & Spirit Sceptre*)

@@ -19,6 +19,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import treemek.mesky.Mesky;
 import treemek.mesky.Reference;
 import treemek.mesky.cosmetics.CosmeticHandler;
+import treemek.mesky.utils.Utils;
 
 public class Cat extends ModelBase{
 
@@ -112,7 +113,8 @@ public class Cat extends ModelBase{
 		}
 	}
 	
-	
+	double motionYforce = 0;
+	double tailForce = 0;
 	private void renderCat(EntityPlayer player, float partialTicks, float scale, ResourceLocation textureLocation) {
 		GL11.glPushMatrix();
 		
@@ -159,8 +161,11 @@ public class Cat extends ModelBase{
         float f11 = (System.currentTimeMillis() % 1000) / 1000F * (float) (Math.PI*2);
         // -------
         // head
-        head.rotateAngleZ = degreeToRadian((float)(Math.sin(f11)*2));
-        head.rotateAngleX = degreeToRadian(25);
+        double targetMotionYforce = Math.max(-30, (player.motionY * 10)) * Utils.influenceBasedOnDistanceFromAToB(pitch, 0, 45) + (Math.sin(f11*2)*2 * (1-Utils.influenceBasedOnDistanceFromAToB(player.motionY, 0, 0.5f)));
+    	motionYforce += (targetMotionYforce - motionYforce) * 0.02f;
+    	
+		head.rotateAngleZ = degreeToRadian((float)(Math.sin(f11)*2 * (Utils.influenceBasedOnDistanceFromAToB(player.motionY, 0, 0.2f))));
+        head.rotateAngleX = degreeToRadian((float) (25 + motionYforce));
         head.offsetY = pixelsToCordinats(1);
         head.offsetZ = pixelsToCordinats(2);
         head.render(0.0625f); // head
@@ -179,8 +184,7 @@ public class Cat extends ModelBase{
         
         body.render(0.0625f); // body
         
-        
-        float xtailRotation = degreeToRadian(180 + (float)(Math.sin(f11)*20));
+        float xtailRotation = degreeToRadian((float) (180 + ((Math.sin(f11)*20))));
         tail.rotateAngleX = xtailRotation;
         tail.offsetY = 0.25f;
         tail.offsetZ = -0.25f;
@@ -189,7 +193,7 @@ public class Cat extends ModelBase{
         // -------
         // back legs
         
-        float xBackLegRotation = degreeToRadian(180 + 20);
+        float xBackLegRotation = degreeToRadian((float) (180 + 20 - motionYforce));
         float zBackLegRotation = degreeToRadian(15);
 		leftBackLeg.rotateAngleX = xBackLegRotation;
 		leftBackLeg.rotateAngleZ = zBackLegRotation;
@@ -206,7 +210,7 @@ public class Cat extends ModelBase{
         // -------
         // front legs
         
-        float xFrontLegRotation = degreeToRadian(90 + 20);
+        float xFrontLegRotation = degreeToRadian((float) (90 + 20 + motionYforce/3));
         float yFrontLegRotation = degreeToRadian(25);
         leftFrontLeg.rotateAngleX = xFrontLegRotation; // top and bottom of leg are on Y axis not Z
         leftFrontLeg.rotateAngleY = yFrontLegRotation;

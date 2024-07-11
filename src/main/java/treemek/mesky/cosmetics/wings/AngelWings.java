@@ -1,15 +1,23 @@
 package treemek.mesky.cosmetics.wings;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.passive.EntityHorse;
+import net.minecraft.entity.passive.EntityPig;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import treemek.mesky.cosmetics.CosmeticHandler;
+import treemek.mesky.utils.RotationUtils;
+import treemek.mesky.utils.Utils;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -64,8 +72,25 @@ public class AngelWings extends ModelBase
 	{
 		double scale = 1.2f;
 		float yRotation = 40;
-		double rotate = interpolate(player.prevRenderYawOffset, player.renderYawOffset, partialTicks);
+		double rotate = 0;
 		
+		if(player.isRiding() && player.ridingEntity instanceof EntityHorse) {
+			EntityHorse horse = (EntityHorse) player.ridingEntity;
+			if(horse.isHorseSaddled()) {
+				rotate = Utils.interpolate360(horse.prevRenderYawOffset, horse.renderYawOffset, partialTicks);
+			}else {
+				rotate = Utils.getPlayerRidingWithoutControlRotation((EntityLivingBase) player.ridingEntity, partialTicks);
+			}
+		}else if(player.isRiding() && player.ridingEntity instanceof EntityPig) {
+			EntityPig pig = (EntityPig) player.ridingEntity;
+			if(pig.canRiderInteract()) {
+				rotate = Utils.interpolate360(pig.prevRenderYawOffset, pig.renderYawOffset, partialTicks);
+			}else {
+				rotate = Utils.getPlayerRidingWithoutControlRotation((EntityLivingBase) player.ridingEntity, partialTicks);
+			}
+		}else {
+			rotate = Utils.interpolate360(player.prevRenderYawOffset, player.renderYawOffset, partialTicks);
+		}
 		
 		GL11.glPushMatrix();
 		GlStateManager.scale(scaleFactor, scaleFactor, scaleFactor);
@@ -103,17 +128,5 @@ public class AngelWings extends ModelBase
 		GL11.glCullFace(1029);
 		GL11.glDisable(GL11.GL_CULL_FACE);
 		GL11.glPopMatrix();
-	}
-
-	private float interpolate(float yaw1, float yaw2, float percent)
-	{
-		float f = (yaw1 + (yaw2 - yaw1) * percent) % 360;
-
-		if (f < 0)
-		{
-			f += 360;
-		}
-
-		return f;
 	}
 }

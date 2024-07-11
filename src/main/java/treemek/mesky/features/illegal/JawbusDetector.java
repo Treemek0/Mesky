@@ -11,8 +11,10 @@ import java.util.Map.Entry;
 import java.util.UUID;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.monster.EntityIronGolem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -80,13 +82,16 @@ public class JawbusDetector {
 	            }
 				
 				Iterator<Entry<TemporaryWaypoint, Entity>> iterator = detectedJawbuses.entrySet().iterator();
+				EntityPlayerSP player = mc.thePlayer;
 			    while (iterator.hasNext()) {
 			        Entry<TemporaryWaypoint, Entity> entry = iterator.next();
 			        TemporaryWaypoint waypoint = entry.getKey();
 			        Entity entity = entry.getValue();
 			        
-			        if(!entity.isEntityAlive() && !mobList.contains(entity)) {
-			        	Waypoints.temporaryWaypointsList.remove(waypoint);
+			        if(!mobList.contains(entity)) {
+			        	if (Minecraft.getMinecraft().thePlayer.getDistance(waypoint.coords[0], player.posY, waypoint.coords[2]) <= 40) {
+				            iterator.remove();
+				        }
 			        }
 			        
 			        if(!Waypoints.temporaryWaypointsList.contains(waypoint)) {
@@ -161,6 +166,17 @@ public class JawbusDetector {
 		}
     }
 
+    @SubscribeEvent
+    public void onPlayerJoinWorld(EntityJoinWorldEvent event) {
+    	if (event.world.isRemote && event.entity instanceof EntityPlayer) {
+            EntityPlayer player = (EntityPlayer) event.entity;
+            if (player == Minecraft.getMinecraft().thePlayer) {
+            	detectedJawbuses.clear();
+                playerLocations.clear();
+            }
+        }
+    }
+    
     @SubscribeEvent
     public void onClientDisconnect(ClientDisconnectionFromServerEvent event) {
         detectedJawbuses.clear();

@@ -48,7 +48,7 @@ public class RecordHeadMovement {
 		
 		if (HeadPlayer.isPressed()) {
 			//RotationUtils.replayMovement(RotationUtils.readMovementFromFile(new File(Mesky.configDirectory + "/mesky/recordings/FishingRotation1.json")));
-			RotationUtils.rotateCurveTo(0, -Minecraft.getMinecraft().thePlayer.rotationPitch + 90, 0.5f, true);
+			RotationUtils.addToRotationQueue(recordedAngles);
 		}
 	}
 	

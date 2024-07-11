@@ -103,25 +103,10 @@ public class Waypoints {
     public static Waypoint addWaypoint(String name, String color, float x, float y, float z) {
     	EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
     	color = color.replace("#", "");
+    	
     	Waypoint waypoint;
-    	if(!HypixelCheck.isOnHypixel()) {
-    		waypoint = new Waypoint(name, color, x, y, z, Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName());
-    		waypointsList.add(0, waypoint);
-    	}else{
-    		Location.checkTabLocation();
-    		if(WaypointsGui.region != null) {
-	    		if(WaypointsGui.region.getText() != null) {
-	    			waypoint = new Waypoint(name, color, x, y, z, WaypointsGui.region.getText());
-	    			waypointsList.add(0, waypoint);
-	    		}else {
-	    			waypoint = new Waypoint(name, color, x, y, z, Locations.currentLocationText);
-	    			waypointsList.add(0, waypoint);
-	    		}
-    		}else {
-    			waypoint = new Waypoint(name, color, x, y, z, Locations.currentLocationText);
-    			waypointsList.add(0, waypoint);
-    		}
-    	}
+		waypoint = new Waypoint(name, color, x, y, z, Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld));
+		waypointsList.add(0, waypoint);
 		ConfigHandler.SaveWaypoint(waypointsList);
 		return waypoint;
     }
@@ -149,7 +134,7 @@ public class Waypoints {
         if (!waypointsList.isEmpty()) {
         	Location.checkTabLocation();
             for (Waypoint waypoint : waypointsList) {
-            	if((!HypixelCheck.isOnHypixel() && waypoint.world.equals(Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName())) || (HypixelCheck.isOnHypixel() && waypoint.world.equals(Locations.currentLocationText))) {
+            	if(waypoint.world.equals(Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld))) {
                 	// when im gonna be unbanned then check for world types
                     waypoint.color = Utils.fixColor(waypoint.color);
                     RenderHandler.draw3DWaypointString(waypoint.name, waypoint.color, waypoint.coords, event.partialTicks, 1);  
@@ -230,37 +215,20 @@ public class Waypoints {
 		Location.checkTabLocation();
 		
 		for (Waypoint waypoint : Waypoints.waypointsList) {
-	        if(!HypixelCheck.isOnHypixel()) {
-	    		if(waypoint.world.equals(Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName())){
-	        	LocationWaypointsList.add(new Waypoint(waypoint.name, waypoint.color, waypoint.coords[0], waypoint.coords[1], waypoint.coords[2], Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName()));
-	    		}
-	    	}else{
-	    		if(Locations.currentLocationText != null) {
-	    			if(waypoint.world.equalsIgnoreCase(WaypointsGui.region.getText())) {
-	    			LocationWaypointsList.add(new Waypoint(waypoint.name, waypoint.color, waypoint.coords[0], waypoint.coords[1], waypoint.coords[2], WaypointsGui.region.getText()));
-	    			}
-	    		}   		
-	    	}
+    		if(waypoint.world.equals(Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld))){
+    			LocationWaypointsList.add(new Waypoint(waypoint.name, waypoint.color, waypoint.coords[0], waypoint.coords[1], waypoint.coords[2], waypoint.world));
+    		}
 		}
 		return LocationWaypointsList;
     }
     
     public static List<Waypoint> GetWaypointsWithoutLocation() {
     	List<Waypoint> LocationWaypointsList = new ArrayList<Waypoint>();
-		Location.checkTabLocation();
 		
 		for (Waypoint waypoint : Waypoints.waypointsList) {
-	        if(!HypixelCheck.isOnHypixel()) {
-	    		if(!waypoint.world.contains(Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName())){
-	        	LocationWaypointsList.add(new Waypoint(waypoint.name, waypoint.color, waypoint.coords[0], waypoint.coords[1], waypoint.coords[2],  waypoint.world));
-	    		}
-	    	}else{
-	    		if(Locations.currentLocationText != null) {
-	    			if(!waypoint.world.equalsIgnoreCase(WaypointsGui.region.getText())) {
-	    			LocationWaypointsList.add(new Waypoint(waypoint.name, waypoint.color, waypoint.coords[0], waypoint.coords[1], waypoint.coords[2], waypoint.world));
-	    			}
-	    		}   		
-	    	}
+			if(!waypoint.world.equals(Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld))){
+    			LocationWaypointsList.add(new Waypoint(waypoint.name, waypoint.color, waypoint.coords[0], waypoint.coords[1], waypoint.coords[2], waypoint.world));
+    		}
 		}
 		return LocationWaypointsList;
     }
@@ -270,36 +238,31 @@ public class Waypoints {
     	
     	for (int i = 0; i < waypointsList.size(); i++) {
     		Waypoint waypoint = waypointsList.get(i);
-    		if(!HypixelCheck.isOnHypixel()) {
-	    		System.out.println(i);
-    			if(waypoint.world.equals(Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName())){
-    				if(numberInLocation == number) {
-    					Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Deleted waypoint: " + waypointsList.get(i).name));
-	    				waypointsList.remove(i);
-	    				ConfigHandler.SaveWaypoint(waypointsList);
-	    				break;
-	    			}else {
-	    				numberInLocation++;
-	    			}
-	    			
-	    		}
-	    	}else{
-	    		if(Locations.currentLocationText != null) {
-	    			if(waypoint.world.equalsIgnoreCase(WaypointsGui.region.getText())) {
-	    				if(numberInLocation == number) {
-	    					Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Deleted waypoint: " + waypointsList.get(i).name));
-	    					waypointsList.remove(i);	
-	    					ConfigHandler.SaveWaypoint(waypointsList);
-	    					break;
-		    			}else {
-		    				numberInLocation++;
-		    			}
-	    			}   		
-	    		}
-	    	}
+			if(waypoint.world.equals(Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld))){
+				if(numberInLocation == number) {
+					Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Deleted waypoint: " + waypointsList.get(i).name));
+    				waypointsList.remove(i);
+    				ConfigHandler.SaveWaypoint(waypointsList);
+    				break;
+    			}else {
+    				numberInLocation++;
+    			}
+    		}
+	    	
     	}
     }
 	
+    @SubscribeEvent
+    public void onPlayerJoinWorld(EntityJoinWorldEvent event) {
+    	if (event.world.isRemote && event.entity instanceof EntityPlayer) {
+            EntityPlayer player = (EntityPlayer) event.entity;
+            if (player == Minecraft.getMinecraft().thePlayer) {
+            	temporaryWaypointsList.clear();
+        		touchWaypointsList.clear();
+            }
+        }
+    }
+    
     @SubscribeEvent
     public void onClientDisconnect(ClientDisconnectionFromServerEvent event) {
     	temporaryWaypointsList.clear();

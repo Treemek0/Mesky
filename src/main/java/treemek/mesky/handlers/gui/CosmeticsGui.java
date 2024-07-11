@@ -38,6 +38,7 @@ public class CosmeticsGui extends GuiScreen {
 	@Override
 	public void initGui() {
 	    super.initGui();
+	    buttonList.clear();
 	    
 	    int checkSize = ((height / 25) < 12)?12:(height / 25);
         
@@ -91,17 +92,12 @@ public class CosmeticsGui extends GuiScreen {
                 else CosmeticHandler.PetType.number = 4;
                 break;
         }
-        refreshGui();
+        initGui();
         ConfigHandler.saveSettings();
     }
 	
 	@Override
 	public boolean doesGuiPauseGame() {
 		return false;
-	}
-	
-	private void refreshGui() {
-		buttonList.clear();
-		initGui();
 	}
 }

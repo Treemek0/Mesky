@@ -103,7 +103,7 @@ public class WaypointsGui extends GuiScreen {
 	    
     	if(holdingElement != null) {
 	    	
-	    	drawRect(holdingElement.xPosition, holdingElement.yPosition, holdingElement.xPosition + holdingElement.getWidth(), holdingElement.yPosition + holdingElement.getHeight(), new Color(33, 33, 33,255).getRGB());
+	    	drawRect(holdingElement.xPosition, holdingElement.yPosition, holdingElement.xPosition + holdingElement.getWidth(), holdingElement.yPosition + holdingElement.getHeight(), new Color(28, 28, 28,255).getRGB());
 	    	
 	    	List<GuiTextField> inputs = holdingElement.getListOfTextFields();
 			for (GuiTextField input : inputs) {
@@ -609,13 +609,7 @@ public class WaypointsGui extends GuiScreen {
 	        	return; // skip
 	        }
 	        
-	        if(!HypixelCheck.isOnHypixel()) {
-	    		waypointsList.add(0, new Waypoint(name, color, x, y, z, Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName()));
-	    	}else{
-	    		if(Locations.currentLocationText != null) {
-	    			waypointsList.add(0, new Waypoint(name, color, x, y, z, region.getText()));
-	    		}
-	    	}
+	    	waypointsList.add(0, new Waypoint(name, color, x, y, z, Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld)));
 	        
 	    }
 	    saveButton.packedFGColour = 11131282;

@@ -72,9 +72,9 @@ public class GuiLocations extends GuiScreen {
 		drawDefaultBackground();
         
 		// idfk how to do it man
-		renderFishingTimer();
-		renderBonzoMask();
-		renderSpiritMask();
+		if(SettingsConfig.FishingTimer.isOn) renderFishingTimer();
+		if(SettingsConfig.BonzoTimer.isOn) renderBonzoMask();
+		if(SettingsConfig.SpiritTimer.isOn) renderSpiritMask();
         
 		if(currentlyDragged != null) {
 			int x = Math.round(width * (currentlyDragged.position[0] / 100));
@@ -109,6 +109,8 @@ public class GuiLocations extends GuiScreen {
         for (GuiLocation location : locations) {
             float x = (width * (location.position[0] / 100));
             float y = (height * (location.position[1] / 100));
+            
+            if(!location.setting.isOn) continue;
             
             if (mouseX >= x && mouseX <= x + location.width && mouseY >= y && mouseY <= y + location.height) {
                 currentlyDragged = location;

@@ -63,6 +63,8 @@ public class Locations {
 						return;
 					}
 				}
+				
+				currentLocation = Location.NONE;
 			}
 			currentLocation = Location.NONE;
 		}

@@ -88,7 +88,7 @@ public class ChatFunctionsGui extends GuiScreen {
 		
 	    if(holdingElement != null) {
 	    	
-	    	drawRect(holdingElement.xPosition, holdingElement.yPosition, holdingElement.xPosition + holdingElement.getWidth(), holdingElement.yPosition + holdingElement.getHeight(), new Color(33, 33, 33,255).getRGB());
+	    	drawRect(holdingElement.xPosition, holdingElement.yPosition, holdingElement.xPosition + holdingElement.getWidth(), holdingElement.yPosition + holdingElement.getHeight(), new Color(28, 28, 28,255).getRGB());
 	    	
 	    	List<GuiTextField> inputs = holdingElement.getListOfTextFields();
 			for (GuiTextField input : inputs) {

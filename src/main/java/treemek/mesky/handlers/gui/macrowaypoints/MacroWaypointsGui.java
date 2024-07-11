@@ -105,7 +105,7 @@ public class MacroWaypointsGui extends GuiScreen {
 	    
 	    if(holdingElement != null) {
 	    	
-	    	drawRect(holdingElement.xPosition, holdingElement.yPosition, holdingElement.xPosition + holdingElement.getWidth(), holdingElement.yPosition + holdingElement.getHeight(), new Color(33, 33, 33,255).getRGB());
+	    	drawRect(holdingElement.xPosition, holdingElement.yPosition, holdingElement.xPosition + holdingElement.getWidth(), holdingElement.yPosition + holdingElement.getHeight(), new Color(28, 28, 28,255).getRGB());
 	    	
 	    	List<GuiTextField> inputs = holdingElement.getListOfTextFields();
 			for (GuiTextField input : inputs) {
@@ -681,13 +681,8 @@ public class MacroWaypointsGui extends GuiScreen {
 	        	return; // skip
 	        }
 	        
-	        if(!HypixelCheck.isOnHypixel()) {
-	        	waypointsList.add(0, new MacroWaypoint(new Waypoint(name, color, x, y, z, Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName()), yaw, pitch, left, right, back, forward, leftClick, rightClick, noiseLevel, function));
-	    	}else{
-	    		if(Locations.currentLocationText != null) {
-	    			waypointsList.add(0, new MacroWaypoint(new Waypoint(name, color, x, y, z, Locations.currentLocationText), yaw, pitch, left, right, back, forward, leftClick, rightClick, noiseLevel, function));
-	    		}
-	    	}
+	        waypointsList.add(0, new MacroWaypoint(new Waypoint(name, color, x, y, z, Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld)), yaw, pitch, left, right, back, forward, leftClick, rightClick, noiseLevel, function));
+	    	
 	        
 	    }
 	    saveButton.packedFGColour = 11131282;

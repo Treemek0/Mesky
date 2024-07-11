@@ -72,12 +72,8 @@ public class MacroWaypoints {
 		EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
     	color = color.replace("#", "");
     	Waypoint waypoint;
-    	if(!HypixelCheck.isOnHypixel()) {
-    		waypoint = new Waypoint(name, color, x, y, z, Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName());
-    	}else{
-    		Location.checkTabLocation();
-			waypoint = new Waypoint(name, color, x, y, z, Locations.currentLocationText);
-    	}
+		waypoint = new Waypoint(name, color, x, y, z,  Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld));
+
 		
 		MacroWaypoint macroWaypoint = new MacroWaypoint(waypoint, yaw, pitch, left, right, back, forward, leftClick, rightClick, noiseLevel, "");
     	waypointsList.add(macroWaypoint);
@@ -91,7 +87,7 @@ public class MacroWaypoints {
         	Location.checkTabLocation();
             for (MacroWaypoint macroWaypoint : waypointsList) {
             	Waypoint waypoint = macroWaypoint.waypoint;
-            	if((!HypixelCheck.isOnHypixel() && waypoint.world.equals(Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName())) || (HypixelCheck.isOnHypixel() && waypoint.world.equals(Locations.currentLocationText))) {
+            	if(waypoint.world.equals(Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld))) {
                 	// when im gonna be unbanned then check for world types
                     RenderHandler.draw3DString(waypoint.name, waypoint.coords, waypoint.color, event.partialTicks);
                     
@@ -161,17 +157,9 @@ public class MacroWaypoints {
 		
 		for (MacroWaypoint macroWaypoint : waypointsList) {
         	Waypoint waypoint = macroWaypoint.waypoint;
-	        if(!HypixelCheck.isOnHypixel()) {
-	    		if(waypoint.world.equals(Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName())){
-	        	LocationWaypointsList.add(new MacroWaypoint(new Waypoint(waypoint.name, waypoint.color, waypoint.coords[0], waypoint.coords[1], waypoint.coords[2], Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName()), macroWaypoint.yaw, macroWaypoint.pitch, macroWaypoint.left, macroWaypoint.right, macroWaypoint.back, macroWaypoint.forward, macroWaypoint.leftClick, macroWaypoint.rightClick, macroWaypoint.noiseLevel, macroWaypoint.function)); 
-	    		}
-	    	}else{
-	    		if(Locations.currentLocationText != null) {
-	    			if(waypoint.world.equalsIgnoreCase(Locations.currentLocationText)) {
-	    			LocationWaypointsList.add(new MacroWaypoint(new Waypoint(waypoint.name, waypoint.color, waypoint.coords[0], waypoint.coords[1], waypoint.coords[2], Locations.currentLocationText), macroWaypoint.yaw, macroWaypoint.pitch, macroWaypoint.left, macroWaypoint.right, macroWaypoint.back, macroWaypoint.forward, macroWaypoint.leftClick, macroWaypoint.rightClick, macroWaypoint.noiseLevel, macroWaypoint.function)); 
-	    			}
-	    		}   		
-	    	}
+        	if(waypoint.world.equals(Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld))){
+	        	LocationWaypointsList.add(new MacroWaypoint(new Waypoint(waypoint.name, waypoint.color, waypoint.coords[0], waypoint.coords[1], waypoint.coords[2], waypoint.world), macroWaypoint.yaw, macroWaypoint.pitch, macroWaypoint.left, macroWaypoint.right, macroWaypoint.back, macroWaypoint.forward, macroWaypoint.leftClick, macroWaypoint.rightClick, macroWaypoint.noiseLevel, macroWaypoint.function)); 
+        	}
 		}
 		return LocationWaypointsList;
     }
@@ -182,17 +170,9 @@ public class MacroWaypoints {
 		
 		for (MacroWaypoint macroWaypoint : waypointsList) {
         	Waypoint waypoint = macroWaypoint.waypoint;
-	        if(!HypixelCheck.isOnHypixel()) {
-	    		if(!waypoint.world.contains(Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName())){
-	        	LocationWaypointsList.add(new MacroWaypoint(new Waypoint(waypoint.name, waypoint.color, waypoint.coords[0], waypoint.coords[1], waypoint.coords[2],  waypoint.world), macroWaypoint.yaw, macroWaypoint.pitch, macroWaypoint.left, macroWaypoint.right, macroWaypoint.back, macroWaypoint.forward, macroWaypoint.leftClick, macroWaypoint.rightClick, macroWaypoint.noiseLevel, macroWaypoint.function));
-	    		}
-	    	}else{
-	    		if(Locations.currentLocationText != null) {
-	    			if(!waypoint.world.equalsIgnoreCase(Locations.currentLocationText)) {
-	    				LocationWaypointsList.add(new MacroWaypoint(new Waypoint(waypoint.name, waypoint.color, waypoint.coords[0], waypoint.coords[1], waypoint.coords[2],  waypoint.world), macroWaypoint.yaw, macroWaypoint.pitch, macroWaypoint.left, macroWaypoint.right, macroWaypoint.back, macroWaypoint.forward, macroWaypoint.leftClick, macroWaypoint.rightClick, macroWaypoint.noiseLevel, macroWaypoint.function));
-    	    		}
-	    		}   		
-	    	}
+        	if(!waypoint.world.equals(Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld))){
+	        	LocationWaypointsList.add(new MacroWaypoint(new Waypoint(waypoint.name, waypoint.color, waypoint.coords[0], waypoint.coords[1], waypoint.coords[2], waypoint.world), macroWaypoint.yaw, macroWaypoint.pitch, macroWaypoint.left, macroWaypoint.right, macroWaypoint.back, macroWaypoint.forward, macroWaypoint.leftClick, macroWaypoint.rightClick, macroWaypoint.noiseLevel, macroWaypoint.function)); 
+        	}
 		}
 		return LocationWaypointsList;
     }
@@ -202,32 +182,16 @@ public class MacroWaypoints {
     	
     	for (int i = 0; i < waypointsList.size(); i++) {
     		Waypoint waypoint = waypointsList.get(i).waypoint;
-    		if(!HypixelCheck.isOnHypixel()) {
-    			if(waypoint.world.equals(Minecraft.getMinecraft().theWorld.getWorldInfo().getWorldName())){
-    				if(numberInLocation == number) {
-    					Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Deleted macro waypoint: " + waypointsList.get(i).waypoint.name));
-	    				waypointsList.remove(i);
-	    				ConfigHandler.SaveMacroWaypoint(waypointsList);
-	    				break;
-	    			}else {
-	    				numberInLocation++;
-	    			}
-	    			
-	    		}
-	    	}else{
-	    		if(Locations.currentLocationText != null) {
-	    			if(waypoint.world.equalsIgnoreCase(Locations.currentLocationText)) {
-	    				if(numberInLocation == number) {
-	    					Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Deleted macro waypoint: " + waypointsList.get(i).waypoint.name));
-	    					waypointsList.remove(i);	
-	    					ConfigHandler.SaveMacroWaypoint(waypointsList);
-	    					break;
-		    			}else {
-		    				numberInLocation++;
-		    			}
-	    			}   		
-	    		}
-	    	}
+    		if(waypoint.world.equals(Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld))){
+				if(numberInLocation == number) {
+					Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Deleted macro waypoint: " + waypointsList.get(i).waypoint.name));
+    				waypointsList.remove(i);
+    				ConfigHandler.SaveMacroWaypoint(waypointsList);
+    				break;
+    			}else {
+    				numberInLocation++;
+    			}
+    		}
     	}
     }
 }

@@ -22,7 +22,7 @@ The fix for it is just using computer and cable connected to phone to move file 
 - [x] Changing gui locations
 - [x] AutoFish [!**Illegal**!]
 - [x] Jawbus Detection [!**Illegal**!]
-- [x] EntityDetector (/mesky find <true/false> <name of entity>) [!**Illegal**!]
+- [x] EntityDetector (/mesky find <true/false> <name of entity\>) [!**Illegal**!]
 - [x] "Freelook" but it rotates player not camera so idk if thats bannable [?**Illegal**?]
 - [ ] Utils for Kuudra (standing spots, pearl spots, etc) *but i have to learn them first*
 - [ ] Lowest bin (don't know anything about api)

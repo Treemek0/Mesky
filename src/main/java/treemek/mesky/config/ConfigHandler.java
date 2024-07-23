@@ -12,6 +12,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,6 +24,7 @@ import scala.util.parsing.input.Reader;
 import treemek.mesky.Mesky;
 import treemek.mesky.config.SettingsConfig.Setting;
 import treemek.mesky.cosmetics.CosmeticHandler;
+import treemek.mesky.handlers.gui.cosmetics.CustomCapeGui;
 import treemek.mesky.utils.Alerts;
 import treemek.mesky.utils.Waypoints;
 import treemek.mesky.utils.Alerts.Alert;
@@ -183,12 +185,26 @@ public class ConfigHandler {
 	                SettingsConfig.AutoFish = safelyGetInfo(settings.get("AutoFish"), SettingsConfig.AutoFish);
 	                SettingsConfig.KillSeaCreatures = safelyGetInfo(settings.get("KillSeaCreatures"), SettingsConfig.KillSeaCreatures);
 	                SettingsConfig.AutoThrowHook = safelyGetInfo(settings.get("AutoThrowHook"), SettingsConfig.AutoThrowHook);
+	                SettingsConfig.FreeLook = safelyGetInfo(settings.get("FreeLook"), SettingsConfig.FreeLook);
+	                
+	                // Mesky settings
+	                SettingsConfig.ScrollbarSpeed = safelyGetInfo(settings.get("ScrollbarSpeed"), SettingsConfig.ScrollbarSpeed);
+	                SettingsConfig.ScrollbarSmoothness = safelyGetInfo(settings.get("ScrollbarSmoothness"), SettingsConfig.ScrollbarSmoothness);
+	                SettingsConfig.MarkWaypointTime = safelyGetInfo(settings.get("MarkWaypointTime"), SettingsConfig.MarkWaypointTime);
+	                SettingsConfig.EntityDetectorWaypointLifeTime = safelyGetInfo(settings.get("EntityDetectorWaypointLifeTime"), SettingsConfig.EntityDetectorWaypointLifeTime);
+	                SettingsConfig.EntityDetectorWaypointTouchRadius = safelyGetInfo(settings.get("EntityDetectorWaypointTouchRadius"), SettingsConfig.EntityDetectorWaypointTouchRadius);
 	                
 	                // cosmetics
 	                CosmeticHandler.AuraType = safelyGetInfo(settings.get("AuraType"), CosmeticHandler.AuraType);
 	                CosmeticHandler.HatType = safelyGetInfo(settings.get("HatType"), CosmeticHandler.HatType);
 	                CosmeticHandler.WingsType = safelyGetInfo(settings.get("WingsType"), CosmeticHandler.WingsType);
 	                CosmeticHandler.PetType = safelyGetInfo(settings.get("PetType"), CosmeticHandler.PetType);
+	                CosmeticHandler.CapeType = safelyGetInfo(settings.get("CapeType"), CosmeticHandler.CapeType);
+	                CosmeticHandler.CustomCapeTexture = safelyGetInfo(settings.get("CustomCapeTexture"), CosmeticHandler.CustomCapeTexture);
+	                CosmeticHandler.CustomCapeFrequency = safelyGetInfo(settings.get("CustomCapeFrequency"), CosmeticHandler.CustomCapeFrequency);
+	                CosmeticHandler.AllowCatFallingAnimation = safelyGetInfo(settings.get("AllowCatFallingAnimation"), CosmeticHandler.AllowCatFallingAnimation);
+	                
+	                if(CosmeticHandler.CapeType.number == 5) CustomCapeGui.iterateImagesInFolder(CosmeticHandler.CustomCapeTexture.text, "CustomCape");
                 }
             } catch (IOException ex) {
                 ex.printStackTrace();
@@ -198,7 +214,18 @@ public class ConfigHandler {
     
     private static Setting safelyGetInfo(Setting objectFromFile, Setting oldSetting) {
     	if(objectFromFile != null) {
-    		return objectFromFile;
+    		for (Field field : Setting.class.getDeclaredFields()) { // its so when i update setting class then users wont have to delete config file
+                field.setAccessible(true);
+                try {
+                    Object newValue = field.get(objectFromFile);
+                    if (newValue != null) {
+                        field.set(oldSetting, newValue);
+                    }
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            }
+            return oldSetting;
     	}else {
     		return oldSetting;
     	}
@@ -206,7 +233,7 @@ public class ConfigHandler {
 
     public static void saveSettings(){
       // features
-    	Map<String, Setting> settings = new HashMap<>();
+    	Map<String, Setting> settings = new LinkedHashMap<>(); // linked so it would be in order
     	
     	settings.put("BlockFlowerPlacing", SettingsConfig.BlockFlowerPlacing);
     	settings.put("FishingTimer", SettingsConfig.FishingTimer);
@@ -223,12 +250,25 @@ public class ConfigHandler {
         settings.put("AutoFish", SettingsConfig.AutoFish);
         settings.put("KillSeaCreatures", SettingsConfig.KillSeaCreatures);
         settings.put("AutoThrowHook", SettingsConfig.AutoThrowHook);
+        settings.put("FreeLook", SettingsConfig.FreeLook);
+        //settings.put("SliderTest", SettingsConfig.SliderTest);
+        
+        // mesky settings
+        settings.put("ScrollbarSpeed", SettingsConfig.ScrollbarSpeed);
+        settings.put("ScrollbarSmoothness", SettingsConfig.ScrollbarSmoothness);
+        settings.put("MarkWaypointTime", SettingsConfig.MarkWaypointTime);
+        settings.put("EntityDetectorWaypointLifeTime", SettingsConfig.EntityDetectorWaypointLifeTime);
+        settings.put("EntityDetectorWaypointTouchRadius", SettingsConfig.EntityDetectorWaypointTouchRadius);
         
     	//cosmetics
     	settings.put("AuraType", CosmeticHandler.AuraType);
     	settings.put("HatType", CosmeticHandler.HatType);
     	settings.put("WingsType", CosmeticHandler.WingsType);
     	settings.put("PetType", CosmeticHandler.PetType);
+    	settings.put("CapeType", CosmeticHandler.CapeType);
+    	settings.put("CustomCapeTexture", CosmeticHandler.CustomCapeTexture);
+    	settings.put("CustomCapeFrequency", CosmeticHandler.CustomCapeFrequency);
+    	settings.put("AllowCatFallingAnimation", CosmeticHandler.AllowCatFallingAnimation);
         
     	new File(Mesky.configDirectory + "/mesky/").mkdirs();
     	try (FileWriter writer = new FileWriter(Mesky.configDirectory + "/mesky/meskySettings.json")) {

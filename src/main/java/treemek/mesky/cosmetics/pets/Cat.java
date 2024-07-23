@@ -95,7 +95,8 @@ public class Cat extends ModelBase{
 		if (player.equals(Minecraft.getMinecraft().thePlayer) && !player.isInvisible()) // Should render wings onto this player?
 		{
 			float scale = (event.renderer.getMainModel().isChild)?0.5f:1;
-			switch (CosmeticHandler.PetType.number) {
+
+			switch (CosmeticHandler.PetType.number.intValue()) {
 			case 1:
 				renderCat(player, event.partialRenderTick, scale, new ResourceLocation(Reference.MODID, "textures/models/cat/CalicoCat.png"));
 				break;
@@ -161,9 +162,12 @@ public class Cat extends ModelBase{
         float f11 = (System.currentTimeMillis() % 1000) / 1000F * (float) (Math.PI*2);
         // -------
         // head
-        double targetMotionYforce = Math.max(-30, (player.motionY * 10)) * Utils.influenceBasedOnDistanceFromAToB(pitch, 0, 45) + (Math.sin(f11*2)*2 * (1-Utils.influenceBasedOnDistanceFromAToB(player.motionY, 0, 0.5f)));
-    	motionYforce += (targetMotionYforce - motionYforce) * 0.02f;
-    	
+        if(CosmeticHandler.AllowCatFallingAnimation.isOn) {
+        	double targetMotionYforce = Math.max(-30, (player.motionY * 10)) * Utils.influenceBasedOnDistanceFromAToB(pitch, 0, 45) + (Math.sin(f11*2)*2 * (1-Utils.influenceBasedOnDistanceFromAToB(player.motionY, 0, 0.5f)));
+    		motionYforce += (targetMotionYforce - motionYforce) * 0.02f;
+        }else {
+        	motionYforce = 0;
+        }
 		head.rotateAngleZ = degreeToRadian((float)(Math.sin(f11)*2 * (Utils.influenceBasedOnDistanceFromAToB(player.motionY, 0, 0.2f))));
         head.rotateAngleX = degreeToRadian((float) (25 + motionYforce));
         head.offsetY = pixelsToCordinats(1);

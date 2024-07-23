@@ -1,14 +1,22 @@
 package treemek.mesky.utils.chat;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ChatLine;
+import net.minecraft.client.gui.GuiIngame;
+import net.minecraft.client.gui.GuiNewChat;
+import net.minecraft.client.gui.GuiUtilRenderComponents;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatStyle;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.StringUtils;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.fml.common.eventhandler.Event;
@@ -24,7 +32,7 @@ public class NickMentionDetector {
 //	public void onChat(ClientChatReceivedEvent event) {
 //		if(Minecraft.getMinecraft().theWorld != null && Minecraft.getMinecraft().theWorld.isRemote && (event.type == 0 || event.type == 1)) {
 //			if(event.isCanceled()) return;
-//			if(!SettingsConfig.NickMentionDetection) return;
+//			if(!SettingsConfig.NickMentionDetection.isOn) return;
 //			
 //	        String message = event.message.getFormattedText();
 //	        IChatComponent chatComponent = event.message;
@@ -51,9 +59,11 @@ public class NickMentionDetector {
 //		        	}	        
 //	        	}
 //      	
+//		        
 //		        if(!newChatComponent.equals(new ChatComponentText(""))) {
 //			        event.setCanceled(true);
 ////					Minecraft.getMinecraft().thePlayer.addChatMessage(newChatComponent);
+//			        System.out.println(newChatComponent.getFormattedText());
 //					Minecraft.getMinecraft().thePlayer.addChatComponentMessage(newChatComponent);
 //		        }
 //	        }
@@ -105,6 +115,7 @@ public class NickMentionDetector {
 				if(!positions.isEmpty()) {
 					for (Integer p : positions) {
 						if(hadColon || !fullMessage.contains(":")) {
+							skippedPart = skippedPart.replace(String.valueOf('\u127E'), "").replace(String.valueOf('\u2692'), "");
 							componentText += color + skippedPart.substring(0, p) + EnumChatFormatting.DARK_AQUA + nick;
 							skippedPart = skippedPart.substring(p + nick.length());
 						}else {
@@ -125,6 +136,7 @@ public class NickMentionDetector {
 				for (Integer p : positions) {
 					if(hadColon || !fullMessage.contains(":")) {
 						// idk how tf does that work when i substring from message and then try to get position from already substringed message IT SHOULD GIVE DIFFERENT RESOULT
+						message = message.replace(String.valueOf('\u127E'), "").replace(String.valueOf('\u2692'), "");
 						componentText += color + message.substring(0, p) + EnumChatFormatting.DARK_AQUA + nick;
 						message = message.substring(p + nick.length());
 					}else {
@@ -168,7 +180,7 @@ public class NickMentionDetector {
 	
 	private boolean haveSender(String message) {
     	if(!message.contains(":")) return false;
-    	int colonIndex = message.replace("ቾ", "").replace("⚒️", "").indexOf(':');
+    	int colonIndex = message.replace(String.valueOf('\u127E'), "").replace(String.valueOf('\u2692'), "").indexOf(':');
     	if(colonIndex-2 < 0) return true; // it means that the nick is one letter long :O
     	if(message.length() < 3 || colonIndex < 3) return false;
         if(StringUtils.stripControlCodes(message).startsWith("[")) return true;
@@ -180,7 +192,7 @@ public class NickMentionDetector {
 		if(haveSender(message)) {
 			Integer p = (message.indexOf(":")+1 > 0)? message.indexOf(":")+1 : 0;
 			String author = message.substring(0, p);
-			String onlyMessage = message.substring(p - 1);
+			String onlyMessage = message.substring(p - 1).replace(String.valueOf('\u127E'), "").replace(String.valueOf('\u2692'), "");
 			return new String[] {author,onlyMessage};
 		}else {
 			return new String[] {"", message};

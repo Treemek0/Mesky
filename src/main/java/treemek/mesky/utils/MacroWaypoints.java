@@ -84,7 +84,6 @@ public class MacroWaypoints {
 	@SubscribeEvent
     public void onWorldRender(RenderWorldLastEvent event) {
         if (!waypointsList.isEmpty()) {
-        	Location.checkTabLocation();
             for (MacroWaypoint macroWaypoint : waypointsList) {
             	Waypoint waypoint = macroWaypoint.waypoint;
             	if(waypoint.world.equals(Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld))) {
@@ -128,6 +127,7 @@ public class MacroWaypoints {
 							}
 							KeyBinding.unPressAllKeys();
 							if(macroWaypoint.yaw != null && macroWaypoint.pitch != null) {
+								RotationUtils.clearAllRotations();
 								RotationUtils.rotateCurveToWithControlableNoise(RotationUtils.getNeededYawFromMinecraftRotation(macroWaypoint.yaw), RotationUtils.getNeededPitchFromMinecraftRotation(macroWaypoint.pitch), 0.5f, macroWaypoint.noiseLevel);
 								Thread.sleep(1500);
 							}

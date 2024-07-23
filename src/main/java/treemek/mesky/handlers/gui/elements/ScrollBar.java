@@ -9,6 +9,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.util.ResourceLocation;
 import treemek.mesky.Reference;
+import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.handlers.gui.elements.buttons.DeleteButton;
 import treemek.mesky.utils.Waypoints;
 
@@ -22,9 +23,9 @@ public class ScrollBar extends Gui{
 	public int x;
 	public int y;
 	
-	private static final int SCROLL_SPEED = 15;
-    private static final float SMOOTH_SCROLLING_SPEED = 0.02f;
-
+	private int SCROLL_SPEED = SettingsConfig.ScrollbarSpeed.number.intValue();
+	private float SMOOTH_SCROLLING_SPEED = SettingsConfig.ScrollbarSmoothness.number.floatValue();
+	
 	public ScrollBar(int maxBottomScroll, int width, int height, int x, int y) {
 		this.maxBottomScroll = maxBottomScroll;
 		this.scrollbarHeight = height;
@@ -37,9 +38,12 @@ public class ScrollBar extends Gui{
 	
 	public ScrollBar() {
 		// if dont want to give 0,0,0,0
+		this.ScrollOffset = 0;
+		this.targetScrollOffset = 0;
+		this.maxBottomScroll = 0;
 	}
 	
-	
+	// Scrolling
     public void handleMouseInput(int scroll) throws IOException {      
         if (scroll != 0) {
         	if(targetScrollOffset < maxBottomScroll && scroll < 0) return;
@@ -50,11 +54,14 @@ public class ScrollBar extends Gui{
         }
     }
     
+    // Length of scrollable space (contentHeight - visibleHeight) [must be positive]
     public void updateMaxBottomScroll(int maxBottomScroll) {
-        this.maxBottomScroll = maxBottomScroll;
+        maxBottomScroll = Math.min(-maxBottomScroll, 0);
+    	this.maxBottomScroll = maxBottomScroll;
         targetScrollOffset = Math.max(targetScrollOffset, maxBottomScroll);
     }
     
+    // Update scrollbar position to click
     public int updateOffsetToMouseClick(int mouseY){
     	float precentOfScrollbar = (float)(mouseY - y) / ((y + scrollbarHeight) - y);
 		targetScrollOffset = (int) ((float)maxBottomScroll * precentOfScrollbar);
@@ -67,6 +74,7 @@ public class ScrollBar extends Gui{
     	return (int) ScrollOffset;
     }
     
+    // Update scrollbar width, height and position
     public void updateScrollBar(int width, int height, int x, int y) {
     	this.scrollbarHeight = height;
 		this.scrollbarWidth = width;
@@ -76,9 +84,9 @@ public class ScrollBar extends Gui{
     
     public void renderScrollBar() {	
     	if(maxBottomScroll != 0) { // dont render if doesnt needed
-    		updateScrollOffset();
+    		if((targetScrollOffset != ScrollOffset)) updateScrollOffset();
     		
-	        int scrollbar_height = (int) Math.max(scrollbarWidth * 2.857, Math.abs((scrollbarHeight - (scrollbarHeight / 20)) / Math.max(1, Math.abs(maxBottomScroll) / 10)));
+	        int scrollbar_height = (int) Math.max(scrollbarWidth * 2.857, Math.abs((scrollbarHeight - (scrollbarHeight / 20)) / Math.max(1, Math.abs(maxBottomScroll) / 15)));
 	        
 	        int scrollbarBG_endPosition = y + scrollbarHeight - scrollbar_height;
 
@@ -88,17 +96,23 @@ public class ScrollBar extends Gui{
 	       
         	drawRect(x, y, x + scrollbarWidth, y + scrollbarHeight, new Color(8, 7, 10, 150).getRGB());
         	
-        	ResourceLocation scrollbar = new ResourceLocation(Reference.MODID, "/gui/scrollbar.png");
+        	ResourceLocation scrollbar = new ResourceLocation(Reference.MODID, "gui/scrollbar.png");
         	Minecraft.getMinecraft().getTextureManager().bindTexture(scrollbar);
         	drawModalRectWithCustomSizedTexture(x, scrollbar_positionY, 0, 0, (int) scrollbarWidth, scrollbar_height, scrollbarWidth, scrollbar_height);
         }
     }
     
+    // the same thing as renderScrollBar() just different name because yes
     public void drawScrollBar() {
     	renderScrollBar();
     }
     
+    // Smooth function
     private void updateScrollOffset() {
+    	if (Math.abs(targetScrollOffset - ScrollOffset) * SMOOTH_SCROLLING_SPEED < (SCROLL_SPEED * SMOOTH_SCROLLING_SPEED)/25) {
+            ScrollOffset = targetScrollOffset; // Snap to target
+    	}
+    	
         ScrollOffset += (targetScrollOffset - ScrollOffset) * SMOOTH_SCROLLING_SPEED;
     }
     

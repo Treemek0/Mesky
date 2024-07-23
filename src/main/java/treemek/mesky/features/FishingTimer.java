@@ -33,6 +33,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import treemek.mesky.Reference;
 import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.handlers.RenderHandler;
+import treemek.mesky.utils.Locations;
 
 public class FishingTimer extends GuiScreen{
 	
@@ -50,9 +51,10 @@ public class FishingTimer extends GuiScreen{
             if (event.action == PlayerInteractEvent.Action.RIGHT_CLICK_AIR || event.action == PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK) {
                 if (Minecraft.getMinecraft().thePlayer.getHeldItem() != null && Minecraft.getMinecraft().thePlayer.getHeldItem().getItem() == Items.fishing_rod) {
                     if (!isFishing) {
-                        // Telling other scripts that we started fishing
-                        isFishing = true;
-                       
+                    	if(!Locations.getRegion().contains("Carnival")) {
+	                        // Telling other scripts that we started fishing
+	                        isFishing = true;
+                    	}
                     }
                 }
             }
@@ -64,9 +66,11 @@ public class FishingTimer extends GuiScreen{
     	Entity entity = event.entity;
     	if(entity instanceof EntityFishHook) {
     		if(((EntityFishHook)entity).angler == Minecraft.getMinecraft().thePlayer){
-    			isFishing = true;
-    			fishingHook = (EntityFishHook) entity;
-        		fishingTimer = 0;
+    			if(!Locations.getRegion().contains("Carnival")) {
+	    			isFishing = true;
+	    			fishingHook = (EntityFishHook) entity;
+	        		fishingTimer = 0;
+    			}
     		}
     	}
     }

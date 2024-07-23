@@ -22,8 +22,10 @@ import treemek.mesky.handlers.GuiHandler;
 import treemek.mesky.handlers.gui.GUI;
 import treemek.mesky.utils.Alerts;
 import treemek.mesky.utils.FriendsLocations;
+import treemek.mesky.utils.Locations;
 import treemek.mesky.utils.Locations.Location;
 import treemek.mesky.utils.MacroWaypoints;
+import treemek.mesky.utils.Utils;
 import treemek.mesky.utils.Waypoints;
 
 public class Commands extends CommandBase{
@@ -38,31 +40,12 @@ public class Commands extends CommandBase{
 		// Command arguments ./mesky [args]
     	if(args.length > 0){
     		String command = args[0].toLowerCase();
-    		System.out.println(command);
     		
     		if(command.equals("reload")) {
     			ConfigHandler.reloadConfig();
     		}
     		if(command.equals("fishing")) {
     			FishingTimer.isText3d = !FishingTimer.isText3d;
-    		}
-    		if(command.equals("pickaxeslot")) {
-    			if(args.length >= 2) {
-    				try {
-    					int slot = Integer.parseInt(args[1]);
-    					if(slot <= 9 && slot >= 0) {
-    						SettingsConfig.GhostPickaxeSlot.number = slot;
-    						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Slot set to: " + slot));
-    					}else {
-    						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Slot have to be between 0 and 9"));
-    					}
-					} catch (Exception e) {
-						e.printStackTrace();
-						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Error: " + e.toString()));
-					}
-    			}else {
-    				Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Correct way of using this command: /mesky pickaxeSlot <slot_number>"));
-    			}
     		}
 			if(command.equals("waypoint")) {
     			if(args.length >= 6) {
@@ -75,8 +58,7 @@ public class Commands extends CommandBase{
 						Waypoints.addWaypoint(name, color, x, y, z);
 						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Added waypoint: " + EnumChatFormatting.DARK_PURPLE + name + " " + EnumChatFormatting.GOLD + x + " " + y + " " + z));
 					} catch (Exception e) {
-						e.printStackTrace();
-						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Error: " + e.toString()));
+						Utils.writeError(e);
 						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Correct way of using this command: /mesky waypoint <name> <hex_color> <x> <y> <z>"));
 					}
     			}else {
@@ -104,8 +86,7 @@ public class Commands extends CommandBase{
 						MacroWaypoints.addMacroWaypoint(name, color, x, y, z, yaw, pitch, left, right, back, forward, leftClick, rightClick, noiseLevel);
 						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Added macro waypoint: " + EnumChatFormatting.DARK_PURPLE + name + " " + EnumChatFormatting.GOLD + x + " " + y + " " + z));
 					} catch (Exception e) {
-						e.printStackTrace();
-						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Error: " + e.toString()));
+						Utils.writeError(e);
 						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Correct way of using this command: /mesky waypoint <name> <hex_color> <noiseLevel> <leftClick true/false> <rightClick true/false> <leftMove true/false> <rightMove true/false> <backMove true/false> <forwardMove true/false>"));
 					}
     			}else {
@@ -124,8 +105,7 @@ public class Commands extends CommandBase{
 						Waypoints.addTemporaryWaypoint(name, color, x, y, z, 2, time);
 						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Added temporary waypoint (" + time/1000 + "s): " + EnumChatFormatting.DARK_PURPLE + name + " " + EnumChatFormatting.GOLD + x + " " + y + " " + z));
 					} catch (Exception e) {
-						e.printStackTrace();
-						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Error: " + e.toString()));
+						Utils.writeError(e);
 						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Correct way of using this command: /mesky tempwaypoint <name> <hex_color> <x> <y> <z> <time [s]>"));
 					}
     			}else {
@@ -148,8 +128,7 @@ public class Commands extends CommandBase{
 						Waypoints.addTouchWaypoint(name, color, x, y, z, 2, radius, lifeTime);
 						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Added touch waypoint (" + radius + "m): " + EnumChatFormatting.DARK_PURPLE + name + " " + EnumChatFormatting.GOLD + x + " " + y + " " + z));
 					} catch (Exception e) {
-						e.printStackTrace();
-						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Error: " + e.toString()));
+						Utils.writeError(e);
 						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Correct way of using this command: /mesky touchwaypoint <name> <hex_color> <x> <y> <z> <touch radius>"));
 					}
     			}else {
@@ -159,48 +138,14 @@ public class Commands extends CommandBase{
 			if(command.equals("friend")) {
     			if(args.length >= 2) {
 	    			String nick = args[1];
-	    			Location location = Location.NONE;
 					try {
-						location = FriendsLocations.getLocationForPlayer(nick);
+						FriendsLocations.getInfoForPlayer(nick);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
-	    			if(location == Location.NONE) {
-	    				Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("We don't have a location for this nickname. Either you didn't have this mod when you added this friend or you were outside Skyblock."));
-	    			}else {
-					Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(nick + ": " + location.name()));
-	    			}
     			}else {
     				Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Correct way of using this command: /mesky friend <nick>"));
     			}
-			}
-			if(command.equals("set")) {
-				if(args.length >= 4) {
-					Float x;
-					Float y;
-					try {
-						x = Float.parseFloat(args[2]);
-						y = Float.parseFloat(args[3]);
-					} catch (Exception e) {
-						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "You didn't put numbers correctly /mesky set <setting_name> <x> <y>"));
-						return;
-					}
-					if(args[1].equals("bonzoMask")) {
-						SettingsConfig.BonzoTimer.position = new Float[] {x,y};
-						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Set " + EnumChatFormatting.DARK_PURPLE + args[1]  + EnumChatFormatting.WHITE + " to " + EnumChatFormatting.GOLD + "x: " + x + "%, y: " + y + "%"));
-					}
-					if(args[1].equals("fishingTimer")) {
-						SettingsConfig.FishingTimer.position = new Float[] {x,y};
-						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Set " + EnumChatFormatting.DARK_PURPLE + args[1]  + EnumChatFormatting.WHITE + " to " + EnumChatFormatting.GOLD + "x: " + x + "%, y: " + y + "%"));
-					}
-					if(args[1].equals("spiritMask")) {
-						SettingsConfig.SpiritTimer.position = new Float[] {x,y};
-						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Set " + EnumChatFormatting.DARK_PURPLE + args[1]  + EnumChatFormatting.WHITE + " to " + EnumChatFormatting.GOLD + "x: " + x + "%, y: " + y + "%"));
-					}
-					ConfigHandler.saveSettings();
-				}else {
-					Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Correct way of using this command (x and y are % of screen): /mesky set <nameOfSetting> <x> <y>"));
-				}
 			}
 			if(command.equals("hideplayers")) {
 				SettingsConfig.HidePlayers.isOn = !SettingsConfig.HidePlayers.isOn;
@@ -229,6 +174,9 @@ public class Commands extends CommandBase{
 				}else {
 					Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Correct way of using this command /mesky find <onlyArmorStands? <true>/<false>> <name of entity>"));
 				}
+			}
+			if(command.equals("region")) {
+				Utils.writeMinecraftMessage("Current region: " + Locations.getRegion());
 			}
     	}
     }

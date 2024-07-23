@@ -141,11 +141,7 @@ public class Alerts extends GuiScreen {
     }
 	
 	public static List<Alert> alertsList = new ArrayList<>();
-	
-	 // Texture cache to store image path -> texture ID mappings
-    static Map<String, BufferedImage> bufferedTextureCache = new ConcurrentHashMap<>();
-    static Map<BufferedImage, ResourceLocation> resourceLocationCache = new ConcurrentHashMap<>();
-    
+
     // queue to render (but its list not queue lol)
     public static List<AlertRenderInfo> renderingQueue = new ArrayList<>();
 
@@ -282,94 +278,25 @@ public class Alerts extends GuiScreen {
             GlStateManager.popMatrix();
 	    }
 	    
-	    private static void downloadImageFromInternet(final String urlString, final String errorWhere) {
-	        new Thread(new Runnable() {
-	        	private BufferedImage bufferedimage;
-	        	private ResourceLocation resourceLocation;
-	        	
-	            public void run() {
-	                try {
-	                    // Download the image
-	                    URL url = new URL(urlString);
-	                    InputStream inputStream = url.openStream();
-	                    bufferedimage = ImageIO.read(inputStream);
-	                    // Switch back to the main thread for OpenGL operations
-	                    Minecraft.getMinecraft().addScheduledTask(new Runnable() {
-							public void run() {
-	                            try {
-	                            	resourceLocation = Minecraft.getMinecraft().getTextureManager().getDynamicTextureLocation("custom_image", new DynamicTexture(bufferedimage));
-			                    	bufferedTextureCache.put(urlString, bufferedimage);
-	                            	resourceLocationCache.put(bufferedimage, resourceLocation);
-	                            } catch (Exception e) {
-	                            	if(Minecraft.getMinecraft().thePlayer != null) {
-	                            		if(e.getLocalizedMessage() == null) {
-	                            			Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]" + EnumChatFormatting.WHITE + " in " + EnumChatFormatting.AQUA + errorWhere + EnumChatFormatting.WHITE + ": " + EnumChatFormatting.BOLD.RED + "There was a problem with downloading this image (BufferedImage is null)"));
-	                            		}else {
-	                            			Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]" + EnumChatFormatting.WHITE + " in " + EnumChatFormatting.AQUA + errorWhere + EnumChatFormatting.WHITE + ": " + EnumChatFormatting.BOLD.RED + e.getLocalizedMessage()));
-	                            		}
-	                            	}
-                            	}
-	                        }
-	                    });
-	                } catch (Exception e) {
-	                	if(Minecraft.getMinecraft().thePlayer != null) {
-                    		Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]" + EnumChatFormatting.WHITE + " in " + EnumChatFormatting.AQUA + errorWhere + EnumChatFormatting.WHITE + ": " + EnumChatFormatting.BOLD.RED + e.getLocalizedMessage()));
-                    		e.printStackTrace();
-	                	}	             
-                	}
-	            }
-	        }).start();
-	    }
 	    
-	    private static void findImageFromFiles(final String path, final String errorWhere) {
-	    	new Thread(new Runnable() {
-	            private BufferedImage bufferedimage;
-	            private ResourceLocation resourceLocation;
-	            
-				public void run() {
-			    	try {
-			    		File imageFile = new File(path);
-			    		try (InputStream inputStream = new BufferedInputStream(new FileInputStream(imageFile))) {
-		                    bufferedimage = ImageIO.read(inputStream);
-		                }
-			    		
-			            Minecraft.getMinecraft().addScheduledTask(new Runnable() {
-			                public void run() {
-			                    try {
-			                    	resourceLocation = Minecraft.getMinecraft().getTextureManager().getDynamicTextureLocation("custom_image", new DynamicTexture(bufferedimage));
-			                    	bufferedTextureCache.put(path, bufferedimage);
-	                            	resourceLocationCache.put(bufferedimage, resourceLocation);
-			                    }catch (Exception e) {
-			                    	if(Minecraft.getMinecraft().thePlayer != null) {
-	                            		Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]" + EnumChatFormatting.WHITE + " in " + EnumChatFormatting.AQUA + errorWhere + EnumChatFormatting.WHITE + ": " + EnumChatFormatting.BOLD.RED + e.getLocalizedMessage()));
-	                            	}
-			                    }
-			                }
-			            });
-			        } catch (Exception e) {
-			        	if(Minecraft.getMinecraft().thePlayer != null) {
-                    		Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]" + EnumChatFormatting.WHITE + " in " + EnumChatFormatting.AQUA + errorWhere + EnumChatFormatting.WHITE + ": " + EnumChatFormatting.BOLD.RED + e.getLocalizedMessage()));
-                    	}
-			        }
-	            }
-	    	}).start();
-	    }
+	    
+	   
 	    
 
 	    public void getTextureFromCache(Alert alert) {
-	        if (!bufferedTextureCache.containsKey(alert.displayedMessage)) {
+	        if (!ImageCache.bufferedTextureCache.containsKey(alert.displayedMessage)) {
 	            // If the texture is not in the cache, load it
 	        	if(alert.displayedMessage.contains("https://")) {
-	        		downloadImageFromInternet(alert.displayedMessage, "Alerts " + EnumChatFormatting.DARK_AQUA + "('" + alert.triggerMessage + "')");
+	        		ImageCache.downloadImageFromInternet(alert.displayedMessage, "Alerts " + EnumChatFormatting.DARK_AQUA + "('" + alert.triggerMessage + "')");
 	        	}else {
-	        		findImageFromFiles(alert.displayedMessage, "Alerts " + EnumChatFormatting.DARK_AQUA + "('" + alert.triggerMessage + "')");
+	        		ImageCache.findImageFromFiles(alert.displayedMessage, "Alerts " + EnumChatFormatting.DARK_AQUA + "('" + alert.triggerMessage + "')");
 	        	}
 	        }
 	        // Return the texture from the cache
-	        BufferedImage buff = bufferedTextureCache.getOrDefault(alert.displayedMessage, null);
+	        BufferedImage buff = ImageCache.bufferedTextureCache.getOrDefault(alert.displayedMessage, null);
 	        
 	        if(buff != null) {
-	        	ResourceLocation location = resourceLocationCache.getOrDefault(buff, null);
+	        	ResourceLocation location = ImageCache.resourceLocationCache.getOrDefault(buff, null);
 		        ResourceLocation soundLocation = new ResourceLocation("minecraft", "random.anvil_land");
 	            Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.create(soundLocation));
 	            
@@ -383,31 +310,31 @@ public class Alerts extends GuiScreen {
 	    }
 	    
 	    public static void putAllImagesToCache() {
-	    	// downloads images while loading game so when you want to get them they dont have to download (it sometimes took 5s to receive alert before this)
+	    	// downloads alert images while loading game so when you want to get them they dont have to download (it sometimes took 5s to receive alert before this)
 	    	List<String> paths = new ArrayList();
 	    	
 	    	for (Alert alert : alertsList) {
 				if((alert.displayedMessage.endsWith(".png") || alert.displayedMessage.endsWith(".jpg") || alert.displayedMessage.endsWith(".jpeg")) && (alert.displayedMessage.contains("/") || alert.displayedMessage.contains("\\"))) {
 					paths.add(alert.displayedMessage);
-					if(!bufferedTextureCache.containsKey(alert.displayedMessage)) {
+					if(!ImageCache.bufferedTextureCache.containsKey(alert.displayedMessage)) {
 						if(alert.displayedMessage.contains("https://")) {
-			        		downloadImageFromInternet(alert.displayedMessage, "Alerts " + EnumChatFormatting.DARK_AQUA + "('" + alert.triggerMessage + "')");
+							ImageCache.downloadImageFromInternet(alert.displayedMessage, "Alerts " + EnumChatFormatting.DARK_AQUA + "('" + alert.triggerMessage + "')");
 			        	}else {
-			        		findImageFromFiles(alert.displayedMessage, "Alerts " + EnumChatFormatting.DARK_AQUA + "('" + alert.triggerMessage + "')");
+			        		ImageCache.findImageFromFiles(alert.displayedMessage, "Alerts " + EnumChatFormatting.DARK_AQUA + "('" + alert.triggerMessage + "')");
 			        	}
 					}
 				}
 			}
 	    	
-	    	// deleting all unused images (while changing them or something idk)
-	    	for (Map.Entry<String, BufferedImage> cache : bufferedTextureCache.entrySet()) {
+	    	// deleting all unused alert images (while changing them or something idk)
+	    	for (Map.Entry<String, BufferedImage> cache : ImageCache.bufferedTextureCache.entrySet()) {
 	    	    String path = cache.getKey();
 	    	    BufferedImage buff = cache.getValue();
 	    	    
 	    	    if(!paths.contains(path)) {
-	    	    	bufferedTextureCache.remove(path);
-	    	    	Minecraft.getMinecraft().getTextureManager().deleteTexture(resourceLocationCache.get(buff));
-	    	    	resourceLocationCache.remove(buff);
+	    	    	ImageCache.bufferedTextureCache.remove(path);
+	    	    	Minecraft.getMinecraft().getTextureManager().deleteTexture(ImageCache.resourceLocationCache.get(buff));
+	    	    	ImageCache.resourceLocationCache.remove(buff);
 	    	    }
 	    	}
 	    }
@@ -416,20 +343,20 @@ public class Alerts extends GuiScreen {
 	    	String alert = alerts.get(i).display.getText();
 	    	
     		if((alert.endsWith(".png") || alert.endsWith(".jpg") || alert.endsWith(".jpeg")) && (alert.contains("/") || alert.contains("\\"))) {
-    			if(!bufferedTextureCache.containsKey(alert)) {
+    			if(!ImageCache.bufferedTextureCache.containsKey(alert)) {
 					if(alert.contains("https://")) {
-		        		downloadImageFromInternet(alert, "Alerts " + EnumChatFormatting.DARK_AQUA + "('" + "edit" + "')");
+						ImageCache.downloadImageFromInternet(alert, "Alerts " + EnumChatFormatting.DARK_AQUA + "('" + "edit" + "')");
 		        	}else {
-		        		findImageFromFiles(alert, "Alerts " + EnumChatFormatting.DARK_AQUA + "(" + "edit" + ")");
+		        		ImageCache.findImageFromFiles(alert, "Alerts " + EnumChatFormatting.DARK_AQUA + "(" + "edit" + ")");
 		        	}
     			}
 			}
     
 		    // Return the texture from the cache
-	        BufferedImage buff = bufferedTextureCache.getOrDefault(alert, null);
+	        BufferedImage buff = ImageCache.bufferedTextureCache.getOrDefault(alert, null);
 	        
 	        if(buff != null) {
-	        	ResourceLocation location = resourceLocationCache.getOrDefault(buff, null);
+	        	ResourceLocation location = ImageCache.resourceLocationCache.getOrDefault(buff, null);
 	        	
 	        	AlertPosition.alertInfo = new AlertRenderInfo(alert, 0, 0, location, buff, position, scale);
 	        	AlertPosition.alert = alerts.get(i);

@@ -82,8 +82,8 @@ public class FoldableSettingButton extends GuiButton{
 				}
 				if(hiddenObjects.get(i) instanceof GuiTextField) {
 					SettingTextField input = (SettingTextField) hiddenObjects.get(i);
-					input.drawTextField(xPosition + 5, yPosition + foldHeight + 2);
-					foldHeight += input.height + 5;
+					input.drawTextField(xPosition + 7, yPosition + foldHeight + 2);
+					foldHeight += input.height + 6;
 				}
 			}
 		}

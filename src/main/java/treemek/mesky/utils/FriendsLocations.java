@@ -40,6 +40,7 @@ public class FriendsLocations {
 	
 	@SubscribeEvent(priority = EventPriority.HIGH)
 	public void onChat(ClientChatReceivedEvent event) {
+		if(!HypixelCheck.isOnHypixel()) return;
 		String message = StringUtils.stripControlCodes(event.message.getUnformattedText());
 
 		if(message.contains(": ")) return;

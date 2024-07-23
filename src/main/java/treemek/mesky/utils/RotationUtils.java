@@ -115,6 +115,8 @@ public class RotationUtils {
 			angles.add(new float[] {interpolatedYaw, interpolatedPitch});
 		}
 		
+		angles.add(goalRotation);
+		
 		addToRotationQueue(angles);
 	}
 	
@@ -146,6 +148,8 @@ public class RotationUtils {
 	        angles.add(new float[] {interpolatedYaw, interpolatedPitch});
 		}
 		
+		angles.add(goalRotation);
+		
 		addToRotationQueue(angles);
 	}
 	
@@ -176,6 +180,8 @@ public class RotationUtils {
 	        
 	        angles.add(new float[] {interpolatedYaw, interpolatedPitch});
 		}
+		
+		angles.add(goalRotation);
 		
 		addToRotationQueue(angles);
 	}
@@ -210,6 +216,8 @@ public class RotationUtils {
 	        angles.add(new float[] {interpolatedYaw, interpolatedPitch});
 	    }
 
+	    angles.add(goalRotation);
+	    
 	    addToRotationQueue(angles);
 	}
 	
@@ -241,6 +249,8 @@ public class RotationUtils {
 	        
 	        angles.add(new float[] {interpolatedYaw, interpolatedPitch});
 		}
+		
+		angles.add(goalRotation);
 		
 		addToRotationQueue(angles);
 	}

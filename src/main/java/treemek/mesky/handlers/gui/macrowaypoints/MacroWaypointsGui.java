@@ -79,6 +79,11 @@ public class MacroWaypointsGui extends GuiScreen {
 		for (int i = 0; i < waypoints.size(); i++) {
 			MacroWaypointElement waypoint = waypoints.get(i);
 			if(waypoint == holdingElement) continue;
+			
+			if (waypoint.yPosition + waypoint.getHeight() <= ((height / 3))) {
+                continue;
+       	 	}
+			
 			List<GuiTextField> inputs = waypoint.getListOfTextFields();
 			
 			for (GuiTextField input : inputs) {
@@ -98,6 +103,11 @@ public class MacroWaypointsGui extends GuiScreen {
 	    for (int i = 0; i < waypoints.size(); i++) {
 	    	MacroWaypointElement waypoint = waypoints.get(i);
 	    	if(waypoint == holdingElement) continue;
+	    	
+	    	if (waypoint.yPosition + waypoint.getHeight() <= ((height / 3))) {
+                continue;
+       	 	}
+	    	
 	    	for (GuiButton button : waypoints.get(i).getListOfButtons()) {
 	    		button.drawButton(mc, mouseX, mouseY);
 	    	}
@@ -187,7 +197,7 @@ public class MacroWaypointsGui extends GuiScreen {
 		int waypointHeight = inputHeight*2 + 5;
 		inputMargin = ((height / 40) < 5)?5:(height / 40);
 		
-		scrollbar.updateMaxBottomScroll(Math.min(0, -(((MacroWaypoints.GetLocationWaypoints().size() * (waypointHeight + inputMargin))) - (height - (height/3)))));
+		scrollbar.updateMaxBottomScroll(((MacroWaypoints.GetLocationWaypoints().size() * (waypointHeight + inputMargin))) - (height - (height/3)));
 		int ScrollOffset = scrollbar.getOffset(); // so scrolloffset doesnt go below maxbottomscroll
 		
         int positionY = (int) (height / 3 + ScrollOffset);
@@ -196,13 +206,6 @@ public class MacroWaypointsGui extends GuiScreen {
 	        for (int i = 0; i < MacroWaypoints.GetLocationWaypoints().size(); i++) {
 	        	// Position 0 for inputs + every input height and their bottom margin
 	        	int inputFullPosition = positionY + ((waypointHeight + inputMargin) * i);
-	        	
-	
-	        	
-	        	// Check if any part of the text field is within the visible area (stop rendering inputs that go over text)
-	            if (inputFullPosition <= ((height / 3) - 20)) {
-	                continue;
-	            }
 	        	
 	        	DeleteButton deleteButton = new DeleteButton(0 + (5*i), (int)(width * 0.9f), inputFullPosition, inputHeight, inputHeight, "");
 	        	
@@ -276,13 +279,6 @@ public class MacroWaypointsGui extends GuiScreen {
 	        	// Position 0 for inputs + every input height and their bottom margin
 	        	int inputFullPosition = positionY + ((waypointHeight + inputMargin) * i);
 	        	
-	
-	        	
-	        	// Check if any part of the text field is within the visible area (stop rendering inputs that go over text)
-	            if (inputFullPosition <= ((height / 3) - 20)) {
-	                continue;
-	            }
-	        	
 	        	DeleteButton deleteButton = new DeleteButton(0 + (5*i), (int)(width * 0.9f), inputFullPosition, inputHeight, inputHeight, "");
 	        	
 	        	
@@ -354,7 +350,7 @@ public class MacroWaypointsGui extends GuiScreen {
 	
 	@Override
     protected void actionPerformed(GuiButton button) {
-		if(button.id == -1) {
+		if(button.id == -1 && button == saveButton) {
 			// Save button
 			SaveWaypoints();
 			return;
@@ -467,7 +463,7 @@ public class MacroWaypointsGui extends GuiScreen {
 						if(input.isFocused()) {
 							if(input.getId() == 2) {
 								// Backspace / leftArrow / rightArrow / . / delete
-								if(keyCode == 14 || keyCode == 203 || keyCode == 205 || keyCode == 211) input.textboxKeyTyped(typedChar, keyCode);
+								if(keyCode == 14 || keyCode == 203 || keyCode == 205 || keyCode == 211 || keyCode == Keyboard.KEY_MINUS) input.textboxKeyTyped(typedChar, keyCode);
 								
 								// disallows more than one "." in coords 
 								if(keyCode == 52 && !input.getText().contains(".")) input.textboxKeyTyped(typedChar, keyCode);
@@ -515,6 +511,11 @@ public class MacroWaypointsGui extends GuiScreen {
 			// focusing input when clicked
 			for (int i = 0; i < waypoints.size(); i++) {
 				MacroWaypointElement waypoint = waypoints.get(i);
+				
+				if (mouseY <= ((height / 3))) {
+	                 break;
+	        	 }
+				
 				boolean isAnythingPressed = false;
 				List<GuiTextField> inputs = waypoint.getListOfTextFields();
 				
@@ -523,7 +524,7 @@ public class MacroWaypointsGui extends GuiScreen {
 						input.mouseClicked(mouseX, mouseY, mouseButton);
 						isAnythingPressed = true;
 					}else {
-						input.setSelectionPos(input.getSelectionEnd());
+						input.setCursorPositionZero();
 						input.setFocused(false);
 					}
 				}
@@ -769,7 +770,7 @@ public class MacroWaypointsGui extends GuiScreen {
 	
 	public void updateWaypointsY() {
 		int waypointHeight = inputHeight*2 + 5;
-		scrollbar.updateMaxBottomScroll(Math.min(0, -(((waypoints.size() * (waypointHeight + inputMargin))) - (height - (height/3)))));
+		scrollbar.updateMaxBottomScroll(((waypoints.size() * (waypointHeight + inputMargin))) - (height - (height/3)));
 		int ScrollOffset = scrollbar.getOffset();
 		
 		int positionY = (int) (height / 3 + ScrollOffset);

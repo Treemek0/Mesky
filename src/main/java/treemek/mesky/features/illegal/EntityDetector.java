@@ -61,16 +61,7 @@ public class EntityDetector {
 	public static void getAllEntityFromType(String type, boolean findArmorStands) {
 		Minecraft mc = Minecraft.getMinecraft();
 		if (mc.thePlayer == null || mc.theWorld == null) return;
-		
-		Iterator<TouchWaypoint> iterator = Waypoints.touchWaypointsList.iterator();
-    	while (iterator.hasNext()) {
-    	    TouchWaypoint waypoint = iterator.next();
-    	    
-    	    if(entitiesWaypoint.contains(waypoint)) {
-    	    	iterator.remove();
-    	    	entitiesWaypoint.remove(waypoint);
-    	    }
-    	}
+
 
 		List<Entity> mobList = mc.theWorld.loadedEntityList;
 		List<int[]> checkedEntityCoords = new ArrayList<>();
@@ -86,9 +77,8 @@ public class EntityDetector {
              	int y = (int) Math.round(entity.posY);
              	int z = (int) Math.round(entity.posZ);
              	
-             	if(!checkedEntityCoords.contains(new int[]{x,z})) {           	
-	             	TouchWaypoint waypoint = new TouchWaypoint(entity.getName(), "a42b22", x, y, z, 2, 5, 600 * 1000L);
-	             	
+             	if(!checkedEntityCoords.contains(new int[]{x,z})) {   
+	             	TouchWaypoint waypoint = new TouchWaypoint(entity.getName(), "a42b22", x, y, z, 2, SettingsConfig.EntityDetectorWaypointTouchRadius.number.floatValue(), SettingsConfig.EntityDetectorWaypointLifeTime.number.longValue() * 1000L);
 	             	
 	             	Waypoints.touchWaypointsList.add(waypoint);
 	             	entitiesWaypoint.add(waypoint);
@@ -102,5 +92,20 @@ public class EntityDetector {
 		}else {
 			Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Found " + EnumChatFormatting.GOLD + numberOfEntities + EnumChatFormatting.WHITE + " entites of type '" + type + "'"));
 		}
+	}
+	
+	
+	public static void clearEntityWaypoints() {
+		Iterator<TouchWaypoint> iterator = Waypoints.touchWaypointsList.iterator();
+    	while (iterator.hasNext()) {
+    	    TouchWaypoint waypoint = iterator.next();
+    	    
+    	    if(entitiesWaypoint.contains(waypoint)) {
+    	    	iterator.remove();
+    	    	entitiesWaypoint.remove(waypoint);
+    	    }
+    	}
+    	
+    	entitiesWaypoint.clear();
 	}
 }

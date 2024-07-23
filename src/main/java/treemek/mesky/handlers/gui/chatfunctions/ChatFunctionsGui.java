@@ -67,6 +67,11 @@ public class ChatFunctionsGui extends GuiScreen {
 		for (int i = 0; i < chatFunctions.size(); i++) {
 			ChatFunctionElement chatFunction = chatFunctions.get(i);
 			if(chatFunction == holdingElement) continue;
+			
+			if (chatFunction.yPosition + chatFunction.getHeight() <= ((height / 3))) {
+                continue;
+       	 	}
+			
 			for (GuiTextField input : chatFunction.getListOfTextFields()) {
 				input.drawTextBox();
 			}
@@ -80,6 +85,10 @@ public class ChatFunctionsGui extends GuiScreen {
 	    for (int i = 0; i < chatFunctions.size(); i++) {
 			ChatFunctionElement chatFunction = chatFunctions.get(i);
 			if(chatFunction == holdingElement) continue;
+			
+			if (chatFunction.yPosition + chatFunction.getHeight() <= ((height / 3))) {
+                continue;
+       	 	}
 			
 			for (GuiButton button : chatFunction.getListOfButtons()) {
 				button.drawButton(mc, mouseX, mouseY);
@@ -118,9 +127,9 @@ public class ChatFunctionsGui extends GuiScreen {
     	int display_X = trigger_X + (width / 3) + 10;
         
         int infoY = (int)((height / 3) - 15);
-        RenderHandler.drawText("Only", (trigger_X * 0.1), infoY - fontRendererObj.FONT_HEIGHT*2, 1, true, 0x7a7a7a);
+        RenderHandler.drawText("Only", (trigger_X * 0.1), infoY - fontRendererObj.FONT_HEIGHT - 2, 1, true, 0x7a7a7a);
         RenderHandler.drawText("Party", (trigger_X * 0.1), infoY, 1, true, 0x7a7a7a);
-        RenderHandler.drawText("Ignore", (trigger_X * 0.4), infoY - fontRendererObj.FONT_HEIGHT*2, 1, true, 0x7a7a7a);
+        RenderHandler.drawText("Ignore", (trigger_X * 0.4), infoY - fontRendererObj.FONT_HEIGHT - 2, 1, true, 0x7a7a7a);
         RenderHandler.drawText("Players", (trigger_X * 0.4), infoY, 1, true, 0x7a7a7a);
         RenderHandler.drawText("Equal", (trigger_X * 0.7), infoY, 1, true, 0x7a7a7a);
         
@@ -160,18 +169,13 @@ public class ChatFunctionsGui extends GuiScreen {
         this.buttonList.add(new MeskyButton(-2, 0, (height/15), (int)(width * 0.2f), 20, "New function"));
         
         // This is so you cant scroll limitless, it takes every waypoint height with their margin and removes visible inputs height so you can scroll max to how much of inputs isnt visible
-  		scrollbar.updateMaxBottomScroll(Math.min(0, -(((ChatFunctions.chatFunctionsList.size() * (inputHeight + inputMargin))) - (height - (height/3)))));
+  		scrollbar.updateMaxBottomScroll(((ChatFunctions.chatFunctionsList.size() * (inputHeight + inputMargin))) - (height - (height/3)));
   		int ScrollOffset = scrollbar.getOffset();
       		
         if(chatFunctions.isEmpty()) {
 	        for (int i = 0; i < ChatFunctions.chatFunctionsList.size(); i++) {
 	        	// Position 0 for inputs + every input height and their bottom margin
 	        	int inputFullPosition = positionY + ((inputHeight + inputMargin) * i);
-	        	
-	        	// Check if any part of the text field is within the visible area (stop rendering inputs that go over text)
-	            if (inputFullPosition <= ((height / 3) - 20)) {
-	                continue;
-	            }
 	        	
 	        	
 	        	// Delete function button
@@ -205,10 +209,6 @@ public class ChatFunctionsGui extends GuiScreen {
 	        	// Position 0 for inputs + every input height and their bottom margin
 	        	int inputFullPosition = positionY + ((inputHeight + inputMargin) * i);
 	        	
-	        	// Check if any part of the text field is within the visible area (stop rendering inputs that go over text)
-	            if (inputFullPosition <= ((height / 3) - 20)) {
-	                continue;
-	            }
 	        	
 	        	
 	        	// Delete function button
@@ -333,12 +333,18 @@ public class ChatFunctionsGui extends GuiScreen {
 			// focusing on input if clicked
 			for (int i = 0; i < chatFunctions.size(); i++) {
 				ChatFunctionElement chatFunction = chatFunctions.get(i);
+				
+				if (mouseY <= ((height / 3))) {
+	                 break;
+	        	 }
+				
 				boolean isAnythingPressed = false;
 				for (GuiTextField input : chatFunction.getListOfTextFields()) {
 					if (mouseX >= input.xPosition && mouseX <= input.xPosition + input.width && mouseY >= input.yPosition && mouseY <= input.yPosition + input.height) {
 						input.mouseClicked(mouseX, mouseY, mouseButton);
 						isAnythingPressed = true;
 					}else {
+						input.setCursorPositionZero();
 						input.setFocused(false);
 					}
 				}
@@ -485,7 +491,7 @@ public class ChatFunctionsGui extends GuiScreen {
 	}
 	
 	public void updateChatFunctionsY() {
-		scrollbar.updateMaxBottomScroll(Math.min(0, -(((chatFunctions.size() * (inputHeight + inputMargin))) - (height - (height/3)))));
+		scrollbar.updateMaxBottomScroll(((chatFunctions.size() * (inputHeight + inputMargin))) - (height - (height/3)));
 		int ScrollOffset = scrollbar.getOffset();
 		
 		int positionY = (int) (height / 3 + ScrollOffset);

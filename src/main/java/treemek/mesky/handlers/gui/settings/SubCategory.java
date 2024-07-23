@@ -11,10 +11,11 @@ import net.minecraft.client.gui.GuiTextField;
 import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.handlers.gui.elements.buttons.FoldableSettingButton;
 import treemek.mesky.handlers.gui.elements.buttons.SettingButton;
+import treemek.mesky.handlers.gui.elements.sliders.SettingSlider;
 import treemek.mesky.handlers.gui.elements.textFields.SettingTextField;
 
 public class SubCategory extends GuiScreen{
-	String name;;
+	String name = null;
 	List<Object> list;
 	public int subHeight = 0;
 	public int y;
@@ -24,6 +25,10 @@ public class SubCategory extends GuiScreen{
 		this.list = list;
 	}
 
+	public SubCategory(List<Object> list) {
+		this.list = list;
+	}
+	
 	public void drawSubCategory(int y, int width, int height) {
 		this.y = y;
 		
@@ -34,11 +39,13 @@ public class SubCategory extends GuiScreen{
 		float defaultFontHeight = mc.fontRendererObj.FONT_HEIGHT;
 		float scaleFactor = (float) ((height/20) / defaultFontHeight) / 2;
 		
-		RenderHandler.drawText(name, x, y, scaleFactor, true, 0x505050);
-		newSubHeight += scaleFactor;
+		if(name != null) {
+			RenderHandler.drawText(name, x, y, scaleFactor, true, 0x505050);
+			newSubHeight += (scaleFactor * defaultFontHeight) + 3;
+		}
 		
 		if(list.size() > 0) {
-			int subEndY = (int)(y + defaultFontHeight * scaleFactor + 5);
+			int subEndY = (int)(y + newSubHeight);
 			for (int i = 0; i < list.size(); i++) {
 				if(list.get(i) instanceof GuiButton) {
 					GuiButton button = (GuiButton) list.get(i);
@@ -55,7 +62,7 @@ public class SubCategory extends GuiScreen{
            		 SettingTextField input = (SettingTextField)this.list.get(i);
 					
 					input.drawTextField(x, subEndY);
-					subEndY += input.height + 5;
+					subEndY += input.height + 6;
 				}
 			}
 			
@@ -93,7 +100,7 @@ public class SubCategory extends GuiScreen{
 	                			if (input.isHovered(mouseX, mouseY)) {
 	             					input.mouseClicked(mouseX, mouseY, mouseButton);
 	             				}else {
-	             					input.setSelectionPos(input.getSelectionEnd());
+	             					input.setCursorPositionZero();
 	             					input.setFocused(false);
 	             				}
 	                		}
@@ -113,13 +120,50 @@ public class SubCategory extends GuiScreen{
             		 if (input.isHovered(mouseX, mouseY)) {
      					input.mouseClicked(mouseX, mouseY, mouseButton);
      				}else {
-     					input.setSelectionPos(input.getSelectionEnd());
+     					input.setCursorPositionZero();
      					input.setFocused(false);
      				}
             	}
             }
         }
         super.mouseClicked(mouseX, mouseY, mouseButton);
+    }
+	
+	protected void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton, long timeSinceLastClick) {
+		for (int i = 0; i < this.list.size(); ++i)
+        {
+			if(list.get(i) instanceof SettingSlider) { // SettingSlider not GuiButton is because GuiButton doesnt have that function and its custom made lol
+				((SettingSlider)list.get(i)).mouseClickMoved(mouseX, mouseY, clickedMouseButton, timeSinceLastClick);
+			}
+			
+			if(list.get(i) instanceof FoldableSettingButton) {
+				List<Object> foldableList = ((FoldableSettingButton)list.get(i)).hiddenObjects;
+				for (int j = 0; j < foldableList.size(); ++j){
+					if(foldableList.get(j) instanceof SettingSlider) {
+						((SettingSlider)foldableList.get(j)).mouseClickMoved(mouseX, mouseY, clickedMouseButton, timeSinceLastClick);
+					}
+				}
+			}
+        }
+	}
+	
+	protected void mouseReleased(int mouseX, int mouseY, int state)
+    {
+		for (int i = 0; i < this.list.size(); ++i)
+        {
+			if(list.get(i) instanceof GuiButton) {
+				((GuiButton)list.get(i)).mouseReleased(mouseX, mouseY);
+			}
+			
+			if(list.get(i) instanceof FoldableSettingButton) {
+				List<Object> foldableList = ((FoldableSettingButton)list.get(i)).hiddenObjects;
+				for (int j = 0; j < foldableList.size(); ++j){
+					if(foldableList.get(j) instanceof GuiButton) {
+						((GuiButton)foldableList.get(j)).mouseReleased(mouseX, mouseY);;
+					}
+				}
+			}
+        }
     }
 	
 	protected void keyTyped(char typedChar, int keyCode) {

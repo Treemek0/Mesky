@@ -16,7 +16,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.EventBus;
 import treemek.mesky.config.ConfigHandler;
 import treemek.mesky.cosmetics.aura.FireAura;
-import treemek.mesky.cosmetics.cape.CustomCape;
+import treemek.mesky.cosmetics.cape.Cape;
 import treemek.mesky.cosmetics.hat.StovePiperHat;
 import treemek.mesky.cosmetics.pets.Cat;
 import treemek.mesky.cosmetics.pets.Parrot;
@@ -41,6 +41,7 @@ import treemek.mesky.utils.Alerts;
 import treemek.mesky.utils.ChatFunctions;
 import treemek.mesky.utils.FriendsLocations;
 import treemek.mesky.utils.HypixelCheck;
+import treemek.mesky.utils.Locations;
 import treemek.mesky.utils.MacroWaypoints;
 import treemek.mesky.utils.PathfinderUtils;
 import treemek.mesky.utils.RotationUtils;
@@ -68,6 +69,7 @@ public class Mesky {
 		ConfigHandler.reloadConfig();
 		
 		MinecraftForge.EVENT_BUS.register(new HypixelCheck());
+		MinecraftForge.EVENT_BUS.register(new Locations());
 		MinecraftForge.EVENT_BUS.register(new GuiHandler());
 		MinecraftForge.EVENT_BUS.register(new FishingTimer());
 		MinecraftForge.EVENT_BUS.register(new BlockFlowerPlacing());
@@ -81,7 +83,7 @@ public class Mesky {
 		MinecraftForge.EVENT_BUS.register(new MaskTimer());
 		MinecraftForge.EVENT_BUS.register(new FireWings());
 		MinecraftForge.EVENT_BUS.register(new AngelWings());
-		MinecraftForge.EVENT_BUS.register(new CustomCape());
+		MinecraftForge.EVENT_BUS.register(new Cape());
 		MinecraftForge.EVENT_BUS.register(new StovePiperHat());
 		MinecraftForge.EVENT_BUS.register(new HidePlayers());
 		MinecraftForge.EVENT_BUS.register(new CoordsDetector());
@@ -100,7 +102,7 @@ public class Mesky {
 		//MinecraftForge.EVENT_BUS.register(new PathfinderUtils());
 		
 		ClientRegistry.registerKeyBinding(GhostBlock.GKEY);
-		ClientRegistry.registerKeyBinding(Freelook.KEY);
+		//ClientRegistry.registerKeyBinding(Freelook.KEY);
 		
 		//if(Minecraft.getMinecraft().getSession().getUsername().equals("Treemek")){
 			//ClientRegistry.registerKeyBinding(PathfinderUtils.PathFindKey);

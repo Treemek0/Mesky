@@ -96,7 +96,7 @@ public class CoordsDetector {
 
     private boolean haveSender(String message) {
     	if(!message.contains(":")) return false;
-    	int colonIndex = message.replace("ቾ", "").replace("⚒️", "").indexOf(':');
+    	int colonIndex = message.replace("ቾ", "").replace("⚒", "").indexOf(':');
     	if(colonIndex-2 < 0) return true; // it means that the nick is one letter long :O
     	if(message.length() < 3 || colonIndex < 3) return false;
         Character beforeColon = message.charAt(colonIndex-1);
@@ -111,8 +111,8 @@ public class CoordsDetector {
         if(sender == null) sender = "fromChat" + Math.round(Math.random()*1000);
         
         ChatStyle temp = new ChatStyle();
-        temp.setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/mesky tempwaypoint " + sender + " E66758 " + x + " " + y + " " + z + " " + 180));
-        temp.setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("Create a temporary waypoint (3min)")));
+        temp.setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/mesky tempwaypoint " + sender + " E66758 " + x + " " + y + " " + z + " " + SettingsConfig.MarkWaypointTime));
+        temp.setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("Create a temporary waypoint")));
         temp.setColor(EnumChatFormatting.RED); // Set the color of the button text
         
         ChatComponentText clickableMessage = new ChatComponentText(" [MARK]");
@@ -142,7 +142,7 @@ public class CoordsDetector {
     
     private String getSender(String message) {
         // Extract sender's name from the message (assuming it's at the start before ":")
-    	String regex = "[ቾ⚒️]";
+    	String regex = "[ቾ⚒]";
     	message = message.replaceAll(regex, "");
         int colonIndex = message.indexOf(':');
         if (colonIndex != -1) {

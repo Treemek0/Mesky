@@ -132,7 +132,6 @@ public class Waypoints {
     @SubscribeEvent
     public void onWorldRender(RenderWorldLastEvent event) {
         if (!waypointsList.isEmpty()) {
-        	Location.checkTabLocation();
             for (Waypoint waypoint : waypointsList) {
             	if(waypoint.world.equals(Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld))) {
                 	// when im gonna be unbanned then check for world types

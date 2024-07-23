@@ -205,11 +205,15 @@ public class RenderHandler {
 	public static void draw3DBox(AxisAlignedBB aabb, String color, float partialTicks) {
         Entity render = Minecraft.getMinecraft().getRenderViewEntity();
         Color colour = Color.decode("#" + color);
-
+        
+        if(Minecraft.getMinecraft().theWorld == null) return;
+        
         double realX = render.lastTickPosX + (render.posX - render.lastTickPosX) * partialTicks;
         double realY = render.lastTickPosY + (render.posY - render.lastTickPosY) * partialTicks;
         double realZ = render.lastTickPosZ + (render.posZ - render.lastTickPosZ) * partialTicks;
 
+        if(!Minecraft.getMinecraft().theWorld.getChunkFromBlockCoords(new BlockPos(realX, realY, realZ)).isLoaded()) return;
+        
         GlStateManager.pushMatrix();
         GlStateManager.translate(-realX, -realY, -realZ);
         GlStateManager.disableTexture2D();

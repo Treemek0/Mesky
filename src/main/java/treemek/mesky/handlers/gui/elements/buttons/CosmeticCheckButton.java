@@ -10,23 +10,25 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.ResourceLocation;
 import treemek.mesky.Reference;
+import treemek.mesky.config.ConfigHandler;
+import treemek.mesky.config.SettingsConfig.Setting;
+import treemek.mesky.cosmetics.CosmeticHandler;
 import treemek.mesky.handlers.RenderHandler;
 
 public class CosmeticCheckButton extends GuiButton{
-
-	int x;
-	int y;
 	String buttonText;
-	public boolean isFull;
 	ResourceLocation image;
 	int checkSize;
+	public Setting setting;
+	private int cosmeticId;
 	
-	public CosmeticCheckButton(int buttonId, int x, int y, int width, int height, String buttonText, boolean isFull, ResourceLocation image, int checkSize) {
+	public CosmeticCheckButton(int buttonId, int x, int y, int width, int height, String buttonText, Setting setting, int cosmeticId, ResourceLocation image, int checkSize) {
 		super(buttonId, x, y, width, height, buttonText);
-		this.x = x;
-		this.y = y;
+		this.xPosition = x;
+		this.yPosition = y;
 		this.buttonText = buttonText;
-		this.isFull = isFull;
+		this.setting = setting;
+		this.cosmeticId = cosmeticId;
 		this.image = image;
 		this.checkSize = checkSize;
 	}
@@ -36,18 +38,25 @@ public class CosmeticCheckButton extends GuiButton{
 	ResourceLocation check = new ResourceLocation(Reference.MODID, "gui/check.png");
 	
 	public boolean isFull() {
-		return isFull;
+		return setting.number == cosmeticId;
 	}
+	
+	public void changeFull() {
+		if(setting.number == cosmeticId) setting.number = 0D;
+        else setting.number = (double) cosmeticId;
+		ConfigHandler.saveSettings();
+	}
+	
 	
 	@Override
 	public void drawButton(Minecraft mc, int mouseX, int mouseY) {
         
-        int left = x;
-        int top = y;
-		int right = x + width;
-        int bottom = y + height;
+        int left = xPosition;
+        int top = yPosition;
+		int right = xPosition + width;
+        int bottom = yPosition + height;
 		
-        if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height) {
+        if (mouseX >= xPosition && mouseX <= xPosition + width && mouseY >= yPosition && mouseY <= yPosition + height) {
             hovered = true;
         } else {
             hovered = false;
@@ -63,20 +72,20 @@ public class CosmeticCheckButton extends GuiButton{
 	    GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
 
 		
-		if(isFull) {
+		if(isFull()) {
 			mc.renderEngine.bindTexture(check);
 		}else {
 			mc.renderEngine.bindTexture(empty);
 		}
 		// drawing button
-		int checkX = x + (width/2) - (checkSize/2);
-		int checkY = (int)(y + (height*0.1));
+		int checkX = xPosition + (width/2) - (checkSize/2);
+		int checkY = (int)(yPosition + (height*0.1));
 		drawModalRectWithCustomSizedTexture(checkX, checkY, 0, 0, checkSize, checkSize, checkSize, checkSize);
 		
 		
 		// drawing image
 		mc.renderEngine.bindTexture(image);
-		drawModalRectWithCustomSizedTexture(x, y, 0, 0, width, height, width, height);
+		drawModalRectWithCustomSizedTexture(xPosition, yPosition, 0, 0, width, height, width, height);
 	}
 	
 
@@ -84,11 +93,7 @@ public class CosmeticCheckButton extends GuiButton{
 	@Override
 	public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
 		if(hovered) {
-			if(isFull) { 
-				isFull = false;
-			}else {
-				isFull = true;
-			}
+			changeFull();
 		}
 		return super.mousePressed(mc, mouseX, mouseY);
 	}

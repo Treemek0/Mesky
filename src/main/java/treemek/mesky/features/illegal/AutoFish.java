@@ -36,6 +36,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.features.FishingTimer;
 import treemek.mesky.utils.Alerts;
+import treemek.mesky.utils.Locations;
 import treemek.mesky.utils.RotationUtils;
 import treemek.mesky.utils.Utils;
 
@@ -71,8 +72,15 @@ public class AutoFish {
             if (event.action == PlayerInteractEvent.Action.RIGHT_CLICK_AIR || event.action == PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK) {
                 if (Minecraft.getMinecraft().thePlayer.getHeldItem() != null && Minecraft.getMinecraft().thePlayer.getHeldItem().getItem() == Items.fishing_rod) {
                     if (blokEverything) {
-                        blokEverything = false;
+                    	if(!Locations.getRegion().contains("Carnival")) {
+                    		blokEverything = false;
+                    	}
+                    	
                         lastBlockPos = Minecraft.getMinecraft().thePlayer.getPosition();
+                    }else {
+                    	if(Locations.getRegion().contains("Carnival")) {
+                    		blokEverything = true;
+                    	}
                     }
                     
                     originalRotation = new float[] {Minecraft.getMinecraft().thePlayer.rotationYaw, Minecraft.getMinecraft().thePlayer.rotationPitch};

@@ -16,6 +16,7 @@ import treemek.mesky.handlers.GuiHandler;
 import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.handlers.gui.alerts.AlertsGui;
 import treemek.mesky.handlers.gui.chatfunctions.ChatFunctionsGui;
+import treemek.mesky.handlers.gui.cosmetics.CosmeticsGui;
 import treemek.mesky.handlers.gui.elements.buttons.CheckButton;
 import treemek.mesky.handlers.gui.elements.buttons.MeskyButton;
 import treemek.mesky.handlers.gui.macrowaypoints.MacroWaypointsGui;

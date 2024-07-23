@@ -6,6 +6,7 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ResourceLocation;
 import treemek.mesky.Reference;
+import treemek.mesky.config.ConfigHandler;
 import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.config.SettingsConfig.Setting;
 import treemek.mesky.handlers.RenderHandler;
@@ -15,12 +16,17 @@ public class SettingButton extends GuiButton{
 	String buttonText;
 	Setting setting;
 	
-	public SettingButton(int buttonId, int width, int height, String buttonText, Setting setting) {
-		super(buttonId, 0, 0, width, height, buttonText);
+	public SettingButton(int buttonId, int size, String buttonText, Setting setting) {
+		super(buttonId, 0, 0, size, size, buttonText);
 		this.buttonText = buttonText;
 		this.setting = setting;
 	}
 	
+	public SettingButton(int buttonId, int size, int x, int y, String buttonText, Setting setting) {
+		super(buttonId, x, y, size, size, buttonText);
+		this.buttonText = buttonText;
+		this.setting = setting;
+	}
 	
 	ResourceLocation empty = new ResourceLocation(Reference.MODID, "gui/check-empty.png");
 	ResourceLocation check = new ResourceLocation(Reference.MODID, "gui/check.png");
@@ -31,6 +37,7 @@ public class SettingButton extends GuiButton{
 	
 	public void changeFull() {
          setting.isOn = !setting.isOn;
+         ConfigHandler.saveSettings();
 	}
 	
 	@Override

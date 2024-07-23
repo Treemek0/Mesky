@@ -1,31 +1,62 @@
 package treemek.mesky.utils;
 
 import java.awt.Color;
+import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+
+import javax.imageio.ImageIO;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.scoreboard.Score;
+import net.minecraft.scoreboard.ScoreObjective;
+import net.minecraft.scoreboard.ScorePlayerTeam;
+import net.minecraft.scoreboard.Scoreboard;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.StringUtils;
 import net.minecraft.util.Vec3;
 import treemek.mesky.handlers.gui.waypoints.WaypointsGui;
 import treemek.mesky.utils.Locations.Location;
 
 public class Utils {
+	private static final Logger logger = LogManager.getLogger();
+	
 	// Taken from SkyblockAddons
 	public static List<String> getItemLore(ItemStack itemStack) {
 	final int NBT_INTEGER = 3;
@@ -81,6 +112,40 @@ public class Utils {
 	 public static boolean containsWord(List<String> list, String word) {
 	        return list.stream().anyMatch(sentence -> sentence.contains(word));
 	    }
+
+	 public static List<String> getScoreboardLines(boolean withColors) {
+	        List<String> lines = new ArrayList<>();
+	        Scoreboard scoreboard = Minecraft.getMinecraft().theWorld.getScoreboard();
+	        if (scoreboard == null) return lines;
+
+	        ScoreObjective objective = scoreboard.getObjectiveInDisplaySlot(1);
+
+	        if (objective == null) return lines;
+
+	        Collection<Score> scores = scoreboard.getSortedScores(objective);
+	        List<Score> list = Lists.newArrayList(scores.stream()
+	                .filter(input -> input != null && input.getPlayerName() != null && !input.getPlayerName().startsWith("#"))
+	                .collect(Collectors.toList()));
+
+	        if (list.size() > 15) {
+	            scores = Lists.newArrayList(Iterables.skip(list, scores.size() - 15));
+	        } else {
+	            scores = list;
+	        }
+
+	        for (Score score : scores) {
+	            ScorePlayerTeam team = scoreboard.getPlayersTeam(score.getPlayerName());
+	            String line = ScorePlayerTeam.formatPlayerName(team, score.getPlayerName());
+	            if(!withColors) line = StringUtils.stripControlCodes(line);
+	            lines.add(line);
+	        }
+
+	        return lines;
+	    }
+	 
+	 public static String removeEmojisFromString(String s) {
+		 return s.replaceAll("[^\\x00-\\x7F]", "");
+	 }
 	 
 	 public static float normalizeAngle(float angle) {
 		    angle = angle % 360.0F;
@@ -95,6 +160,7 @@ public class Utils {
 		    return angle;
 	 }
 	 
+	 // if bPercent is 0.1 then a=90% and b=10%
 	 public static float getPrecentAverage(float a, float b, float bPercent) {
 		 float aPercent = 1-bPercent;
 		 return	(a*aPercent)+(b*bPercent);
@@ -293,6 +359,34 @@ public class Utils {
 		}
 
 		return f;
+	}
+	
+	public static String getCurrentTime() {
+        LocalTime now = LocalTime.now();
+
+        String timeFormatted = now.getHour() + ":" + now.getMinute() + ":" + now.getSecond();
+        return timeFormatted;
+	}
+	
+	public static void writeError(Exception e) {
+		e.printStackTrace();
+		writeMinecraftMessage(EnumChatFormatting.RED + "[" + getCurrentTime() + "] " + e);
+	}
+	
+	public static void writeError(String e) {
+		writeToConsole(e);
+		writeMinecraftMessage(EnumChatFormatting.RED + "[" + getCurrentTime() + "]" + e);
+	}
+	
+	public static void writeMinecraftMessage(String a) {
+		if(Minecraft.getMinecraft().thePlayer != null) {
+			if(a == null) a = "";
+			Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(a));
+		}
+	}
+	
+	public static void writeToConsole(String a) {
+		logger.info("[Mesky]: " + a);
 	}
 }
 

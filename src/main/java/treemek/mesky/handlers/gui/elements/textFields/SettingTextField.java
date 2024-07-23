@@ -38,8 +38,6 @@ public class SettingTextField extends GuiTextField{
 		setTextAsSetting();
 	}
 	
-	
-	
 	public void drawTextField(int x, int y) {
 		this.xPosition = x;
 		this.yPosition = y + 2; // because height has -4 and thats because of wrong drawing of textbox having border outside of its height
@@ -82,7 +80,7 @@ public class SettingTextField extends GuiTextField{
 			setting.text = this.getText();
 			
 			if(onlyNumbers) {
-				setting.number = Integer.parseInt(this.getText());
+				setting.number = Double.parseDouble(this.getText());
 			}
 			
 		} catch (IllegalArgumentException e) {
@@ -100,6 +98,8 @@ public class SettingTextField extends GuiTextField{
 			if(keyCode == 14 || keyCode == 203 || keyCode == 205 || keyCode == 211) {
 				return true;
 			}else if((keyCode == Keyboard.KEY_A || keyCode == Keyboard.KEY_C || keyCode == Keyboard.KEY_V) && isCtrlKeyDown()){
+				return true;
+			}else if(keyCode == Keyboard.KEY_PERIOD && !getText().contains(".")){
 				return true;
 			}else {
 				return false;

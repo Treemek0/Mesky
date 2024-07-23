@@ -62,6 +62,10 @@ public class AlertsGui extends GuiScreen {
 			AlertElement alert = alerts.get(i);
 			if(alert == holdingElement) continue;
 			
+			if (alert.yPosition + alert.getHeight() <= ((height / 3))) {
+                continue;
+       	 	}
+			
 			List<GuiTextField> inputs = alert.getListOfTextFields();
 			
 			for (GuiTextField input : inputs) {
@@ -78,6 +82,10 @@ public class AlertsGui extends GuiScreen {
 	    for (int i = 0; i < alerts.size(); i++) {
 			AlertElement alert = alerts.get(i);
 			if(alert == holdingElement) continue;
+			
+			if (alert.yPosition + alert.getHeight() <= ((height / 3))) {
+                continue;
+       	 	}
 			
 			for (GuiButton button : alert.getListOfButtons()) {
 				if(button instanceof EditButton) {
@@ -133,9 +141,9 @@ public class AlertsGui extends GuiScreen {
     	int time_X = display_X + (width / 4);
         
         int positionY = (int)((height / 3) - 15);
-        RenderHandler.drawText("Only", (trigger_X * 0.1), positionY - mc.fontRendererObj.FONT_HEIGHT*1.2, 1, true, 0x7a7a7a);
+        RenderHandler.drawText("Only", (trigger_X * 0.1), positionY - mc.fontRendererObj.FONT_HEIGHT - 2, 1, true, 0x7a7a7a);
         RenderHandler.drawText("Party", (trigger_X * 0.1), positionY, 1, true, 0x7a7a7a);
-        RenderHandler.drawText("Ignore", (trigger_X * 0.4), positionY - mc.fontRendererObj.FONT_HEIGHT*1.2, 1, true, 0x7a7a7a);
+        RenderHandler.drawText("Ignore", (trigger_X * 0.4), positionY - mc.fontRendererObj.FONT_HEIGHT - 2, 1, true, 0x7a7a7a);
         RenderHandler.drawText("Players", (trigger_X * 0.4), positionY, 1, true, 0x7a7a7a);
         RenderHandler.drawText("Equal", (trigger_X * 0.7), positionY, 1, true, 0x7a7a7a);
         
@@ -174,18 +182,13 @@ public class AlertsGui extends GuiScreen {
         this.buttonList.add(new MeskyButton(-2, 0, (height/15), (int)(width * 0.2f), 20, "New alert"));
         
     	// This is so you cant scroll limitless, it takes every waypoint height with their margin and removes visible inputs height so you can scroll max to how much of inputs isnt visible
- 		scrollbar.updateMaxBottomScroll(Math.min(0, -(((Alerts.alertsList.size() * (inputHeight + inputMargin))) - (height - (height/3)))));
+ 		scrollbar.updateMaxBottomScroll(((Alerts.alertsList.size() * (inputHeight + inputMargin))) - (height - (height/3)));
  		int ScrollOffset = scrollbar.getOffset();
  		
  		if(alerts.isEmpty()) {	
 	        for (int i = 0; i < Alerts.alertsList.size(); i++) {
 	        	// Position 0 for inputs + every input height and their bottom margin
 	        	int inputFullPosition = positionY + ((inputHeight + inputMargin) * i);
-	        	
-	        	// Check if any part of the text field is within the visible area (stop rendering inputs that go over text)
-	            if (inputFullPosition <= ((height / 3) - 20)) {
-	                continue;
-	            }
 	        	
 	        	// Delete button
 	        	DeleteButton deleteButton = new DeleteButton(0, (int)(width * 0.9f), inputFullPosition, inputHeight, inputHeight, "");
@@ -225,11 +228,6 @@ public class AlertsGui extends GuiScreen {
 	 		for (int i = 0; i < alerts.size(); i++) {
 	        	// Position 0 for inputs + every input height and their bottom margin
 	        	int inputFullPosition = positionY + ((inputHeight + inputMargin) * i);
-	        	
-	        	// Check if any part of the text field is within the visible area (stop rendering inputs that go over text)
-	            if (inputFullPosition <= ((height / 3) - 20)) {
-	                continue;
-	            }
 	        	
 	        	// Delete button
 	        	DeleteButton deleteButton = new DeleteButton(0, (int)(width * 0.9f), inputFullPosition, inputHeight, inputHeight, "");
@@ -388,6 +386,11 @@ public class AlertsGui extends GuiScreen {
 			for (int i = 0; i < alerts.size(); i++) {
 				AlertElement alert = alerts.get(i);
 				boolean isAnythingPressed = false;
+				
+				if (mouseY <= ((height / 3))) {
+	                 break;
+	        	 }
+				
 				List<GuiTextField> inputs = alert.getListOfTextFields();
 				
 				for (GuiTextField input : inputs) {
@@ -395,6 +398,7 @@ public class AlertsGui extends GuiScreen {
 						input.mouseClicked(mouseX, mouseY, mouseButton);
 						isAnythingPressed = true;
 					}else {
+						input.setCursorPositionZero();
 						input.setFocused(false);
 					}
 				}
@@ -526,7 +530,7 @@ public class AlertsGui extends GuiScreen {
 	}
 	
 	public void updateAlertsY() {
-		scrollbar.updateMaxBottomScroll(Math.min(0, -(((alerts.size() * (inputHeight + inputMargin))) - (height - (height/3)))));
+		scrollbar.updateMaxBottomScroll(((alerts.size() * (inputHeight + inputMargin))) - (height - (height/3)));
 		int ScrollOffset = scrollbar.getOffset();
 		
 		int positionY = (int) (height / 3 + ScrollOffset);

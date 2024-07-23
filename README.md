@@ -12,7 +12,8 @@ The fix for it is just using computer and cable connected to phone to move file 
 - [x] Fishing timer
 - [x] Settings/Alerts/Waypoints/Cosmetics/ChatFunctions/MacroWaypoints all in one place (/mesky)
 - [x] Bonzo/Spirit mask timer
-- [x] Cosmetics (4 types of cats, 2 types of wings and a hat)
+- [x] Cosmetics
+- [x] Custom cape (make your own cape from cape template, make folder anywhere on your system, paste your cape there and name it "cape0" [for animating cape just make cape1, cape2, ...] and select folder in gui)
 - [x] Hiding players (in settings)
 - [x] Coordinates detection in chat
 - [x] Ghost block [!**Illegal**!]

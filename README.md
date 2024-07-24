@@ -23,6 +23,7 @@ The fix for it is just using computer and cable connected to phone to move file 
 - [x] AutoFish [!**Illegal**!]
 - [x] Jawbus Detection [!**Illegal**!]
 - [x] EntityDetector (/mesky find <true/false> <name of entity\>) [!**Illegal**!]
+      ([/mesky whatentity] to get name of entity that player is looking at)
 - [x] "Freelook" but it rotates player not camera so idk if thats bannable [?**Illegal**?]
 - [ ] Utils for Kuudra (standing spots, pearl spots, etc) *but i have to learn them first*
 - [ ] Lowest bin (don't know anything about api)

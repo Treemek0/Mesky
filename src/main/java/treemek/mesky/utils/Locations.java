@@ -105,7 +105,7 @@ public class Locations {
 			}
 		 }
 		    
-		 return null;
+		 return "";
 	  }
 
 	 @SubscribeEvent

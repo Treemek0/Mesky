@@ -17,6 +17,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.client.resources.SkinManager;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent.Post;
@@ -90,7 +91,7 @@ public class Parrot extends ModelBase{
        
 	}
 	
-	
+//	
 //	@SubscribeEvent
 //	public void onRenderPlayer(RenderPlayerEvent.Post event)
 //	{
@@ -103,7 +104,7 @@ public class Parrot extends ModelBase{
 //			renderParrot(event, event.partialRenderTick, scale, null);
 //		}
 //	}
-	
+//	
 	
 	private void renderParrot(Post event, float partialTicks, float scale, ResourceLocation textureLocation) {
 		GL11.glPushMatrix();
@@ -113,13 +114,24 @@ public class Parrot extends ModelBase{
 		GlStateManager.scale(scale, scale, scale);
 		
 		
-		
-        GlStateManager.translate(0, 2, 0);
-    	
+		float shoulderHeight = (player.isSneaking())?1.42f*0.85f:1.42f; // if sneaking then height - 25%
+    	if(((AbstractClientPlayer)event.entityPlayer).getSkinType().equals("slim")) {
+    		shoulderHeight -= pixelsToCordinats(0.5f);
+    	}
         
-        float yaw = interpolate(player.prevRenderYawOffset, player.renderYawOffset, 1);;
-        GL11.glRotated(-yaw, 0.0F, 1.0F, 0.0F);      
+    	GlStateManager.translate(0, shoulderHeight, 0);
+    	
+        float yaw = player.prevRenderYawOffset + (player.renderYawOffset - player.prevRenderYawOffset) * partialTicks;
+        GlStateManager.rotate(-yaw, 0.0F, 1.0F, 0.0F);      
 
+        GlStateManager.translate(0, -pixelsToCordinats(6), 0); // rotation point to body
+        if(player.isSneaking()) {
+    		GL11.glRotated(22.9, 1, 0, 0);
+    	}
+
+        //setAngles(event.renderer.getMainModel().bipedLeftArm);
+        
+        GlStateManager.translate(0, pixelsToCordinats(6), 0);
         
         GL11.glDisable(GL11.GL_TEXTURE_2D);
         
@@ -186,6 +198,9 @@ public class Parrot extends ModelBase{
 		return a * ((float)Math.PI / 180F);
 	}
 	
+	public float radiansTodegree(float a) {
+		return a / ((float)Math.PI / 180F);
+	}
 	
 	public float pixelsToCordinats(float pixel) {
 		return pixel*0.0625f;
@@ -203,4 +218,11 @@ public class Parrot extends ModelBase{
 		return f;
 	}
 
+	public void setAngles(ModelRenderer source)
+    {
+        GL11.glRotated(radiansTodegree(source.rotateAngleX), 1, 0, 0);
+        GL11.glRotated(radiansTodegree(source.rotateAngleY), 0, 1, 0);
+        GL11.glRotated(radiansTodegree(-source.rotateAngleZ), 0, 0, 1);
+    }
+	
 }

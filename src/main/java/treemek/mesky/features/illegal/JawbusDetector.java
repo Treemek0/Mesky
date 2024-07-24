@@ -147,7 +147,7 @@ public class JawbusDetector {
 	            	if(playerLocation.getZ() > -430 && playerLocation.getX() > -365 && playerLocation.getX() < -355) return; // player location is at spawn
 	            	
 	                ChatStyle temp = new ChatStyle();
-	                temp.setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/mesky tempwaypoint " + playerName + " E66758 " + playerLocation.getX() + " " + playerLocation.getY() + " " + playerLocation.getZ() + " " + SettingsConfig.MarkWaypointTime.number.longValue()));
+	                temp.setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/mesky tempwaypoint " + playerName + " E66758 " + playerLocation.getX() + " " + playerLocation.getY() + " " + playerLocation.getZ() + " " + SettingsConfig.MarkWaypointTime.number.intValue()));
 	                temp.setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("Create a temporary waypoint (3min)")));
 	                temp.setColor(EnumChatFormatting.RED); // Set the color of the button text
 	                

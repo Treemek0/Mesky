@@ -35,6 +35,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.utils.Alerts;
+import treemek.mesky.utils.Utils;
 import treemek.mesky.utils.Waypoints;
 import treemek.mesky.utils.Waypoints.TouchWaypoint;
 import treemek.mesky.utils.Waypoints.Waypoint;
@@ -56,6 +57,12 @@ public class EntityDetector {
 		}
 	}
 	
+	public static String whatEntity() {
+		Entity entity = Utils.getEntityLookedAt(10);
+		if(entity == null) return "";
+		
+		return entity.getName();
+	}
 	
 	@SideOnly(Side.CLIENT)
 	public static void getAllEntityFromType(String type, boolean findArmorStands) {

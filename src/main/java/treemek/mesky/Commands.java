@@ -175,6 +175,10 @@ public class Commands extends CommandBase{
 					Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Correct way of using this command /mesky find <onlyArmorStands? <true>/<false>> <name of entity>"));
 				}
 			}
+			if(command.equals("whatentity")) {
+				Utils.writeMinecraftMessage(EnumChatFormatting.AQUA + "Looked at entity: ");
+				Utils.writeMinecraftMessage(EnumChatFormatting.GOLD + EntityDetector.whatEntity());
+			}
 			if(command.equals("region")) {
 				Utils.writeMinecraftMessage("Current region: " + Locations.getRegion());
 			}

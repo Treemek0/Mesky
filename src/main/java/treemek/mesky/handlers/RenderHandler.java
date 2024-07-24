@@ -212,7 +212,8 @@ public class RenderHandler {
         double realY = render.lastTickPosY + (render.posY - render.lastTickPosY) * partialTicks;
         double realZ = render.lastTickPosZ + (render.posZ - render.lastTickPosZ) * partialTicks;
 
-        if(!Minecraft.getMinecraft().theWorld.getChunkFromBlockCoords(new BlockPos(realX, realY, realZ)).isLoaded()) return;
+        if(!Minecraft.getMinecraft().theWorld.isBlockLoaded(new BlockPos(realX, realY, realZ))) return;
+        
         
         GlStateManager.pushMatrix();
         GlStateManager.translate(-realX, -realY, -realZ);

@@ -2,6 +2,7 @@ package treemek.mesky.handlers.gui.elements.buttons;
 
 import java.awt.FileDialog;
 import java.awt.Frame;
+import java.awt.Window;
 import java.io.File;
 
 import javax.swing.JFileChooser;
@@ -50,15 +51,16 @@ public class FileSelectorButton extends GuiButton{
 	
 	private void openFileChooser() {
 	    // Ensure the GUI thread is used to open the file dialog
-	    Minecraft.getMinecraft().addScheduledTask(() -> {
-	        FileDialog fileDialog = new FileDialog((java.awt.Frame) null, "Select \"cape0\" File", FileDialog.LOAD);
+		new Thread(() -> {
+	        FileDialog fileDialog = new FileDialog((java.awt.Frame) null, "Select cape0 file", FileDialog.LOAD);
+	        fileDialog.setDirectory(resultField.getText());
 	        fileDialog.setVisible(true);
-
+	        
 	        String directory = fileDialog.getDirectory();
 	        if (directory != null) {
 	            setFolderPath(directory.substring(0, directory.length()-1));
 	        }
-	    });
+	    }).start();
 	}
 
     private void setFolderPath(String path) {

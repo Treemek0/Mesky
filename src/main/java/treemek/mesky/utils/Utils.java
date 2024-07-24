@@ -36,6 +36,7 @@ import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -44,6 +45,7 @@ import net.minecraft.scoreboard.Score;
 import net.minecraft.scoreboard.ScoreObjective;
 import net.minecraft.scoreboard.ScorePlayerTeam;
 import net.minecraft.scoreboard.Scoreboard;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.MathHelper;
@@ -345,6 +347,58 @@ public class Utils {
         return riddenEntityRotation;
 	}
     
+    public static Entity getEntityLookedAt(double range) {
+        Minecraft mc = Minecraft.getMinecraft();
+        EntityPlayerSP player = mc.thePlayer;
+        if(player == null) return null;
+        Vec3 eyePosition = player.getPositionEyes(1.0F);
+        Vec3 lookVector = player.getLook(1.0F);
+        Vec3 traceEnd = eyePosition.addVector(lookVector.xCoord * range, lookVector.yCoord * range, lookVector.zCoord * range);
+
+        // Ray trace for blocks first
+        MovingObjectPosition blockHit = mc.theWorld.rayTraceBlocks(eyePosition, traceEnd);
+        Vec3 hitVec = blockHit != null ? blockHit.hitVec : traceEnd;
+
+        Entity pointedEntity = null;
+        double minDistance = range;
+
+        List<Entity> entities = mc.theWorld.getEntitiesWithinAABBExcludingEntity(player,
+            player.getEntityBoundingBox()
+            .addCoord(lookVector.xCoord * range, lookVector.yCoord * range, lookVector.zCoord * range)
+            .expand(1.0D, 1.0D, 1.0D)
+        );
+
+        for (Entity entity : entities) {
+            if (entity.canBeCollidedWith()) {
+                float collisionBorderSize = entity.getCollisionBorderSize();
+                AxisAlignedBB entityBB = entity.getEntityBoundingBox().expand(collisionBorderSize, collisionBorderSize, collisionBorderSize);
+                MovingObjectPosition entityHit = entityBB.calculateIntercept(eyePosition, hitVec);
+
+                if (entityBB.isVecInside(eyePosition)) {
+                    if (0.0D < minDistance || minDistance == 0.0D) {
+                        pointedEntity = entity;
+                        minDistance = 0.0D;
+                    }
+                } else if (entityHit != null) {
+                    double distanceToHit = eyePosition.distanceTo(entityHit.hitVec);
+
+                    if (distanceToHit < minDistance || minDistance == 0.0D) {
+                        if (entity == player.ridingEntity && !entity.canRiderInteract()) {
+                            if (minDistance == 0.0D) {
+                                pointedEntity = entity;
+                            }
+                        } else {
+                            pointedEntity = entity;
+                            minDistance = distanceToHit;
+                        }
+                    }
+                }
+            }
+        }
+
+        return pointedEntity;
+    }
+    
 	public static float interpolate360(float yaw1, float yaw2, float percent)
 	{
 		float f = (yaw1 + (yaw2 - yaw1) * percent);
@@ -375,7 +429,7 @@ public class Utils {
 	
 	public static void writeError(String e) {
 		writeToConsole(e);
-		writeMinecraftMessage(EnumChatFormatting.RED + "[" + getCurrentTime() + "]" + e);
+		writeMinecraftMessage(EnumChatFormatting.RED + "[" + getCurrentTime() + "] " + e);
 	}
 	
 	public static void writeMinecraftMessage(String a) {

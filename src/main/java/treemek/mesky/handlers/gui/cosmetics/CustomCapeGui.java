@@ -24,6 +24,7 @@ import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.ResourceLocation;
+import treemek.mesky.Mesky;
 import treemek.mesky.config.ConfigHandler;
 import treemek.mesky.cosmetics.CosmeticHandler;
 import treemek.mesky.handlers.GuiHandler;
@@ -74,6 +75,10 @@ public class CustomCapeGui  extends GuiScreen{
 	public void initGui() {
 		int pathsX = width/2 - (width/2)/2;
 		
+		if(CosmeticHandler.CustomCapeTexture.text.isEmpty()) {
+			CosmeticHandler.CustomCapeTexture.text = Mesky.configDirectory;
+		}
+		
 		folderPathField = new GuiTextField(1, fontRendererObj, pathsX, height/2, width/2, 20);
 		folderPathField.setMaxStringLength(256);
 		folderPathField.setText(CosmeticHandler.CustomCapeTexture.text);
@@ -88,9 +93,7 @@ public class CustomCapeGui  extends GuiScreen{
 	protected void keyTyped(char typedChar, int keyCode) throws IOException {
 		if(folderPathField.isFocused()) {
 			folderPathField.textboxKeyTyped(typedChar, keyCode);
-			if(CosmeticHandler.CustomCapeTexture.text != folderPathField.getText()) {
-				CosmeticHandler.CustomCapeTexture.text = folderPathField.getText();
-			}
+			CosmeticHandler.CustomCapeTexture.text = folderPathField.getText();
 		}
 		
 		if(animationFreqField.isFocused()) {

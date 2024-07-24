@@ -111,7 +111,7 @@ public class CoordsDetector {
         if(sender == null) sender = "fromChat" + Math.round(Math.random()*1000);
         
         ChatStyle temp = new ChatStyle();
-        temp.setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/mesky tempwaypoint " + sender + " E66758 " + x + " " + y + " " + z + " " + SettingsConfig.MarkWaypointTime));
+        temp.setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/mesky tempwaypoint " + sender + " E66758 " + x + " " + y + " " + z + " " + SettingsConfig.MarkWaypointTime.number.intValue()));
         temp.setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("Create a temporary waypoint")));
         temp.setColor(EnumChatFormatting.RED); // Set the color of the button text
         

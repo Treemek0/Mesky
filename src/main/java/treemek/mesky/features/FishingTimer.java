@@ -42,7 +42,6 @@ public class FishingTimer extends GuiScreen{
 	public static boolean isInWater = false;
     public static EntityFishHook fishingHook = null;
     private float fishingTimer = 0;
-    public static boolean isText3d = false;
 
    
     @SubscribeEvent
@@ -127,61 +126,35 @@ public class FishingTimer extends GuiScreen{
         }
     }
     
-    //
     // 3d text
-    //
-
     @SubscribeEvent
     public void onWorldRender(RenderWorldLastEvent event) {
-    	if (fishingHook != null && isText3d && SettingsConfig.FishingTimer.isOn) {
-          // Render the fishing timer on the screen
-          renderFishingTimer3D(event.partialTicks);
+    	if (fishingHook != null && SettingsConfig.FishingTimerIs3d.isOn && SettingsConfig.FishingTimer.isOn) {
+    		Minecraft mc = Minecraft.getMinecraft();
+		    FontRenderer fontRenderer = mc.fontRendererObj;
+		      
+		    String timerText = String.format(java.util.Locale.US, "%.1f", fishingTimer);
+		    RenderHandler.draw3DStringWithShadow(fishingHook.posX, fishingHook.posY + 0.6f, fishingHook.posZ, timerText, 0xbfbfbf, 0xbb000000, event.partialTicks, 2);
       }
-        
-    }
-    // Method to render the fishing timer on the screen
-    private void renderFishingTimer3D(float partialTicks) {
-      // Get the Minecraft instance
-      Minecraft mc = Minecraft.getMinecraft();
-      FontRenderer fontRenderer = mc.fontRendererObj;
-      
-   // Draw the timer text on the screen
-      String timerText = String.format(java.util.Locale.US, "%.1f", fishingTimer);
-      RenderHandler.draw3DString(fishingHook.posX, fishingHook.posY + 0.6f, fishingHook.posZ, timerText, 0xbfbfbf, partialTicks);
-
     }
     
     
-    //
-    //	2d text with bobber img
-    //
-    
+    //	2d text
     @SubscribeEvent
     public void onRenderOverlay(RenderGameOverlayEvent.Text event) {
-        if (fishingHook != null && !isText3d && SettingsConfig.FishingTimer.isOn) {
-            // Render the fishing timer on the screen
-            renderFishingTimer(event.resolution, event.partialTicks);
+        if (fishingHook != null && !SettingsConfig.FishingTimerIs3d.isOn && SettingsConfig.FishingTimer.isOn) {
+            Minecraft mc = Minecraft.getMinecraft();
+            FontRenderer fontRenderer = mc.fontRendererObj;
+
+            float x = event.resolution.getScaledWidth() * (SettingsConfig.FishingTimer.position[0]/100);
+            float y = event.resolution.getScaledHeight() * (SettingsConfig.FishingTimer.position[1]/100);
+            Float scale = SettingsConfig.FishingTimer.scale;
             
+            String timerText = String.format(java.util.Locale.US, "%.1f", fishingTimer) + "s";
+            RenderHandler.drawText(timerText, x + (15*scale), y + (5*scale), scale, true, 0xFFFFFF);
+            Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(Reference.MODID, "textures/bobber.png"));
+            drawModalRectWithCustomSizedTexture((int)x, (int)(y), 0, 0, (int)(12 * scale), (int)(17 * scale), (int)(12 * scale), (int)(17 * scale));
         }
-    }
-    
-    
-
-    // Method to render the fishing timer on the screen
-    private void renderFishingTimer(ScaledResolution resolution, float partialTicks) {
-        // Get the Minecraft instance
-        Minecraft mc = Minecraft.getMinecraft();
-        FontRenderer fontRenderer = mc.fontRendererObj;
-
-        // Calculate the position to render the timer
-        float x = resolution.getScaledWidth() * (SettingsConfig.FishingTimer.position[0]/100);
-        float y = resolution.getScaledHeight() * (SettingsConfig.FishingTimer.position[1]/100);
-        Float scale = SettingsConfig.FishingTimer.scale;
-        
-        String timerText = String.format(java.util.Locale.US, "%.1f", fishingTimer) + "s";
-        RenderHandler.drawText(timerText, x + (15*scale), y + (5*scale), scale, true, 0xFFFFFF);
-        Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(Reference.MODID, "textures/bobber.png"));
-        drawModalRectWithCustomSizedTexture((int)x, (int)(y), 0, 0, (int)(12 * scale), (int)(17 * scale), (int)(12 * scale), (int)(17 * scale));
     }
     
     

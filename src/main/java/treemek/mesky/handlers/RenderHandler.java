@@ -168,6 +168,50 @@ public class RenderHandler {
         GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
         mc.fontRendererObj.drawString(timerText, -width, 0, color);
+        
+        GlStateManager.disableBlend();
+        GlStateManager.popMatrix();
+    }
+	
+	public static void draw3DStringWithShadow(double x, double y, double z, String timerText, int color, int shadowColor, float partialTicks, float scale) {
+        Minecraft mc = Minecraft.getMinecraft();
+        EntityPlayer player = mc.thePlayer;
+        double realX = (x - player.lastTickPosX) + ((x - player.posX) - (x - player.lastTickPosX)) * partialTicks;
+        double realY = (y - player.lastTickPosY) + ((y - player.posY) - (y - player.lastTickPosY)) * partialTicks;
+        double realZ = (z - player.lastTickPosZ) + ((z - player.posZ) - (z - player.lastTickPosZ)) * partialTicks;
+        RenderManager renderManager = mc.getRenderManager();
+
+        float f = 1.6F;
+        float f1 = 0.016666668F * f;
+        int width = mc.fontRendererObj.getStringWidth(timerText) / 2;
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(realX, realY, realZ);
+        GL11.glNormal3f(0f, 1f, 0f);
+        GlStateManager.rotate(-renderManager.playerViewY, 0f, 1f, 0f);
+        GlStateManager.rotate(renderManager.playerViewX, 1f, 0f, 0f);
+        GlStateManager.scale(-f1, -f1, -f1);
+        GlStateManager.enableBlend();
+        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+        
+        FontRenderer fontrenderer = mc.fontRendererObj;
+		int j = fontrenderer .getStringWidth(timerText) / 2;
+        GlStateManager.disableTexture2D();
+        Tessellator tessellator = Tessellator.getInstance();
+        WorldRenderer worldrenderer = tessellator.getWorldRenderer();
+        
+        Color shadowC = new Color(shadowColor, true);
+        
+        GlStateManager.scale(scale, scale, scale);
+        worldrenderer.begin(7, DefaultVertexFormats.POSITION_COLOR);
+        worldrenderer.pos(-j - 1, -1, 0.0D).color(shadowC.getRed(), shadowC.getGreen(), shadowC.getBlue(), shadowC.getAlpha()).endVertex();
+        worldrenderer.pos(-j - 1, 8, 0.0D).color(shadowC.getRed(), shadowC.getGreen(), shadowC.getBlue(), shadowC.getAlpha()).endVertex();
+        worldrenderer.pos(j + 1, 8, 0.0D).color(shadowC.getRed(), shadowC.getGreen(), shadowC.getBlue(), shadowC.getAlpha()).endVertex();
+        worldrenderer.pos(j + 1, -1, 0.0D).color(shadowC.getRed(), shadowC.getGreen(), shadowC.getBlue(), shadowC.getAlpha()).endVertex();
+        tessellator.draw();
+        
+        GlStateManager.enableTexture2D();
+        mc.fontRendererObj.drawString(timerText, -width, 0, color);
+        
         GlStateManager.disableBlend();
         GlStateManager.popMatrix();
     }

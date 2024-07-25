@@ -48,6 +48,7 @@ public class SettingsConfig {
     public static Setting BlockFlowerPlacing = new Setting(false, null, null);
 
     public static Setting FishingTimer = new Setting(false, new Float[]{20f, 20f}, 1f);
+    public static Setting FishingTimerIs3d = new Setting(false, null, null);
 
     public static Setting BonzoTimer = new Setting(false, new Float[]{40f,50f}, 1f);
 

@@ -146,8 +146,7 @@ public class CustomCapeGui  extends GuiScreen{
             }
             CosmeticHandler.CustomCapeTexture.number = (double) a;
         } catch (IOException e) {
-            System.err.println("Error reading directory: " + folderPath);
-            e.printStackTrace();
+            Utils.writeError(e);
         }
     }
 	
@@ -183,9 +182,7 @@ public class CustomCapeGui  extends GuiScreen{
 		                }
 		            });
 		        } catch (Exception e) {
-		        	if(Minecraft.getMinecraft().thePlayer != null) {
-             		Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]" + EnumChatFormatting.WHITE + " in " + EnumChatFormatting.AQUA + errorWhere + EnumChatFormatting.WHITE + ": " + EnumChatFormatting.BOLD.RED + e.getLocalizedMessage()));
-             	}
+		        	Utils.writeMinecraftMessage(EnumChatFormatting.BOLD.AQUA + "[Mesky]" + EnumChatFormatting.WHITE + " in " + EnumChatFormatting.AQUA + errorWhere + EnumChatFormatting.WHITE + ": " + EnumChatFormatting.BOLD.RED + e.getLocalizedMessage());
 		        }
             }
     	}).start();
@@ -194,14 +191,23 @@ public class CustomCapeGui  extends GuiScreen{
 	@Override
     public void onGuiClosed() {
 		String folderPath = folderPathField.getText();
-		
-		folderPath = folderPath.replace("/", "\\");
-		
+
 		if(folderPath.endsWith(".png") || folderPath.endsWith(".jpg") || folderPath.endsWith(".jpeg")) {
-			folderPath = folderPath.substring(0, folderPath.lastIndexOf("\\"));
+			File file = new File(folderPath);
+			if(file != null && file.getParent() != null) {
+				folderPath = file.getParent();
+			}
+		}
+
+		if(folderPath.endsWith("\\") || folderPath.endsWith("/")) folderPath = folderPath.substring(0, folderPath.length()-1);
+		
+		if(Utils.systemUsesRightSlashes()) {
+			folderPath = folderPath.replace("\\", "/");
+		}else {
+			folderPath = folderPath.replace("/", "\\");
 		}
 		
-		if(folderPath.endsWith("\\")) folderPath = folderPath.substring(0, folderPath.length()-1);
+		
 		
 		CosmeticHandler.CustomCapeTexture.text = folderPath;
 		iterateImagesInFolder(CosmeticHandler.CustomCapeTexture.text, "CustomCape");

@@ -142,7 +142,13 @@ public class Cape extends ModelBase{
 					// Custom
 					String folderPath = CosmeticHandler.CustomCapeTexture.text;
 					
-					BufferedImage buff = ImageCache.bufferedTextureCache.get(folderPath + "\\cape" + currentAnimation);
+					String filePath;
+					if(folderPath.contains("\\")) {
+						filePath = folderPath + "\\cape" + currentAnimation;
+					}else {
+						filePath = folderPath + "/cape" + currentAnimation;
+					}
+					BufferedImage buff = ImageCache.bufferedTextureCache.get(filePath);
 					if(buff != null) {
 						ResourceLocation location = ImageCache.resourceLocationCache.get(buff);
 						if(location != null) {
@@ -154,10 +160,6 @@ public class Cape extends ModelBase{
 			}
 		}
 	}
-	
-	private double prevRenderYawOffset;
-	private double targetRenderYawOffset;
-	private double smoothRenderYawOffset;
 	
 	public void renderCape(EntityPlayer player, float partialTicks, float scale, ResourceLocation location, RenderPlayer playerRenderer) {
 	    if (!player.isInvisible() && location != null) {

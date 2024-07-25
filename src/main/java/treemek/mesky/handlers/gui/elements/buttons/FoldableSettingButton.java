@@ -21,8 +21,8 @@ public class FoldableSettingButton extends GuiButton{
 	public int foldHeight;
 	public List<Object> hiddenObjects;
 	
-	public FoldableSettingButton(int buttonId, int width, int height, String buttonText, Setting ghostPickaxe, List<Object> hiddenObjects) {
-		super(buttonId, 0, 0, width, height, buttonText);
+	public FoldableSettingButton(int buttonId, int size, String buttonText, Setting ghostPickaxe, List<Object> hiddenObjects) {
+		super(buttonId, 0, 0, size, size, buttonText);
 		this.buttonText = buttonText;
 		this.hiddenObjects = hiddenObjects;
 		this.setting = ghostPickaxe;

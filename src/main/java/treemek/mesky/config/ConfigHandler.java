@@ -172,6 +172,7 @@ public class ConfigHandler {
                 if(settings != null) {
 	                SettingsConfig.BlockFlowerPlacing = safelyGetInfo(settings.get("BlockFlowerPlacing"), SettingsConfig.BlockFlowerPlacing);
 	                SettingsConfig.FishingTimer = safelyGetInfo(settings.get("FishingTimer"), SettingsConfig.FishingTimer);
+	                SettingsConfig.FishingTimerIs3d = safelyGetInfo(settings.get("FishingTimerIs3d"), SettingsConfig.FishingTimerIs3d);
 	                SettingsConfig.BonzoTimer = safelyGetInfo(settings.get("BonzoTimer"), SettingsConfig.BonzoTimer);
 	                SettingsConfig.SpiritTimer = safelyGetInfo(settings.get("SpiritTimer"), SettingsConfig.SpiritTimer);
 	                SettingsConfig.GhostBlocks = safelyGetInfo(settings.get("GhostBlocks"), SettingsConfig.GhostBlocks);
@@ -237,6 +238,7 @@ public class ConfigHandler {
     	
     	settings.put("BlockFlowerPlacing", SettingsConfig.BlockFlowerPlacing);
     	settings.put("FishingTimer", SettingsConfig.FishingTimer);
+    	settings.put("FishingTimerIs3d", SettingsConfig.FishingTimerIs3d);
     	settings.put("BonzoTimer", SettingsConfig.BonzoTimer);
     	settings.put("SpiritTimer", SettingsConfig.SpiritTimer);
     	settings.put("GhostBlocks", SettingsConfig.GhostBlocks);

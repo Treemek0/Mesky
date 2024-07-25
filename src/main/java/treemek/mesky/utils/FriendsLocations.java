@@ -33,6 +33,7 @@ import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.LocalDate;
+import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
@@ -47,7 +48,7 @@ public class FriendsLocations {
 		if(message.contains("You are now friends with")){
 			new Thread(() -> {
 				try {
-					String HypixelNickname = message.substring(message.indexOf("You are now" + 25));
+					String HypixelNickname = message.substring(message.indexOf("You are now") + 25);
 					String nick = HypixelNickname;
 					if(HypixelNickname.contains("[") && HypixelNickname.contains("]")) {
 						nick = HypixelNickname.substring(HypixelNickname.indexOf("]") + 1);
@@ -55,10 +56,10 @@ public class FriendsLocations {
 			
 					nick = nick.trim();
 					
-					System.out.println("Friends locations: detected nick: " + nick);
+					Utils.writeToConsole("Friends locations: detected nick: " + nick);
 					String id = getUUIDFromNick(nick);
 					if(id != null) {
-						System.out.println("Friends locations: extracted nick UUID: " + id);
+						Utils.writeToConsole("Friends locations: extracted nick UUID: " + id);
 		
 		
 						setInfoForPlayer(id, Locations.getLocation());
@@ -81,10 +82,10 @@ public class FriendsLocations {
 					
 					nick = nick.trim();
 					
-					System.out.println("Friends locations: detected nick in remove: " + nick);
+					Utils.writeToConsole("Friends locations: detected nick in remove: " + nick);
 					String id = getUUIDFromNick(nick);
 					if(id != null) {
-						System.out.println("Friends locations: extracted nick UUID: " + id);
+						Utils.writeToConsole("Friends locations: extracted nick UUID: " + id);
 					
 						removePlayer(id);
 					}
@@ -105,10 +106,10 @@ public class FriendsLocations {
 					
 					nick = nick.trim();
 					
-					System.out.println("Friends locations: detected nick in remove: " + nick);
+					Utils.writeToConsole("Friends locations: detected nick in remove: " + nick);
 					String id = getUUIDFromNick(nick);
 					if(id != null) {
-						System.out.println("Friends locations: extracted nick UUID: " + id);
+						Utils.writeToConsole("Friends locations: extracted nick UUID: " + id);
 					
 						removePlayer(id);
 					}
@@ -127,6 +128,62 @@ public class FriendsLocations {
 		}else {
 			savePlayerLocationsToFile(playerLocationMap);
 		}
+	}
+	
+	public static void setCustomInfoForPlayer(String playerName, int day, int month, int year, String location, int x, int y, int z) {
+		Map<String, String[]> playerLocationMap = loadPlayerLocationsFromFile();
+		
+		String playerUUID = getUUIDFromNick(playerName);
+		if(playerUUID == null) return;
+		
+		EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
+    	if(player != null) {
+    		InventoryPlayer inventory = player.inventory;
+    		ItemStack[] hotbar = inventory.mainInventory;
+    		ItemStack[] armor = inventory.armorInventory;
+		
+			String slot1 = (hotbar[8] == null)?" ":(hotbar[0].getIsItemStackEqual(player.getCurrentEquippedItem())?"> 1: ":"  1: ") + EnumChatFormatting.GOLD + hotbar[0].getDisplayName();
+			String slot2 = (hotbar[8] == null)?" ":(hotbar[1].getIsItemStackEqual(player.getCurrentEquippedItem())?"> 2: ":"  2: ") + EnumChatFormatting.GOLD + hotbar[1].getDisplayName();
+			String slot3 = (hotbar[8] == null)?" ":(hotbar[2].getIsItemStackEqual(player.getCurrentEquippedItem())?"> 3: ":"  3: ") + EnumChatFormatting.GOLD + hotbar[2].getDisplayName();
+			String slot4 = (hotbar[8] == null)?" ":(hotbar[3].getIsItemStackEqual(player.getCurrentEquippedItem())?"> 4: ":"  4: ") + EnumChatFormatting.GOLD + hotbar[3].getDisplayName();
+			String slot5 = (hotbar[8] == null)?" ":(hotbar[4].getIsItemStackEqual(player.getCurrentEquippedItem())?"> 5: ":"  5: ") + EnumChatFormatting.GOLD + hotbar[4].getDisplayName();
+			String slot6 = (hotbar[8] == null)?" ":(hotbar[5].getIsItemStackEqual(player.getCurrentEquippedItem())?"> 6: ":"  6: ") + EnumChatFormatting.GOLD + hotbar[5].getDisplayName();
+			String slot7 = (hotbar[8] == null)?" ":(hotbar[6].getIsItemStackEqual(player.getCurrentEquippedItem())?"> 7: ":"  7: ") + EnumChatFormatting.GOLD + hotbar[6].getDisplayName();
+			String slot8 = (hotbar[7] == null)?" ":(hotbar[7].getIsItemStackEqual(player.getCurrentEquippedItem())?"> 8: ":"  8: ") + EnumChatFormatting.GOLD + hotbar[7].getDisplayName();
+			String slot9 = (hotbar[8] == null)?" ":(hotbar[8].getIsItemStackEqual(player.getCurrentEquippedItem())?"> 9: ":"  9: ") + EnumChatFormatting.GOLD + hotbar[8].getDisplayName();
+			String helmet = (armor[3] == null)?" ":armor[3].getDisplayName();
+			String chestplate = (armor[2] == null)?" ":armor[2].getDisplayName();
+			String leggins = (armor[1] == null)?" ":armor[1].getDisplayName();
+			String boots = (armor[0] == null)?" ":armor[0].getDisplayName();
+			
+			String[] info = new String[] {
+					EnumChatFormatting.LIGHT_PURPLE + "# Date: " + EnumChatFormatting.DARK_PURPLE + "Day: " + EnumChatFormatting.GOLD + day + EnumChatFormatting.DARK_PURPLE + ", Month: " + EnumChatFormatting.GOLD + month + " (" + Month.of(month) + ")" + EnumChatFormatting.DARK_PURPLE + ", Year: " + EnumChatFormatting.GOLD + year,
+	    			EnumChatFormatting.LIGHT_PURPLE + "# Location: " + EnumChatFormatting.GOLD + location,
+	    			EnumChatFormatting.LIGHT_PURPLE + "# Coordinates: " + EnumChatFormatting.GOLD + x + " " + y + " " + z,
+	    			" ",
+	    			EnumChatFormatting.LIGHT_PURPLE + "# Your hotbar: ",
+	    			slot1,
+	    			slot2,
+	    			slot3,
+	    			slot4,
+	    			slot5,
+	    			slot6,
+	    			slot7,
+	    			slot8,
+	    			slot9,
+	    			"  Helmet: " + EnumChatFormatting.GOLD + helmet,
+	    			"  Chestplate: " + EnumChatFormatting.GOLD + chestplate,
+	    			"  Leggins: " + EnumChatFormatting.GOLD + leggins,
+	    			"  Boots: " + EnumChatFormatting.GOLD + boots,
+				};
+			
+			if(playerLocationMap.containsKey(playerUUID)) {
+	    		playerLocationMap.replace(playerUUID, info);
+	    	}else {
+	    		playerLocationMap.put(playerUUID, info);
+	    	}
+	        savePlayerLocationsToFile(playerLocationMap);
+    	}
 	}
 
 	// Method to update or set the location for a player
@@ -159,9 +216,8 @@ public class FriendsLocations {
     		String chestplate = (armor[2] == null)?" ":armor[2].getDisplayName();
     		String leggins = (armor[1] == null)?" ":armor[1].getDisplayName();
     		String boots = (armor[0] == null)?" ":armor[0].getDisplayName();
-    		String[] info;
     		
-			info = new String[] {
+			String[] info = new String[] {
 				EnumChatFormatting.LIGHT_PURPLE + "# Date: " + EnumChatFormatting.DARK_PURPLE + "Day: " + EnumChatFormatting.GOLD + currentDate.getDayOfMonth() + EnumChatFormatting.DARK_PURPLE + ", Month: " + EnumChatFormatting.GOLD + currentDate.getMonthValue() + " (" + currentDate.getMonth().toString().toLowerCase() + ")" + EnumChatFormatting.DARK_PURPLE + ", Year: " + EnumChatFormatting.GOLD + currentDate.getYear(),
     			EnumChatFormatting.LIGHT_PURPLE + "# Location: " + EnumChatFormatting.GOLD + location.text,
     			EnumChatFormatting.LIGHT_PURPLE + "# Coordinates: " + EnumChatFormatting.GOLD + Math.round(player.posX) + " " + Math.round(player.posY) + " " + Math.round(player.posZ),
@@ -208,10 +264,12 @@ public class FriendsLocations {
 		}
 		
 		String[] info = playerLocationMap.get(id);
-		Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_AQUA + "Details about when your friendship with " + EnumChatFormatting.AQUA + playerNickname + EnumChatFormatting.DARK_AQUA + " began: "));
+		Utils.writeMinecraftMessage("");
+		Utils.writeMinecraftMessage(EnumChatFormatting.DARK_AQUA + "Details about when your friendship with " + EnumChatFormatting.AQUA + playerNickname + EnumChatFormatting.DARK_AQUA + " began: ");
 		for (String string : info) {
 			Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(string));
 		}
+		Utils.writeMinecraftMessage("");
 		
 		return info;
     }

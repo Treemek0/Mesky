@@ -58,7 +58,7 @@ public class EntityDetector {
 	}
 	
 	public static String whatEntity() {
-		Entity entity = Utils.getEntityLookedAt(10);
+		Entity entity = Utils.getEntityLookedAt(50);
 		if(entity == null) return "";
 		
 		return entity.getName();

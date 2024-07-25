@@ -27,6 +27,8 @@ public class GuiLocations extends GuiScreen {
 	
 	List<GuiLocation> locations = new ArrayList<>();
 	GuiLocation currentlyDragged;
+	int offsetX = 0;
+	int offsetY = 0;
 	
 	public class GuiLocation {
 		Setting setting;
@@ -72,7 +74,7 @@ public class GuiLocations extends GuiScreen {
 		drawDefaultBackground();
         
 		// idfk how to do it man
-		if(SettingsConfig.FishingTimer.isOn) renderFishingTimer();
+		if(SettingsConfig.FishingTimer.isOn && !SettingsConfig.FishingTimerIs3d.isOn) renderFishingTimer();
 		if(SettingsConfig.BonzoTimer.isOn) renderBonzoMask();
 		if(SettingsConfig.SpiritTimer.isOn) renderSpiritMask();
         
@@ -114,6 +116,8 @@ public class GuiLocations extends GuiScreen {
             
             if (mouseX >= x && mouseX <= x + location.width && mouseY >= y && mouseY <= y + location.height) {
                 currentlyDragged = location;
+                offsetX = (int) (mouseX - x);
+                offsetY = (int) (mouseY - y);
             }
         }
     }
@@ -122,13 +126,13 @@ public class GuiLocations extends GuiScreen {
 	protected void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton, long timeSinceLastClick)
     {
 		if (currentlyDragged != null) {
-			mouseX = (int) Math.min(mouseX, width - currentlyDragged.width);
-			mouseY = (int) Math.min(mouseY, height - currentlyDragged.height);
+			Float x = ((mouseX - offsetX) / (float) width) * 100;
+			Float y = ((mouseY - offsetY) / (float) height) * 100;
 			
-			Float x = (mouseX / (float) width) * 100;
-			Float y = (mouseY / (float) height) * 100;
+			x = Math.max(0, Math.min(x, (width - currentlyDragged.width)/width * 100));
+			y = Math.max(0, Math.min(y, (height - currentlyDragged.height)/height * 100));
 			
-            Float[] newPosition = { x, y};
+            Float[] newPosition = {x, y};
             currentlyDragged.setPosition(newPosition);
 		}
     }
@@ -139,6 +143,8 @@ public class GuiLocations extends GuiScreen {
         	locations.set(locations.indexOf(currentlyDragged), currentlyDragged);
         	ConfigHandler.saveSettings();
         	currentlyDragged = null;
+        	offsetX = 0;
+        	offsetY = 0;
         }
     }
 

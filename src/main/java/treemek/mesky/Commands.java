@@ -41,11 +41,9 @@ public class Commands extends CommandBase{
     	if(args.length > 0){
     		String command = args[0].toLowerCase();
     		
+    		
     		if(command.equals("reload")) {
     			ConfigHandler.reloadConfig();
-    		}
-    		if(command.equals("fishing")) {
-    			FishingTimer.isText3d = !FishingTimer.isText3d;
     		}
 			if(command.equals("waypoint")) {
     			if(args.length >= 6) {
@@ -154,7 +152,7 @@ public class Commands extends CommandBase{
 				if(args.length >= 3) {
 					try {
 						boolean onlyArmorStands = false;
-						if(args[1].equals("true")) {
+						if(args[1].equalsIgnoreCase("true")) {
 							onlyArmorStands = true;
 						}
 						
@@ -175,12 +173,60 @@ public class Commands extends CommandBase{
 					Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Correct way of using this command /mesky find <onlyArmorStands? <true>/<false>> <name of entity>"));
 				}
 			}
+			if(command.equals("findclear")) {
+				EntityDetector.clearEntityWaypoints();
+			}
 			if(command.equals("whatentity")) {
 				Utils.writeMinecraftMessage(EnumChatFormatting.AQUA + "Looked at entity: ");
 				Utils.writeMinecraftMessage(EnumChatFormatting.GOLD + EntityDetector.whatEntity());
 			}
 			if(command.equals("region")) {
 				Utils.writeMinecraftMessage("Current region: " + Locations.getRegion());
+			}
+			if(command.equals("setfriend")) {
+				if(args.length >= 9) {
+					String name = args[1];
+					String location = args[5];
+					int day = 0, month = 0, year = 0, x = 0, y = 0, z = 0;
+					try {
+						day = Integer.parseInt(args[2]);
+					} catch (Exception e) {
+						Utils.writeError(args[2] + " isn't a number (Day)");
+					}
+					try {
+						month = Integer.parseInt(args[3]);
+					} catch (Exception e) {
+						Utils.writeError(args[3] + " isn't a number (Month)");
+					}
+					try {
+						year = Integer.parseInt(args[4]);
+					} catch (Exception e) {
+						Utils.writeError(args[4] + " isn't a number (Year)");
+					}
+					try {
+						x = Integer.parseInt(args[6]);
+					} catch (Exception e) {
+						Utils.writeError(args[6] + " isn't a number (x)");
+					}
+					try {
+						y = Integer.parseInt(args[7]);
+					} catch (Exception e) {
+						Utils.writeError(args[7] + " isn't a number (y)");
+					}
+					try {
+						z = Integer.parseInt(args[8]);
+					} catch (Exception e) {
+						Utils.writeError(args[8] + " isn't a number (z)");
+					}
+					
+					FriendsLocations.setCustomInfoForPlayer(name, day, month, year, location, x, y, z);
+					Utils.writeMinecraftMessage(EnumChatFormatting.AQUA + "Added " + name + " to friends list:");
+					Utils.writeMinecraftMessage(EnumChatFormatting.GOLD + "Date: " + day + " " + month + " " + year);
+					Utils.writeMinecraftMessage(EnumChatFormatting.GOLD + "Location: " + location);
+					Utils.writeMinecraftMessage(EnumChatFormatting.GOLD + "Coords: " + x + " " + y + " " + z);
+				}else {
+					Utils.writeMinecraftMessage("Wrong use of command (/mesky setfriend <name> <day> <month (number)> <year> <location> <x> <y> <z>");
+				}
 			}
     	}
     }

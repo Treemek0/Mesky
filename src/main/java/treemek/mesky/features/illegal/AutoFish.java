@@ -60,7 +60,7 @@ public class AutoFish {
 	private Thread antyAfkCycle;
 	
 	private long lastUpdateTimestamp = 0;
-	private String lastMessage;
+	private String lastMessage = "";
     private static final long UPDATE_INTERVAL = 2500;
 	
     // make entity killing from entitylastjoin event in detection (not that important but yk)

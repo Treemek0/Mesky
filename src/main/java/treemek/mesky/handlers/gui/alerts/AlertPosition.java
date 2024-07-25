@@ -28,6 +28,8 @@ public class AlertPosition extends GuiScreen{
 	public static List<AlertElement> alertsGUI;
 	public static List<Alert> alertsList;
 	private boolean currentlyDragged = false;
+	int offsetX = 0;
+	int offsetY = 0;
 	
 	@Override
 	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
@@ -60,8 +62,8 @@ public class AlertPosition extends GuiScreen{
         	}else {
         		float TextWidth = fontRenderer.getStringWidth(alertInfo.message) * alert.scale;
             	float TextHeight = fontRenderer.FONT_HEIGHT * alert.scale;
-            	
-            	if ((mouseX >= (posX - (TextWidth/2)) && mouseX <= (posX + (TextWidth/2)) && mouseY >= (posY - 1) && mouseY <= (posY + (TextHeight*1.5)) + (1*alertInfo.scale)) || currentlyDragged) {
+
+            	if ((mouseX >= (posX - (TextWidth/2)) && mouseX <= (posX + (TextWidth/2)) && mouseY >= (posY - (2*alertInfo.scale)) && mouseY <= (posY + TextHeight + (1*alertInfo.scale))) || currentlyDragged) {
             		RenderHandler.drawAlertText(alertInfo.message, resolution, 0xa93234, alertInfo.scale, posX, posY);
 	            }else {
 	            	RenderHandler.drawAlertText(alertInfo.message, resolution, 0xf54245, alertInfo.scale, posX, posY);
@@ -99,6 +101,8 @@ public class AlertPosition extends GuiScreen{
                 int y = (int) (resolution.getScaledHeight() * ((float)alertInfo.position[1] / 100));
 	            if (mouseX >= x - (imgWidth/2) && mouseX <= x + (imgWidth/2) && mouseY >= y - (imgHeight/2) && mouseY <= y + (imgHeight/2)) {
 	                currentlyDragged = true;
+	                offsetX = mouseX - x;
+	                offsetY = mouseY - y;
 	            }
             }else { // text
             	FontRenderer fontRenderer = mc.fontRendererObj;
@@ -108,8 +112,10 @@ public class AlertPosition extends GuiScreen{
             	int x = (int) (width * ((float)alertInfo.position[0] / 100));
             	int y = (int) (height * ((float)alertInfo.position[1] / 100));
             	
-            	if (mouseX >= (x - (TextWidth/2)) && mouseX <= (x + (TextWidth/2)) && mouseY >= (y + (1*alertInfo.scale)) && mouseY <= (y + (TextHeight) + (1*alertInfo.scale)) + 1) {
+            	if (mouseX >= (x - (TextWidth/2)) && mouseX <= (x + (TextWidth/2)) && mouseY >= (y - (2*alertInfo.scale)) && mouseY <= (y + (TextHeight) + (1*alertInfo.scale))) {
 	                currentlyDragged = true;
+	                offsetX = mouseX - x;
+	                offsetY = mouseY - y;
 	            }
             }
 		}
@@ -119,7 +125,13 @@ public class AlertPosition extends GuiScreen{
 	protected void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton, long timeSinceLastClick)
     {
 		if (currentlyDragged) {
-            int[] newPosition = { (int) ((mouseX / (float) width) * 100), (int) ((mouseY / (float) height) * 100) };
+			int x = (int) (((mouseX - offsetX) / (float) width) * 100);
+			int y = (int) (((mouseY - offsetY) / (float) height) * 100);
+					
+			x = Math.max(0, Math.min(x, 100));
+			y = Math.max(0, Math.min(y, 98));
+			
+            int[] newPosition = {x, y};
             alertInfo.position = newPosition;
 		}
     }

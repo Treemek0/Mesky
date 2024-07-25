@@ -4,6 +4,6 @@ public class Reference {
 
 	public static final String MODID = "mesky";
 	public static final String NAME = "Mesky";
-	public static final String VERSION = "0.1.5.1";
+	public static final String VERSION = "0.1.5.3";
 	
 }

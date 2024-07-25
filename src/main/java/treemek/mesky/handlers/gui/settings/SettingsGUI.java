@@ -128,7 +128,7 @@ public class SettingsGUI extends GuiScreen {
         List<Object> ghostpickaxeFoldable = new ArrayList<>();
         ghostpickaxeFoldable.add(new SettingSlider(41849, 2*checkSize, checkSize, "Ghost Pickaxe slot", SettingsConfig.GhostPickaxeSlot, 1, 1, 9));
         //ghostpickaxeFoldable.add(new SettingTextField(1,  "Ghost Pickaxe slot", checkSize*2, checkSize, SettingsConfig.GhostPickaxeSlot, 1, true, false));
-        illegalSub.add(new FoldableSettingButton(1, checkSize, checkSize, "Ghost Pickaxe", SettingsConfig.GhostPickaxe, ghostpickaxeFoldable));
+        illegalSub.add(new FoldableSettingButton(1, checkSize, "Ghost Pickaxe", SettingsConfig.GhostPickaxe, ghostpickaxeFoldable));
         illegalSub.add(new SettingButton(2, checkSize, "Freelook", SettingsConfig.FreeLook));
         
         List<SubCategory> utility = new ArrayList<>();
@@ -148,14 +148,17 @@ public class SettingsGUI extends GuiScreen {
 		List<Object> autoFishFoldable = new ArrayList<>();
         autoFishFoldable.add(new SettingButton(-1, checkSize, "Kill Sea Creatures", SettingsConfig.KillSeaCreatures));
         autoFishFoldable.add(new SettingButton(-1, checkSize, "Auto throw hook", SettingsConfig.AutoThrowHook));
-        illegalSub.add(new FoldableSettingButton(3, checkSize, checkSize, "AutoFish", SettingsConfig.AutoFish, autoFishFoldable));
+        illegalSub.add(new FoldableSettingButton(3, checkSize, "AutoFish", SettingsConfig.AutoFish, autoFishFoldable));
 	
         illegalSub.add(new SettingButton(2, checkSize, "Jawbus Detection", SettingsConfig.JawbusDetection));
         
         // ==================================================================================
         
 		List<Object> fishingSub = new ArrayList<>();
-		fishingSub.add(new SettingButton(3, checkSize, "Fishing timer", SettingsConfig.FishingTimer));
+		
+		List<Object> fishingTimerFoldable = new ArrayList<>();
+		fishingTimerFoldable.add(new SettingButton(1, checkSize, "Render timer in 3D", SettingsConfig.FishingTimerIs3d));
+		fishingSub.add(new FoldableSettingButton(3, checkSize, "Fishing timer", SettingsConfig.FishingTimer, fishingTimerFoldable));
 		
 		fishing.add(new SubCategory("Normal", fishingSub));
 		fishing.add(new SubCategory("Illegal", illegalSub));

@@ -53,6 +53,7 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StringUtils;
 import net.minecraft.util.Vec3;
+import treemek.mesky.Mesky;
 import treemek.mesky.handlers.gui.waypoints.WaypointsGui;
 import treemek.mesky.utils.Locations.Location;
 
@@ -438,6 +439,16 @@ public class Utils {
 			Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(a));
 		}
 	}
+	
+	public static boolean systemUsesRightSlashes() {
+		if(Mesky.configDirectory.contains("/")) {
+			return true;
+		}else {
+			return false;
+		}
+	}
+	
+	
 	
 	public static void writeToConsole(String a) {
 		logger.info("[Mesky]: " + a);

@@ -53,7 +53,7 @@ public class Waypoints {
             this.name = name;
             this.coords = new float[]{x, y, z};
             this.world = world;
-            this.color = Utils.fixColor(color);
+            this.color = ColorUtils.fixColor(color);
         }
     }
     
@@ -70,7 +70,7 @@ public class Waypoints {
             this.name = name;
             this.coords = new float[]{x, y, z};
             this.scale = scale;
-            this.color = Utils.fixColor(color);
+            this.color = ColorUtils.fixColor(color);
             this.startTime = startTime;
             this.lifeTime = lifeTime;
         } 
@@ -89,7 +89,7 @@ public class Waypoints {
             this.name = name;
             this.coords = new float[]{x, y, z};
             this.scale = scale;
-            this.color = Utils.fixColor(color);
+            this.color = ColorUtils.fixColor(color);
             this.touchRadius = touchRadius;
             if(lifeTime != null) {
 	            this.startTime = System.currentTimeMillis();
@@ -134,8 +134,7 @@ public class Waypoints {
         if (!waypointsList.isEmpty()) {
             for (Waypoint waypoint : waypointsList) {
             	if(waypoint.world.equals(Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld))) {
-                	// when im gonna be unbanned then check for world types
-                    waypoint.color = Utils.fixColor(waypoint.color);
+                    waypoint.color = ColorUtils.fixColor(waypoint.color);
                     RenderHandler.draw3DWaypointString(waypoint.name, waypoint.color, waypoint.coords, event.partialTicks, 1);  
                     
                     try {
@@ -156,8 +155,7 @@ public class Waypoints {
         	Iterator<TemporaryWaypoint> iterator = temporaryWaypointsList.iterator();
         	while (iterator.hasNext()) {
         	    TemporaryWaypoint waypoint = iterator.next();
-            	// when im gonna be unbanned then check for world types
-                waypoint.color = Utils.fixColor(waypoint.color);
+                waypoint.color = ColorUtils.fixColor(waypoint.color);
         		RenderHandler.draw3DWaypointString(waypoint.name, waypoint.color, waypoint.coords, event.partialTicks, waypoint.scale);  
                 
                 try {
@@ -181,8 +179,7 @@ public class Waypoints {
         	Iterator<TouchWaypoint> iterator = touchWaypointsList.iterator();
         	while (iterator.hasNext()) {
         	    TouchWaypoint waypoint = iterator.next();
-            	// when im gonna be unbanned then check for world types
-                waypoint.color = Utils.fixColor(waypoint.color);
+                waypoint.color = ColorUtils.fixColor(waypoint.color);
         		RenderHandler.draw3DWaypointString(waypoint.name, waypoint.color, waypoint.coords, event.partialTicks, waypoint.scale);  
                 
                 try {

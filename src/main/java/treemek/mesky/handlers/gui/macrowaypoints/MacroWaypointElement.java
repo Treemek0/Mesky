@@ -7,12 +7,13 @@ import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
+import treemek.mesky.handlers.gui.elements.ColorPicker;
 import treemek.mesky.handlers.gui.elements.buttons.DeleteButton;
 import treemek.mesky.handlers.gui.elements.buttons.MacroButton;
 
 public class MacroWaypointElement {
 	GuiTextField name;
-	GuiTextField color;
+	ColorPicker color;
 	GuiTextField x;
 	GuiTextField y;
 	GuiTextField z;
@@ -32,7 +33,7 @@ public class MacroWaypointElement {
 	public Integer elementHeight = null;
 	public Integer elementWidth = null;
 	
-	public MacroWaypointElement(GuiTextField name, GuiTextField color, GuiTextField x, GuiTextField y, GuiTextField z, GuiTextField yaw, GuiTextField pitch, MacroButton left, MacroButton right, MacroButton back, MacroButton forward, MacroButton leftClick, MacroButton rightClick, GuiTextField noiseLevel, GuiTextField function, DeleteButton deleteButton) {
+	public MacroWaypointElement(GuiTextField name, ColorPicker color, GuiTextField x, GuiTextField y, GuiTextField z, GuiTextField yaw, GuiTextField pitch, MacroButton left, MacroButton right, MacroButton back, MacroButton forward, MacroButton leftClick, MacroButton rightClick, GuiTextField noiseLevel, GuiTextField function, DeleteButton deleteButton) {
 		this.name = name;
 		this.color = color;
 		this.x = x;
@@ -74,7 +75,6 @@ public class MacroWaypointElement {
 	public List<GuiTextField> getListOfTextFields() {
 		List<GuiTextField> inputs = new ArrayList<>();
 		inputs.add(name);
-		inputs.add(color);
 		inputs.add(x);
 		inputs.add(y);
 		inputs.add(z);
@@ -102,6 +102,13 @@ public class MacroWaypointElement {
 			int lowestX = 10000000;
 			int highestX = 0;
 			int highestX_width = 0;
+			
+			if(color.xPosition < lowestX) lowestX = color.xPosition;
+			if(color.xPosition > highestX) {
+				highestX = color.xPosition;
+				highestX_width = color.width;
+			}
+			
 			List<GuiButton> buttons = getListOfButtons();
 			for (int i = 0; i < buttons.size(); i++) {
 				if(buttons.get(i).xPosition < lowestX) lowestX = buttons.get(i).xPosition;
@@ -135,6 +142,13 @@ public class MacroWaypointElement {
 			int lowestY = 10000000;
 			int highestY = 0;
 			int highestY_height = 0;
+			
+//			if(color.yPosition < lowestY) lowestY = color.yPosition;
+//			if(color.yPosition > highestY) {
+//				highestY = color.yPosition;
+//				highestY_height = color.height;
+//			}
+			
 			List<GuiButton> buttons = getListOfButtons();
 			for (int i = 0; i < buttons.size(); i++) {
 				if(buttons.get(i).yPosition < lowestY) lowestY = buttons.get(i).yPosition;
@@ -166,10 +180,5 @@ public class MacroWaypointElement {
 		getWidth();
 		getHeight();
 		return (mouseX >= xPosition && mouseX <= xPosition + elementWidth && mouseY >= yPosition && mouseY <= yPosition + elementHeight);
-	}
-	
-	
-	public void changeColor() {
-		// make color next to text (circle or something)
 	}
 }

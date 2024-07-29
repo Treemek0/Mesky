@@ -195,59 +195,6 @@ public class Utils {
 		    return p;
 	}
 	 
-	 public static String fixColor(String color) {
-    	if(color == null || color.length() == 0) {
-    		return "ffffff";
-    	}
-    	
-    	color = color.replace("#", "");
-    	
-    	if(color.length() > 8) {
-    		color = color.substring(0, 8);
-    	}
-    	
-    	try {
-			Color.decode("#" + color);
-			return color;
-		} catch (Exception e) {
-			System.out.println(e);
-			color = "ffffff";
-			return color;
-		}
-    }
-	 
-	 public static int InvertColor(int color) {
-		 int r = (color >> 16) & 0xFF;
-	        int g = (color >> 8) & 0xFF;
-	        int b = color & 0xFF;
-	        
-	        // Invert each component
-	        int invertedR = 255 - r;
-	        int invertedG = 255 - g;
-	        int invertedB = 255 - b;
-	        
-	        // Reassemble the color
-	        return (invertedR << 16) | (invertedG << 8) | invertedB;
-	 }
-	 
-	 public static int getColorInt(String color) {
-		 color = color.replace("#", "");
-		 
-		 if(color.length() > 6) {
-    		color = color.substring(0, 6);
-		 }
-		 
-		 try {
-			Color c = Color.decode("#" + color.replace("#", ""));
-			return c.getRGB();
-		} catch (Exception e) {
-			return 0xFFFFFFFF;
-		}
-		 
-		 
-		 
-	 }
-	 
 	 
 	 public static Vec3 getBlockLookingAt(double reachDistance) {
 	 	Minecraft mc = Minecraft.getMinecraft();
@@ -453,6 +400,10 @@ public class Utils {
 	public static void writeToConsole(String a) {
 		logger.info("[Mesky]: " + a);
 	}
+	
+	public static boolean isHexadecimal(String input) {
+        return input.matches("^[0-9A-Fa-f]+$");
+    }
 }
 
 

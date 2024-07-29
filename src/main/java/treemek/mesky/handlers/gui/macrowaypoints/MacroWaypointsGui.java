@@ -35,6 +35,7 @@ import treemek.mesky.features.BlockFlowerPlacing;
 import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.handlers.gui.chatfunctions.ChatFunctionElement;
 import treemek.mesky.handlers.gui.elements.CloseWarning;
+import treemek.mesky.handlers.gui.elements.ColorPicker;
 import treemek.mesky.handlers.gui.elements.ScrollBar;
 import treemek.mesky.handlers.gui.elements.buttons.CheckButton;
 import treemek.mesky.handlers.gui.elements.buttons.DeleteButton;
@@ -90,8 +91,7 @@ public class MacroWaypointsGui extends GuiScreen {
 				input.drawTextBox();
 			}
 			
-			int radius = waypoint.color.height;
-			RenderHandler.drawCircle(waypoint.color.xPosition - radius - 2, waypoint.color.yPosition, radius, Utils.getColorInt(waypoint.color.getText()));
+			waypoint.color.drawTextBox();
 	    }
 
 	    // Reset color and blending state before drawing buttons
@@ -130,8 +130,7 @@ public class MacroWaypointsGui extends GuiScreen {
 				button.drawButton(mc, mouseX, mouseY);
 			}
 			
-			int radius = holdingElement.color.height;
-			RenderHandler.drawCircle(holdingElement.color.xPosition - radius - 2, holdingElement.color.yPosition, radius, Utils.getColorInt(holdingElement.color.getText()));
+			holdingElement.color.drawTextBox();
 	    }
 	    
 		drawRect(0, 0, width, height/3 - 1, new Color(33, 33, 33,255).getRGB());
@@ -219,10 +218,8 @@ public class MacroWaypointsGui extends GuiScreen {
 	            
 	            
 	            // color text input
-	        	GuiTextField waypointColor = new GuiTextField(1, this.fontRendererObj, waypointColor_X, inputFullPosition, width / 10, inputHeight);
-	            waypointColor.setMaxStringLength(9);
-	            waypointColor.setCanLoseFocus(true);
-	            waypointColor.setText(MacroWaypoints.GetLocationWaypoints().get(i).waypoint.color);
+	            ColorPicker colorPicker = new ColorPicker(0, waypointColor_X, 0, inputHeight);	        	
+	            colorPicker.setText(MacroWaypoints.GetLocationWaypoints().get(i).waypoint.color);
 	        	
 	            
 	            // X coordinate input
@@ -272,7 +269,7 @@ public class MacroWaypointsGui extends GuiScreen {
 	            MacroButton back = new MacroButton(4, waypointName_X + (inputHeight+5)*4, inputFullPosition + inputHeight+5, inputHeight, inputHeight, "", MacroWaypoints.GetLocationWaypoints().get(i).back);
 	            MacroButton forward = new MacroButton(5, waypointName_X + (inputHeight+5)*5, inputFullPosition + inputHeight+5, inputHeight, inputHeight, "", MacroWaypoints.GetLocationWaypoints().get(i).forward);
 	            
-	            waypoints.add(new MacroWaypointElement(waypointName, waypointColor, waypointX, waypointY, waypointZ, yaw, pitch, left, right, back, forward, leftClick, rightClick, noiseLevel, function, deleteButton));
+	            waypoints.add(new MacroWaypointElement(waypointName, colorPicker, waypointX, waypointY, waypointZ, yaw, pitch, left, right, back, forward, leftClick, rightClick, noiseLevel, function, deleteButton));
 	        }	
         }else {
         	for (int i = 0; i < waypoints.size(); i++) {
@@ -291,10 +288,8 @@ public class MacroWaypointsGui extends GuiScreen {
 	            
 	            
 	            // color text input
-	        	GuiTextField waypointColor = new GuiTextField(1, this.fontRendererObj, waypointColor_X, inputFullPosition, width / 10, inputHeight);
-	            waypointColor.setMaxStringLength(9);
-	            waypointColor.setCanLoseFocus(true);
-	            waypointColor.setText(waypoints.get(i).color.getText());
+	            ColorPicker colorPicker = new ColorPicker(0, waypointColor_X, 0, inputHeight);
+	            colorPicker.setText(waypoints.get(i).color.getColorString());
 	        	
 	            
 	            // X coordinate input
@@ -342,7 +337,7 @@ public class MacroWaypointsGui extends GuiScreen {
 	            MacroButton back = new MacroButton(4, waypointName_X + (inputHeight+5)*4, inputFullPosition + inputHeight+5, inputHeight, inputHeight, "", waypoints.get(i).back.isFull);
 	            MacroButton forward = new MacroButton(5, waypointName_X + (inputHeight+5)*5, inputFullPosition + inputHeight+5, inputHeight, inputHeight, "", waypoints.get(i).forward.isFull);
 	            
-	            waypoints.set(i, new MacroWaypointElement(waypointName, waypointColor, waypointX, waypointY, waypointZ, yaw, pitch, left, right, back, forward, leftClick, rightClick, noiseLevel, function, deleteButton));
+	            waypoints.set(i, new MacroWaypointElement(waypointName, colorPicker, waypointX, waypointY, waypointZ, yaw, pitch, left, right, back, forward, leftClick, rightClick, noiseLevel, function, deleteButton));
 
 	        }	
         }
@@ -379,11 +374,8 @@ public class MacroWaypointsGui extends GuiScreen {
             waypointName.setText("Name");
             
             // color text input
-        	GuiTextField waypointColor = new GuiTextField(1, this.fontRendererObj, waypointColor_X, 0, width / 10, inputHeight);
-            waypointColor.setMaxStringLength(12);
-            waypointColor.setCanLoseFocus(true);
-            waypointColor.setText("ffffff");
-            
+            ColorPicker colorPicker = new ColorPicker(0, waypointColor_X, 0, inputHeight);
+            colorPicker.setText("ffffff");
             
             // X coordinate input
             GuiTextField waypointX = new GuiTextField(2, this.fontRendererObj, coords_X, 0, coord_Width, inputHeight);
@@ -430,7 +422,7 @@ public class MacroWaypointsGui extends GuiScreen {
             MacroButton back = new MacroButton(4, waypointName_X + (inputHeight+5)*4, 0 + inputHeight, inputHeight, inputHeight, "", false);
             MacroButton forward = new MacroButton(5, waypointName_X + (inputHeight+5)*5, 0 + inputHeight, inputHeight, inputHeight, "", false);
             
-            waypoints.add(0, new MacroWaypointElement(waypointName, waypointColor, waypointX, waypointY, waypointZ, yaw, pitch, left, right, back, forward, leftClick, rightClick, noiseLevel, function, deleteButton));
+            waypoints.add(0, new MacroWaypointElement(waypointName, colorPicker, waypointX, waypointY, waypointZ, yaw, pitch, left, right, back, forward, leftClick, rightClick, noiseLevel, function, deleteButton));
             return;
 		}
 		
@@ -450,6 +442,7 @@ public class MacroWaypointsGui extends GuiScreen {
 	protected void keyTyped(char typedChar, int keyCode) throws IOException {
 		try {
 			if(keyCode == 1) {
+				ColorPicker.turnOff();
 				CloseGui();
 				return;
 			}
@@ -458,6 +451,8 @@ public class MacroWaypointsGui extends GuiScreen {
 				for (int i = 0; i < waypoints.size(); i++) {
 					MacroWaypointElement waypoint = waypoints.get(i);
 					List<GuiTextField> inputs = waypoint.getListOfTextFields();
+					
+					waypoints.get(i).color.keyTyped(typedChar, keyCode);
 					
 					for (GuiTextField input : inputs) {
 						if(input.isFocused()) {
@@ -487,10 +482,6 @@ public class MacroWaypointsGui extends GuiScreen {
 								}
 							}else{
 								input.textboxKeyTyped(typedChar, keyCode);
-								
-								if(input.getId() == 1 && input.getText().length() >= 6) {
-									waypoint.changeColor();
-								}
 							}
 						}
 					}
@@ -508,6 +499,23 @@ public class MacroWaypointsGui extends GuiScreen {
 		closeWarning.mouseClicked(mouseX, mouseY, mouseButton);
 		
 		if(!closeWarning.showElement) {
+			
+			boolean isOpenedColorPicker = false; // made it like that because mouseClick also hides picker so it wouldnt hide if i would make return
+			for (int i = 0; i < waypoints.size(); i++) {
+				if(waypoints.get(i).color.mouseClick(mouseX, mouseY, mouseButton)) isOpenedColorPicker = true;
+			}
+
+			if(isOpenedColorPicker) {
+				for (int i = 0; i < waypoints.size(); i++) {
+					for (GuiTextField input : waypoints.get(i).getListOfTextFields()) {
+						input.setCursorPositionZero();
+						input.setFocused(false);
+					}
+				}
+			
+				return;
+			}
+			
 			// focusing input when clicked
 			for (int i = 0; i < waypoints.size(); i++) {
 				MacroWaypointElement waypoint = waypoints.get(i);
@@ -565,6 +573,10 @@ public class MacroWaypointsGui extends GuiScreen {
 			mouseY = Math.min(Math.max(mouseY, height/3 - 1), height - holdingElement.getHeight());
             holdingElement.updateYposition(mouseY, inputHeight);
 		}
+		
+		for (int i = 0; i < waypoints.size(); i++) {
+			waypoints.get(i).color.mouseClickMoved(mouseX, mouseY, clickedMouseButton, timeSinceLastClick);
+		}
     }
 	
 	protected void mouseReleased(int mouseX, int mouseY, int state)
@@ -591,6 +603,10 @@ public class MacroWaypointsGui extends GuiScreen {
 			}
 			holdingElement = null;
 		}
+		
+		for (int i = 0; i < waypoints.size(); i++) {
+			waypoints.get(i).color.mouseReleased(mouseX, mouseY);
+		}
     }
 	
 	@Override
@@ -612,6 +628,8 @@ public class MacroWaypointsGui extends GuiScreen {
 			for (GuiTextField input : inputs) {
 				input.updateCursorCounter();
 			}
+			
+			waypoint.color.updateCursorCounter();
 		}
 	}
 	
@@ -636,7 +654,7 @@ public class MacroWaypointsGui extends GuiScreen {
 	    	
 	        String name = waypoint.name.getText();
 	        String function = waypoint.function.getText();
-	        String color = waypoint.color.getText().replace("#", ""); 
+	        String color = waypoint.color.getColorString().replace("#", ""); 
 	        try {
 	        	Color.decode("#" + color);
 	        } catch (NumberFormatException e) {
@@ -707,7 +725,7 @@ public class MacroWaypointsGui extends GuiScreen {
 				MacroWaypointElement macroWaypoint = waypoints.get(i);
 		    	
 				String name = macroWaypoint.name.getText();
-		        String color = macroWaypoint.color.getText().replace("#", ""); 
+		        String color = macroWaypoint.color.getColorString();
 		        String function = macroWaypoint.function.getText();
 		        
 		        boolean leftClick = macroWaypoint.leftClick.isFull;
@@ -750,7 +768,7 @@ public class MacroWaypointsGui extends GuiScreen {
 		        }
 		        if(Float.compare(waypointsList.get(i).noiseLevel, noiseLevel) != 0) { isntEqual = true; break; }
 		        if(!name.equals(waypointsList.get(i).waypoint.name)) { isntEqual = true; break; }
-		        if(!color.equals(waypointsList.get(i).waypoint.color)) { isntEqual = true; break; }
+		        if(!color.equalsIgnoreCase(waypointsList.get(i).waypoint.color)) { isntEqual = true; break; }
 		        if(!function.equals(waypointsList.get(i).function)) { isntEqual = true; break; }
 		        if(leftClick != waypointsList.get(i).leftClick) { isntEqual = true; break; }
 		        if(rightClick != waypointsList.get(i).rightClick) { isntEqual = true; break; }

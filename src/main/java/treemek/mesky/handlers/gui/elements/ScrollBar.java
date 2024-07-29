@@ -86,7 +86,8 @@ public class ScrollBar extends Gui{
     	if(maxBottomScroll != 0) { // dont render if doesnt needed
     		if((targetScrollOffset != ScrollOffset)) updateScrollOffset();
     		
-	        int scrollbar_height = (int) Math.max(scrollbarWidth * 2.857, Math.abs((scrollbarHeight - (scrollbarHeight / 20)) / Math.max(1, Math.abs(maxBottomScroll) / 15)));
+	        int scrollbar_height = (int) Math.max(5, (float)Math.abs((scrollbarHeight - (scrollbarHeight / 20)) / Math.max(1, (float)(Math.abs(maxBottomScroll)+100) / 100)));
+	        
 	        
 	        int scrollbarBG_endPosition = y + scrollbarHeight - scrollbar_height;
 

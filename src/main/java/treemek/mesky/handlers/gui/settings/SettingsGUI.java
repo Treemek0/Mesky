@@ -170,7 +170,7 @@ public class SettingsGUI extends GuiScreen {
 		
 		List<Object> scrollbarSub = new ArrayList<>();
         scrollbarSub.add(new SettingSlider(-1,  5*checkSize, checkSize, "Scrollbar speed", SettingsConfig.ScrollbarSpeed, 1, 1, 100));
-        scrollbarSub.add(new SettingSlider(-1,  5*checkSize, checkSize, "Scrollbar smoothness", SettingsConfig.ScrollbarSmoothness, 0.005, 0.005, 0.1));
+        scrollbarSub.add(new SettingSlider(-1,  5*checkSize, checkSize, "Scrollbar smoothness", SettingsConfig.ScrollbarSmoothness, 0.005, 0.005, 0.2));
 	
         List<Object> waypointsSub = new ArrayList<>();
         if(SettingsConfig.CoordsDetection.isOn || SettingsConfig.JawbusDetection.isOn) waypointsSub.add(new SettingSlider(2,  5*checkSize, checkSize, "Time for [Mark] waypoint to disappear [s]", SettingsConfig.MarkWaypointTime, 1, 10, 600));

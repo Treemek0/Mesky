@@ -400,6 +400,29 @@ public class RenderHandler {
          GL11.glPopMatrix();
     }
     
+    public static void drawColorWheel(int x, int y, int radius) {
+        Tessellator tessellator = Tessellator.getInstance();
+        WorldRenderer worldrenderer = tessellator.getWorldRenderer();
+
+        GL11.glPushMatrix(); // Save the current OpenGL state
+        GL11.glTranslatef(x, y, 0); // Translate to the center of the wheel
+
+        worldrenderer.begin(GL11.GL_POINTS, DefaultVertexFormats.POSITION_COLOR);
+        for (int i = 0; i < 360; i++) {
+            double angle = Math.toRadians(i);
+            for (int j = 0; j < radius; j++) {
+                double dx = Math.cos(angle) * j;
+                double dy = Math.sin(angle) * j;
+
+                Color color = Color.getHSBColor(i / 360.0f, j / (float) radius, 1.0f);
+                worldrenderer.pos(dx, dy, 0).color(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, 1.0f).endVertex();
+            }
+        }
+        tessellator.draw();
+
+        GL11.glPopMatrix(); // Restore the previous OpenGL state
+    }
+    
 	
     // Calculate opacity based on elapsed time
     public static float getlinearInterpolation(long elapsedTime, long totalTime) {
@@ -420,4 +443,6 @@ public class RenderHandler {
         }
 		return 1;
     }
+    
+    
 }

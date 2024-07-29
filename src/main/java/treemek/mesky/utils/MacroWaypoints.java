@@ -112,41 +112,43 @@ public class MacroWaypoints {
         	for (int i = 0; i < waypointsList.size(); i++) {
         		MacroWaypoint macroWaypoint = waypointsList.get(i);
 
-            	int y = player.getPosition().getY();
-            	
-            	AxisAlignedBB playerBoundingBox = player.getEntityBoundingBox();
-            	
-            	
-				if(playerBoundingBox.minX > macroWaypoint.boundingBox.minX && playerBoundingBox.maxX < macroWaypoint.boundingBox.maxX && playerBoundingBox.minZ > macroWaypoint.boundingBox.minZ && playerBoundingBox.maxZ < macroWaypoint.boundingBox.maxZ && y > macroWaypoint.boundingBox.minY - 0.999 && y < macroWaypoint.boundingBox.maxY - 0.001) {
-					if(doneMacro.contains(macroWaypoint)) continue;
-					doneMacro.add(macroWaypoint);
-					new Thread(() -> {
-						try {
-							if(!macroWaypoint.function.equals("/")) {
-								Minecraft.getMinecraft().thePlayer.sendChatMessage(macroWaypoint.function);
+        		if(macroWaypoint.waypoint.world.equals(Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld))) {
+	            	int y = player.getPosition().getY();
+	            	
+	            	AxisAlignedBB playerBoundingBox = player.getEntityBoundingBox();
+	            	
+	            	
+					if(playerBoundingBox.minX > macroWaypoint.boundingBox.minX && playerBoundingBox.maxX < macroWaypoint.boundingBox.maxX && playerBoundingBox.minZ > macroWaypoint.boundingBox.minZ && playerBoundingBox.maxZ < macroWaypoint.boundingBox.maxZ && y > macroWaypoint.boundingBox.minY - 0.999 && y < macroWaypoint.boundingBox.maxY - 0.001) {
+						if(doneMacro.contains(macroWaypoint)) continue;
+						doneMacro.add(macroWaypoint);
+						new Thread(() -> {
+							try {
+								if(!macroWaypoint.function.equals("/")) {
+									Minecraft.getMinecraft().thePlayer.sendChatMessage(macroWaypoint.function);
+								}
+								KeyBinding.unPressAllKeys();
+								if(macroWaypoint.yaw != null && macroWaypoint.pitch != null) {
+									RotationUtils.clearAllRotations();
+									RotationUtils.rotateCurveToWithControlableNoise(RotationUtils.getNeededYawFromMinecraftRotation(macroWaypoint.yaw), RotationUtils.getNeededPitchFromMinecraftRotation(macroWaypoint.pitch), 0.5f, macroWaypoint.noiseLevel);
+									Thread.sleep(1500);
+								}
+								
+								KeyBinding.setKeyBindState(left, macroWaypoint.left);
+								KeyBinding.setKeyBindState(right, macroWaypoint.right);
+								KeyBinding.setKeyBindState(back, macroWaypoint.back);
+								KeyBinding.setKeyBindState(forward, macroWaypoint.forward);
+								KeyBinding.setKeyBindState(leftClick, macroWaypoint.leftClick);
+								KeyBinding.setKeyBindState(rightClick, macroWaypoint.rightClick);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
 							}
-							KeyBinding.unPressAllKeys();
-							if(macroWaypoint.yaw != null && macroWaypoint.pitch != null) {
-								RotationUtils.clearAllRotations();
-								RotationUtils.rotateCurveToWithControlableNoise(RotationUtils.getNeededYawFromMinecraftRotation(macroWaypoint.yaw), RotationUtils.getNeededPitchFromMinecraftRotation(macroWaypoint.pitch), 0.5f, macroWaypoint.noiseLevel);
-								Thread.sleep(1500);
-							}
-							
-							KeyBinding.setKeyBindState(left, macroWaypoint.left);
-							KeyBinding.setKeyBindState(right, macroWaypoint.right);
-							KeyBinding.setKeyBindState(back, macroWaypoint.back);
-							KeyBinding.setKeyBindState(forward, macroWaypoint.forward);
-							KeyBinding.setKeyBindState(leftClick, macroWaypoint.leftClick);
-							KeyBinding.setKeyBindState(rightClick, macroWaypoint.rightClick);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
+						}).start();
+					}else {
+						if(doneMacro.contains(macroWaypoint)) {
+							doneMacro.remove(macroWaypoint);
 						}
-					}).start();
-				}else {
-					if(doneMacro.contains(macroWaypoint)) {
-						doneMacro.remove(macroWaypoint);
 					}
-				}
+        		}
 			}
         }
 	}

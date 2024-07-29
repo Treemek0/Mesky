@@ -6,11 +6,12 @@ import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
+import treemek.mesky.handlers.gui.elements.ColorPicker;
 import treemek.mesky.handlers.gui.elements.buttons.DeleteButton;
 
 public class WaypointElement {
 	GuiTextField name;
-	GuiTextField color;
+	ColorPicker color;
 	GuiTextField x;
 	GuiTextField y;
 	GuiTextField z;
@@ -20,7 +21,7 @@ public class WaypointElement {
 	public Integer elementHeight = null;
 	public Integer elementWidth = null;
 	
-	public WaypointElement(GuiTextField name, GuiTextField color, GuiTextField x, GuiTextField y, GuiTextField z, DeleteButton deleteButton) {
+	public WaypointElement(GuiTextField name, ColorPicker color, GuiTextField x, GuiTextField y, GuiTextField z, DeleteButton deleteButton) {
 		this.name = name;
 		this.color = color;
 		this.x = x;
@@ -43,7 +44,6 @@ public class WaypointElement {
 	public List<GuiTextField> getListOfTextFields() {
 		List<GuiTextField> inputs = new ArrayList<>();
 		inputs.add(name);
-		inputs.add(color);
 		inputs.add(x);
 		inputs.add(y);
 		inputs.add(z);
@@ -62,6 +62,13 @@ public class WaypointElement {
 			int lowestX = 10000000;
 			int highestX = 0;
 			int highestX_width = 0;
+			
+			if(color.xPosition < lowestX) lowestX = color.xPosition;
+			if(color.xPosition > highestX) {
+				highestX = color.xPosition;
+				highestX_width = color.width;
+			}
+			
 			List<GuiButton> buttons = getListOfButtons();
 			for (int i = 0; i < buttons.size(); i++) {
 				if(buttons.get(i).xPosition < lowestX) lowestX = buttons.get(i).xPosition;
@@ -92,8 +99,12 @@ public class WaypointElement {
 	
 	public int getHeight() {
 		if(elementHeight == null) {
-		int highestHeight = 0;
+			int highestHeight = 0;
 			
+			if(color.height > highestHeight) {
+				highestHeight = color.height;
+			}
+		
 			List<GuiButton> buttons = getListOfButtons();
 			for (int i = 0; i < buttons.size(); i++) {
 				if(buttons.get(i).height > highestHeight) {

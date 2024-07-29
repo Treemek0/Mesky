@@ -2,6 +2,8 @@ package treemek.mesky.handlers.gui.elements;
 
 import java.io.IOException;
 
+import org.lwjgl.opengl.GL11;
+
 import com.google.gson.JsonSyntaxException;
 
 import net.minecraft.client.Minecraft;
@@ -33,6 +35,8 @@ public class CloseWarning extends GuiScreen{
 	
 	public void drawElement(Minecraft mc, int mouseX, int mouseY) {
 		if(showElement) {
+			GL11.glPushMatrix();
+			GL11.glTranslatef(0, 0, 100);
 			ScaledResolution resolution = new ScaledResolution(Minecraft.getMinecraft());
 			
 			drawRect(0, 0, resolution.getScaledWidth(), resolution.getScaledHeight(), 0xea000000);
@@ -41,6 +45,7 @@ public class CloseWarning extends GuiScreen{
 			
 			yeah.drawButton(mc, mouseX, mouseY);
 			nevermind.drawButton(mc, mouseX, mouseY);
+			GL11.glPopMatrix();
 		}
 	}
 	

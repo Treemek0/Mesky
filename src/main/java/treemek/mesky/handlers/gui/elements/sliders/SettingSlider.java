@@ -2,8 +2,11 @@ package treemek.mesky.handlers.gui.elements.sliders;
 
 import java.awt.Color;
 
+import org.lwjgl.input.Mouse;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.util.ResourceLocation;
 import treemek.mesky.Reference;
 import treemek.mesky.config.ConfigHandler;
@@ -59,15 +62,23 @@ public class SettingSlider extends GuiButton{
 		float scaleFactor = (float) (height / defaultFontHeight) / 2;
 		
 		float textY = yPosition + ((height / 2) - ((defaultFontHeight * scaleFactor) / 2));
-		double roundedCurrent = Math.round(setting.number * 100.0) / 100.0;
+		
+		int decimalPlaces = (int) Math.abs(Math.log10(sliderPrecision));
+		double roundedCurrent = Math.round(setting.number * Math.pow(10, decimalPlaces+1)) / Math.pow(10, decimalPlaces+1);
+		
 		RenderHandler.drawText(sliderText + " (" + roundedCurrent + ")", xPosition + (width*1.25), textY, scaleFactor, true, 0x3e91b5);
 	}
 
 	@Override
 	public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
 		if (mouseX >= xPosition && mouseX <= xPosition + width && mouseY >= yPosition && mouseY <= yPosition + height) {
+			
+			int mX = Mouse.getX(); // X position on screen (more precise)
+		    ScaledResolution scaledResolution = new ScaledResolution(Minecraft.getMinecraft());
+		    float guiX = (float) mX * scaledResolution.getScaledWidth() / Minecraft.getMinecraft().displayWidth;
+
 			clicked = true;
-			float percent = (float)(mouseX - xPosition)/width;
+			float percent = (float)(guiX - xPosition)/width;
 			double rawValue = Utils.getPrecentAverage((float)min, (float)max, percent);
 			double adjustedValue = Math.round(rawValue  / sliderPrecision) * sliderPrecision;
 			
@@ -85,7 +96,11 @@ public class SettingSlider extends GuiButton{
 	
 	public void mouseClickMoved(int mouseX, int mouseY, int clickedMouseButton, long timeSinceLastClick) {
 		if(clicked) {
-			float percent = (float)(mouseX - xPosition)/width;
+			int mX = Mouse.getX();
+		    ScaledResolution scaledResolution = new ScaledResolution(Minecraft.getMinecraft());
+		    float guiX = (float) mX * scaledResolution.getScaledWidth() / Minecraft.getMinecraft().displayWidth;
+			
+			float percent = (float)(guiX - xPosition)/width;
 			double rawValue = Utils.getPrecentAverage((float)min, (float)max, percent);
 			double adjustedValue = Math.round(rawValue  / sliderPrecision) * sliderPrecision;
 			

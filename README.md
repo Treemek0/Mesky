@@ -1,8 +1,7 @@
 # Mesky QOL
-QoL (*Quality of Life*) for Hypixel Skyblock
+QoL (*Quality of Life*) modification for Hypixel Skyblock
 
 **• Version: forge 1.8.9**
-(*I use it and it works fine so it shouldn't cause any bad frame impact or crashes*)
 
 Idk if thats global problem or just mine but when i was trying to move my mod using my android file manager to pojavlauncher directory, pojav couldnt read it.
 The fix for it is just using computer and cable connected to phone to move file to correct directory

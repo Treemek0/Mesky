@@ -143,18 +143,22 @@ public class FishingTimer extends GuiScreen{
     @SubscribeEvent
     public void onRenderOverlay(RenderGameOverlayEvent.Text event) {
         if (fishingHook != null && !SettingsConfig.FishingTimerIs3d.isOn && SettingsConfig.FishingTimer.isOn) {
-            Minecraft mc = Minecraft.getMinecraft();
-            FontRenderer fontRenderer = mc.fontRendererObj;
-
-            float x = event.resolution.getScaledWidth() * (SettingsConfig.FishingTimer.position[0]/100);
-            float y = event.resolution.getScaledHeight() * (SettingsConfig.FishingTimer.position[1]/100);
-            Float scale = SettingsConfig.FishingTimer.scale;
-            
-            String timerText = String.format(java.util.Locale.US, "%.1f", fishingTimer) + "s";
-            RenderHandler.drawText(timerText, x + (15*scale), y + (5*scale), scale, true, 0xFFFFFF);
-            Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(Reference.MODID, "textures/bobber.png"));
-            drawModalRectWithCustomSizedTexture((int)x, (int)(y), 0, 0, (int)(12 * scale), (int)(17 * scale), (int)(12 * scale), (int)(17 * scale));
+        	render2D(fishingTimer);
         }
+    }
+    
+    public static void render2D(Float timer) {
+        ScaledResolution resolution = new ScaledResolution(Minecraft.getMinecraft());
+
+        float x = resolution.getScaledWidth() * (SettingsConfig.FishingTimer.position[0]/100);
+        float y = resolution.getScaledHeight() * (SettingsConfig.FishingTimer.position[1]/100);
+        Float scale = SettingsConfig.FishingTimer.scale;
+        
+        String timerText = String.format(java.util.Locale.US, "%.1f", timer) + "s";
+        float textY = y + ((8.5f*scale) - (Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT * scale)/2);
+        RenderHandler.drawText(timerText, x + (15*scale), textY, scale, true, 0xFFFFFF);
+        Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(Reference.MODID, "textures/bobber.png"));
+        drawModalRectWithCustomSizedTexture((int)x, (int)(y), 0, 0, (int)(12 * scale), (int)(17 * scale), (int)(12 * scale), (int)(17 * scale));
     }
     
     

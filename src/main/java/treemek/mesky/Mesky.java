@@ -48,6 +48,7 @@ import treemek.mesky.utils.RotationUtils;
 import treemek.mesky.utils.Waypoints;
 import treemek.mesky.utils.chat.CoordsDetector;
 import treemek.mesky.utils.chat.NickMentionDetector;
+import treemek.mesky.utils.manager.CameraManager;
 import treemek.mesky.utils.manager.RecordHeadMovement;
 
 @Mod(modid = Reference.MODID, name = Reference.NAME, version = Reference.VERSION, clientSideOnly = true)
@@ -69,6 +70,7 @@ public class Mesky {
 		ConfigHandler.reloadConfig();
 		
 		MinecraftForge.EVENT_BUS.register(new HypixelCheck());
+		MinecraftForge.EVENT_BUS.register(new CameraManager());
 		MinecraftForge.EVENT_BUS.register(new Locations());
 		MinecraftForge.EVENT_BUS.register(new GuiHandler());
 		MinecraftForge.EVENT_BUS.register(new FishingTimer());

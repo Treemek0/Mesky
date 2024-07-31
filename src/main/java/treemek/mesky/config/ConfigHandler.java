@@ -170,40 +170,8 @@ public class ConfigHandler {
                 Map<String, Setting> settings = gson.fromJson(reader, type);
 
                 if(settings != null) {
-	                SettingsConfig.BlockFlowerPlacing = safelyGetInfo(settings.get("BlockFlowerPlacing"), SettingsConfig.BlockFlowerPlacing);
-	                SettingsConfig.FishingTimer = safelyGetInfo(settings.get("FishingTimer"), SettingsConfig.FishingTimer);
-	                SettingsConfig.FishingTimerIs3d = safelyGetInfo(settings.get("FishingTimerIs3d"), SettingsConfig.FishingTimerIs3d);
-	                SettingsConfig.BonzoTimer = safelyGetInfo(settings.get("BonzoTimer"), SettingsConfig.BonzoTimer);
-	                SettingsConfig.SpiritTimer = safelyGetInfo(settings.get("SpiritTimer"), SettingsConfig.SpiritTimer);
-	                SettingsConfig.GhostBlocks = safelyGetInfo(settings.get("GhostBlocks"), SettingsConfig.GhostBlocks);
-	                SettingsConfig.GhostPickaxe = safelyGetInfo(settings.get("GhostPickaxe"), SettingsConfig.GhostPickaxe);
-	                SettingsConfig.HidePlayers = safelyGetInfo(settings.get("HidePlayers"), SettingsConfig.HidePlayers);
-	                SettingsConfig.GhostPickaxeSlot = safelyGetInfo(settings.get("GhostPickaxeSlot"), SettingsConfig.GhostPickaxeSlot);
-	                SettingsConfig.AntyGhostBlocks = safelyGetInfo(settings.get("AntyGhostBlocks"), SettingsConfig.AntyGhostBlocks);
-	                SettingsConfig.CoordsDetection = safelyGetInfo(settings.get("CoordsDetection"), SettingsConfig.CoordsDetection);
-	                SettingsConfig.NickMentionDetection = safelyGetInfo(settings.get("NickMentionDetection"), SettingsConfig.NickMentionDetection);
-	                SettingsConfig.JawbusDetection = safelyGetInfo(settings.get("JawbusDetection"), SettingsConfig.JawbusDetection);
-	                SettingsConfig.AutoFish = safelyGetInfo(settings.get("AutoFish"), SettingsConfig.AutoFish);
-	                SettingsConfig.KillSeaCreatures = safelyGetInfo(settings.get("KillSeaCreatures"), SettingsConfig.KillSeaCreatures);
-	                SettingsConfig.AutoThrowHook = safelyGetInfo(settings.get("AutoThrowHook"), SettingsConfig.AutoThrowHook);
-	                SettingsConfig.FreeLook = safelyGetInfo(settings.get("FreeLook"), SettingsConfig.FreeLook);
-	                
-	                // Mesky settings
-	                SettingsConfig.ScrollbarSpeed = safelyGetInfo(settings.get("ScrollbarSpeed"), SettingsConfig.ScrollbarSpeed);
-	                SettingsConfig.ScrollbarSmoothness = safelyGetInfo(settings.get("ScrollbarSmoothness"), SettingsConfig.ScrollbarSmoothness);
-	                SettingsConfig.MarkWaypointTime = safelyGetInfo(settings.get("MarkWaypointTime"), SettingsConfig.MarkWaypointTime);
-	                SettingsConfig.EntityDetectorWaypointLifeTime = safelyGetInfo(settings.get("EntityDetectorWaypointLifeTime"), SettingsConfig.EntityDetectorWaypointLifeTime);
-	                SettingsConfig.EntityDetectorWaypointTouchRadius = safelyGetInfo(settings.get("EntityDetectorWaypointTouchRadius"), SettingsConfig.EntityDetectorWaypointTouchRadius);
-	                
-	                // cosmetics
-	                CosmeticHandler.AuraType = safelyGetInfo(settings.get("AuraType"), CosmeticHandler.AuraType);
-	                CosmeticHandler.HatType = safelyGetInfo(settings.get("HatType"), CosmeticHandler.HatType);
-	                CosmeticHandler.WingsType = safelyGetInfo(settings.get("WingsType"), CosmeticHandler.WingsType);
-	                CosmeticHandler.PetType = safelyGetInfo(settings.get("PetType"), CosmeticHandler.PetType);
-	                CosmeticHandler.CapeType = safelyGetInfo(settings.get("CapeType"), CosmeticHandler.CapeType);
-	                CosmeticHandler.CustomCapeTexture = safelyGetInfo(settings.get("CustomCapeTexture"), CosmeticHandler.CustomCapeTexture);
-	                CosmeticHandler.CustomCapeFrequency = safelyGetInfo(settings.get("CustomCapeFrequency"), CosmeticHandler.CustomCapeFrequency);
-	                CosmeticHandler.AllowCatFallingAnimation = safelyGetInfo(settings.get("AllowCatFallingAnimation"), CosmeticHandler.AllowCatFallingAnimation);
+                	setAllVariablesFromSave(SettingsConfig.class, settings);
+                	setAllVariablesFromSave(CosmeticHandler.class, settings);
 	                
 	                if(CosmeticHandler.CapeType.number == 5) CustomCapeGui.iterateImagesInFolder(CosmeticHandler.CustomCapeTexture.text, "CustomCape");
                 }
@@ -213,65 +181,12 @@ public class ConfigHandler {
         }     
     }
     
-    private static Setting safelyGetInfo(Setting objectFromFile, Setting oldSetting) {
-    	if(objectFromFile != null) {
-    		for (Field field : Setting.class.getDeclaredFields()) { // its so when i update setting class then users wont have to delete config file
-                field.setAccessible(true);
-                try {
-                    Object newValue = field.get(objectFromFile);
-                    if (newValue != null) {
-                        field.set(oldSetting, newValue);
-                    }
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                }
-            }
-            return oldSetting;
-    	}else {
-    		return oldSetting;
-    	}
-    }
-
     public static void saveSettings(){
-      // features
     	Map<String, Setting> settings = new LinkedHashMap<>(); // linked so it would be in order
     	
-    	settings.put("BlockFlowerPlacing", SettingsConfig.BlockFlowerPlacing);
-    	settings.put("FishingTimer", SettingsConfig.FishingTimer);
-    	settings.put("FishingTimerIs3d", SettingsConfig.FishingTimerIs3d);
-    	settings.put("BonzoTimer", SettingsConfig.BonzoTimer);
-    	settings.put("SpiritTimer", SettingsConfig.SpiritTimer);
-    	settings.put("GhostBlocks", SettingsConfig.GhostBlocks);
-    	settings.put("GhostPickaxe", SettingsConfig.GhostPickaxe);
-    	settings.put("HidePlayers", SettingsConfig.HidePlayers);
-    	settings.put("GhostPickaxeSlot", SettingsConfig.GhostPickaxeSlot);
-    	settings.put("AntyGhostBlocks", SettingsConfig.AntyGhostBlocks);
-    	settings.put("CoordsDetection", SettingsConfig.CoordsDetection);
-    	settings.put("NickMentionDetection", SettingsConfig.NickMentionDetection);
-    	settings.put("JawbusDetection", SettingsConfig.JawbusDetection);
-        settings.put("AutoFish", SettingsConfig.AutoFish);
-        settings.put("KillSeaCreatures", SettingsConfig.KillSeaCreatures);
-        settings.put("AutoThrowHook", SettingsConfig.AutoThrowHook);
-        settings.put("FreeLook", SettingsConfig.FreeLook);
-        //settings.put("SliderTest", SettingsConfig.SliderTest);
-        
-        // mesky settings
-        settings.put("ScrollbarSpeed", SettingsConfig.ScrollbarSpeed);
-        settings.put("ScrollbarSmoothness", SettingsConfig.ScrollbarSmoothness);
-        settings.put("MarkWaypointTime", SettingsConfig.MarkWaypointTime);
-        settings.put("EntityDetectorWaypointLifeTime", SettingsConfig.EntityDetectorWaypointLifeTime);
-        settings.put("EntityDetectorWaypointTouchRadius", SettingsConfig.EntityDetectorWaypointTouchRadius);
-        
-    	//cosmetics
-    	settings.put("AuraType", CosmeticHandler.AuraType);
-    	settings.put("HatType", CosmeticHandler.HatType);
-    	settings.put("WingsType", CosmeticHandler.WingsType);
-    	settings.put("PetType", CosmeticHandler.PetType);
-    	settings.put("CapeType", CosmeticHandler.CapeType);
-    	settings.put("CustomCapeTexture", CosmeticHandler.CustomCapeTexture);
-    	settings.put("CustomCapeFrequency", CosmeticHandler.CustomCapeFrequency);
-    	settings.put("AllowCatFallingAnimation", CosmeticHandler.AllowCatFallingAnimation);
-        
+    	settings.putAll(saveAllVariablesFromClass(SettingsConfig.class));
+    	settings.putAll(saveAllVariablesFromClass(CosmeticHandler.class));
+
     	new File(Mesky.configDirectory + "/mesky/").mkdirs();
     	try (FileWriter writer = new FileWriter(Mesky.configDirectory + "/mesky/meskySettings.json")) {
             new GsonBuilder().setPrettyPrinting().create().toJson(settings, writer);
@@ -280,5 +195,69 @@ public class ConfigHandler {
             ex.printStackTrace();
         }
     }
+    
+    private static void setAllVariablesFromSave(Class c, Map<String, Setting> settings) {
+    	try {	
+    		Field[] fields = c.getDeclaredFields();;
+	        for (Field field : fields) {
+	        	if(field.getType() == Setting.class) {
+	        		field.setAccessible(true);
+	        		Setting setting = (Setting) field.get(null);
+	                if (setting != null) {
+	                    String fieldName = field.getName();
+
+	                    setting = safelyGetInfo(settings.get(fieldName), setting);
+	                }
+	        	}
+	        }
+        } catch (IllegalArgumentException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
+    }
+    
+    private static Map<String, Setting> saveAllVariablesFromClass(Class c) {
+    	Map<String, Setting> settings = new LinkedHashMap<>();
+    	
+    	try {	
+    		Field[] fields = c.getDeclaredFields();;
+	        for (Field field : fields) {
+	        	if(field.getType() == Setting.class) {
+	        		field.setAccessible(true);
+	        		Setting setting = (Setting) field.get(null);
+	                if (setting != null) {
+	                    String fieldName = field.getName();
+
+	                    settings.put(fieldName, setting);
+	                }
+	        	}
+	        }
+        } catch (IllegalArgumentException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
+    	
+    	return settings;
+    }
+    
+    private static Setting safelyGetInfo(Setting objectFromFile, Setting oldSetting) {
+    	if(objectFromFile != null) {
+    		for (Field field : Setting.class.getDeclaredFields()) { // its so when i update setting class then users wont have to delete config file
+                field.setAccessible(true);
+                try {
+                    Object newValue = field.get(objectFromFile);
+                    if (newValue != null) {
+                        field.set(oldSetting, newValue); // this sets variable in oldSetting to new one if isnt null
+                    }
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            }
+    		
+            return oldSetting; // after iterating thru all variables returns
+    	}else {
+    		return oldSetting;
+    	}
+    }
+
+    
 	
 }

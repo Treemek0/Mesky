@@ -99,7 +99,6 @@ public class Waypoints {
         
     }
 
-    // Method to add data
     public static Waypoint addWaypoint(String name, String color, float x, float y, float z) {
     	EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
     	color = color.replace("#", "");

@@ -145,13 +145,18 @@ public class ColorUtils {
     	}
     	
     	try {
-			Color.decode("#" + color);
+    		int c = Integer.parseInt(color, 16);
+			color = getColorString(c); // its because colors are not always in the same format as when theyre saved
 			return color;
 		} catch (Exception e) {
 			System.out.println(e);
-			color = "ffffff";
+			color = "FFFFFF";
 			return color;
 		}
     }
+    
+    public static String getColorString(int color) {
+		return String.format("%06X", color);
+	}
     
 }

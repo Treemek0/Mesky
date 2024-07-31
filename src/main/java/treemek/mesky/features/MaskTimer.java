@@ -96,37 +96,43 @@ public class MaskTimer extends GuiScreen {
 	@SubscribeEvent
     public void onRenderOverlay(RenderGameOverlayEvent.Text event) {
         if (BonzoMaskActivated) {
-            renderBonzoMaskTimer(event.resolution, event.partialTicks);
+            renderBonzoMaskTimer(BonzoCooldownSeconds);
         }
         if (SpiritMaskActivated) {
-            renderSpiritMaskTimer(event.resolution, event.partialTicks);
+            renderSpiritMaskTimer(SpiritCooldownSeconds);
         }
     }
 	
 	
 	
-	private void renderBonzoMaskTimer(ScaledResolution resolution, float partialTicks) {
-		String cooldownTimer = Math.round(BonzoCooldownSeconds) + "s";
+	public static void renderBonzoMaskTimer(Float text) {
+		ScaledResolution resolution = new ScaledResolution(Minecraft.getMinecraft());
+		
+		String cooldownTimer = Math.round(text) + "s";
 		
 		// Calculate the position to render the timer
 		Float scale = SettingsConfig.BonzoTimer.scale;
 		float x = resolution.getScaledWidth() * (SettingsConfig.BonzoTimer.position[0]/100);
         float y = resolution.getScaledHeight() * (SettingsConfig.BonzoTimer.position[1]/100);
         
-        RenderHandler.drawText(cooldownTimer, x + (17*scale), y + (5*scale), scale, true, 0xFFFFFF);
+        float textY = y + ((8.5f*scale) - (Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT * scale)/2);
+        RenderHandler.drawText(cooldownTimer, x + (17*scale), textY, scale, true, 0xFFFFFF);
         Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(Reference.MODID, "textures/Bonzo_Head.png"));
         drawModalRectWithCustomSizedTexture((int)x, (int)y, 0, 0, (int)(17*scale), (int)(17*scale), (int)(17*scale), (int)(17*scale));
 	}
 	
-	private void renderSpiritMaskTimer(ScaledResolution resolution, float partialTicks) {
-		String cooldownTimer = Math.round(SpiritCooldownSeconds) + "s";
+	public static void renderSpiritMaskTimer(Float text) {
+		ScaledResolution resolution = new ScaledResolution(Minecraft.getMinecraft());
+		
+		String cooldownTimer = Math.round(text) + "s";
 		
 		// Calculate the position to render the timer
 		Float scale = SettingsConfig.SpiritTimer.scale;
 		float x = resolution.getScaledWidth() * (SettingsConfig.SpiritTimer.position[0]/100);
         float y = resolution.getScaledHeight() * (SettingsConfig.SpiritTimer.position[1]/100);
 		
-        RenderHandler.drawText(cooldownTimer, x + (17*scale), y + (5*scale), scale, true, 0xFFFFFF);
+        float textY = y + ((8.5f*scale) - (Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT * scale)/2);
+        RenderHandler.drawText(cooldownTimer, x + (17*scale), textY, scale, true, 0xFFFFFF);
         Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(Reference.MODID, "textures/Spirit_Mask.png"));
         drawModalRectWithCustomSizedTexture((int)x, (int)y, 0, 0, (int)(17*scale), (int)(17*scale), (int)(17*scale), (int)(17*scale));
 	}

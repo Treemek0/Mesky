@@ -725,7 +725,7 @@ public class MacroWaypointsGui extends GuiScreen {
 				MacroWaypointElement macroWaypoint = waypoints.get(i);
 		    	
 				String name = macroWaypoint.name.getText();
-		        String color = macroWaypoint.color.getColorString();
+		        String color = macroWaypoint.color.getColorString().replace("#", "");
 		        String function = macroWaypoint.function.getText();
 		        
 		        boolean leftClick = macroWaypoint.leftClick.isFull;

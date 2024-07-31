@@ -41,6 +41,7 @@ import treemek.mesky.handlers.gui.elements.buttons.CheckButton;
 import treemek.mesky.handlers.gui.elements.buttons.DeleteButton;
 import treemek.mesky.handlers.gui.elements.buttons.EditButton;
 import treemek.mesky.handlers.gui.elements.buttons.MeskyButton;
+import treemek.mesky.utils.ColorUtils;
 import treemek.mesky.utils.HypixelCheck;
 import treemek.mesky.utils.Locations;
 import treemek.mesky.utils.Locations.Location;
@@ -679,7 +680,7 @@ public class WaypointsGui extends GuiScreen {
 				WaypointElement waypoint = waypoints.get(i);
 		    	
 		        String name = waypoint.name.getText();
-		        String color = waypoint.color.getColorString();
+		        String color = waypoint.color.getColorString().replace("#", "");
 		        
 		        float x = 0, y = 0, z = 0;
 		        try {
@@ -693,7 +694,7 @@ public class WaypointsGui extends GuiScreen {
 		        if(Float.compare(waypointsList.get(i).coords[1], y) != 0) { isntEqual = true; break; }
 		        if(Float.compare(waypointsList.get(i).coords[2], z) != 0) { isntEqual = true; break; }
 		        if(!name.equals(waypointsList.get(i).name)) { isntEqual = true; break; }
-		        if(!color.equalsIgnoreCase(waypointsList.get(i).color)) { isntEqual = true; break; }
+		        if(!color.equalsIgnoreCase(ColorUtils.fixColor(waypointsList.get(i).color))) { isntEqual = true; break; }
 		    }
 		}
 		

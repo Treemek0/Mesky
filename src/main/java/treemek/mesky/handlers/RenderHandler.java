@@ -3,21 +3,26 @@ package treemek.mesky.handlers;
 import java.awt.Color;
 
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.util.vector.Vector3f;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.client.renderer.culling.ICamera;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StringUtils;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
@@ -27,6 +32,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import treemek.mesky.Mesky;
 import treemek.mesky.Reference;
+import treemek.mesky.features.illegal.Freelook;
 import treemek.mesky.utils.Waypoints;
 import treemek.mesky.utils.Waypoints.Waypoint;
 import net.minecraft.entity.Entity;
@@ -284,16 +290,16 @@ public class RenderHandler {
         GlStateManager.pushMatrix();
         
         Entity viewer = Minecraft.getMinecraft().getRenderViewEntity();
+
         double viewerX = viewer.lastTickPosX + (viewer.posX - viewer.lastTickPosX) * partialTicks;
-        double viewerY = viewer.lastTickPosY + (viewer.posY - viewer.lastTickPosY) * partialTicks;
+        double viewerY = viewer.lastTickPosY + (viewer.posY - viewer.lastTickPosY) * partialTicks + viewer.getEyeHeight();
         double viewerZ = viewer.lastTickPosZ + (viewer.posZ - viewer.lastTickPosZ) * partialTicks;
         
         float[] coords = coord;
-        
         double x = coords[0]-viewerX;
-        double y = coords[1]-viewerY-viewer.getEyeHeight();
+        double y = coords[1]-viewerY;
         double z = coords[2]-viewerZ;
-
+        
         double distSq = x*x + y*y + z*z;
         double dist = Math.sqrt(distSq);
         if(distSq > 144) {
@@ -312,10 +318,12 @@ public class RenderHandler {
         
         renderNametag(name, color);
 
+        float playerViewX = Minecraft.getMinecraft().getRenderManager().playerViewX;
+        if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 2) playerViewX *= -1;
         GlStateManager.rotate(-Minecraft.getMinecraft().getRenderManager().playerViewY, 0.0F, 1.0F, 0.0F);
-        GlStateManager.rotate(Minecraft.getMinecraft().getRenderManager().playerViewX, 1.0F, 0.0F, 0.0F);
+        GlStateManager.rotate(playerViewX, 1.0F, 0.0F, 0.0F);
         GlStateManager.translate(0, -0.25f, 0);
-        GlStateManager.rotate(-Minecraft.getMinecraft().getRenderManager().playerViewX, 1.0F, 0.0F, 0.0F);
+        GlStateManager.rotate(-playerViewX, 1.0F, 0.0F, 0.0F);
         GlStateManager.rotate(Minecraft.getMinecraft().getRenderManager().playerViewY, 0.0F, 1.0F, 0.0F);
         
         EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
@@ -342,9 +350,11 @@ public class RenderHandler {
 	        float f = 1.6F;
 	        float f1 = 0.016666668F * f;
 	        GlStateManager.pushMatrix();
-	        GL11.glNormal3f(0.0F, 1.0F, 0.0F);
-	        GlStateManager.rotate(-Minecraft.getMinecraft().getRenderManager().playerViewY, 0.0F, 1.0F, 0.0F);
-	        GlStateManager.rotate(Minecraft.getMinecraft().getRenderManager().playerViewX, 1.0F, 0.0F, 0.0F);
+	        
+	        float playerViewX = Minecraft.getMinecraft().getRenderManager().playerViewX;
+	        if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 2) playerViewX *= -1;
+        	GlStateManager.rotate(-Minecraft.getMinecraft().getRenderManager().playerViewY, 0.0F, 1.0F, 0.0F);
+        	GlStateManager.rotate(playerViewX, 1.0F, 0.0F, 0.0F);
 	        GlStateManager.scale(-f1, -f1, f1);
 	        GlStateManager.disableLighting();
 	        GlStateManager.depthMask(false);

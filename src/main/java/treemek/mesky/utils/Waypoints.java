@@ -28,6 +28,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientDisconnectionFromServerEvent;
+import treemek.mesky.Reference;
 import treemek.mesky.config.ConfigHandler;
 import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.handlers.gui.waypoints.WaypointsGui;
@@ -48,12 +49,25 @@ public class Waypoints {
         public float[] coords;
         public String world;
         public String color;
+        public Float scale;
+        public Boolean enabled;
 
-        public Waypoint(String name, String color, float x, float y, float z, String world) {
+        public Waypoint(String name, String color, float x, float y, float z, String world, float scale, boolean enabled) {
             this.name = name;
             this.coords = new float[]{x, y, z};
             this.world = world;
             this.color = ColorUtils.fixColor(color);
+            this.scale = scale;
+            this.enabled = enabled;
+        }
+        
+        public void fixNulls() {
+        	if(name == null) name = " ";
+        	if(coords == null) coords = new float[] {0,0,0};
+        	if(world == null) world = " ";
+        	if(enabled == null) enabled = true;
+        	if(color == null) color = "ffffff";
+        	if(scale == null) scale = 1f;
         }
     }
     
@@ -99,12 +113,12 @@ public class Waypoints {
         
     }
 
-    public static Waypoint addWaypoint(String name, String color, float x, float y, float z) {
+    public static Waypoint addWaypoint(String name, String color, float x, float y, float z, float scale) {
     	EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
     	color = color.replace("#", "");
     	
     	Waypoint waypoint;
-		waypoint = new Waypoint(name, color, x, y, z, Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld));
+		waypoint = new Waypoint(name, color, x, y, z, Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld), scale, true);
 		waypointsList.add(0, waypoint);
 		ConfigHandler.SaveWaypoint(waypointsList);
 		return waypoint;
@@ -132,9 +146,10 @@ public class Waypoints {
     public void onWorldRender(RenderWorldLastEvent event) {
         if (!waypointsList.isEmpty()) {
             for (Waypoint waypoint : waypointsList) {
+            	if(!waypoint.enabled) continue;
             	if(waypoint.world.equals(Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld))) {
                     waypoint.color = ColorUtils.fixColor(waypoint.color);
-                    RenderHandler.draw3DWaypointString(waypoint.name, waypoint.color, waypoint.coords, event.partialTicks, 1);  
+                    RenderHandler.draw3DWaypointString(ColorUtils.getColoredText(waypoint.name), waypoint.color, waypoint.coords, event.partialTicks, waypoint.scale);  
                     
                     try {
                     	BlockPos waypointPos = new BlockPos(waypoint.coords[0], waypoint.coords[1], waypoint.coords[2]);
@@ -143,6 +158,7 @@ public class Waypoints {
                         float z = (float) Math.floor(waypointPos.getZ());
                     	AxisAlignedBB aabb = new AxisAlignedBB(x + 1.001, y + 1.001, z + 1.001, x - 0.001, y - 0.001, z - 0.001);
                     	RenderHandler.draw3DBox(aabb, waypoint.color, event.partialTicks);
+                    	RenderHandler.draw3DImage(x + 0.5f, y + 0.5f, z + 0.5f, 0, 0, 0.5f, 0.5f, new ResourceLocation(Reference.MODID, "gui/marker.png"), ColorUtils.getColorInt(waypoint.color), false, event.partialTicks);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -155,7 +171,7 @@ public class Waypoints {
         	while (iterator.hasNext()) {
         	    TemporaryWaypoint waypoint = iterator.next();
                 waypoint.color = ColorUtils.fixColor(waypoint.color);
-        		RenderHandler.draw3DWaypointString(waypoint.name, waypoint.color, waypoint.coords, event.partialTicks, waypoint.scale);  
+        		RenderHandler.draw3DWaypointString(ColorUtils.getColoredText(waypoint.name), waypoint.color, waypoint.coords, event.partialTicks, waypoint.scale);  
                 
                 try {
                 	BlockPos waypointPos = new BlockPos(waypoint.coords[0], waypoint.coords[1], waypoint.coords[2]);
@@ -164,6 +180,7 @@ public class Waypoints {
                     float z = (float) Math.floor(waypointPos.getZ());
                 	AxisAlignedBB aabb = new AxisAlignedBB(x + 1.001, y + 1.001, z + 1.001, x - 0.001, y - 0.001, z - 0.001);
                 	RenderHandler.draw3DBox(aabb, waypoint.color, event.partialTicks);
+                	RenderHandler.draw3DImage(x + 0.5f, y + 0.5f, z + 0.5f, 0, 0, 0.5f, 0.5f, new ResourceLocation(Reference.MODID, "gui/clock.png"), ColorUtils.getColorInt(waypoint.color), false, event.partialTicks);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -179,7 +196,7 @@ public class Waypoints {
         	while (iterator.hasNext()) {
         	    TouchWaypoint waypoint = iterator.next();
                 waypoint.color = ColorUtils.fixColor(waypoint.color);
-        		RenderHandler.draw3DWaypointString(waypoint.name, waypoint.color, waypoint.coords, event.partialTicks, waypoint.scale);  
+        		RenderHandler.draw3DWaypointString(ColorUtils.getColoredText(waypoint.name), waypoint.color, waypoint.coords, event.partialTicks, waypoint.scale);  
                 
                 try {
                 	BlockPos waypointPos = new BlockPos(waypoint.coords[0], waypoint.coords[1], waypoint.coords[2]);
@@ -188,6 +205,7 @@ public class Waypoints {
                     float z = (float) Math.floor(waypointPos.getZ());
                 	AxisAlignedBB aabb = new AxisAlignedBB(x + 1.001, y + 1.001, z + 1.001, x - 0.001, y - 0.001, z - 0.001);
                 	RenderHandler.draw3DBox(aabb, waypoint.color, event.partialTicks);
+                	RenderHandler.draw3DImage(x + 0.5f, y + 0.5f, z + 0.5f, 0, 0, 0.5f, 0.5f, new ResourceLocation(Reference.MODID, "gui/touch.png"), ColorUtils.getColorInt(waypoint.color), false, event.partialTicks);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -211,7 +229,7 @@ public class Waypoints {
 		
 		for (Waypoint waypoint : Waypoints.waypointsList) {
     		if(waypoint.world.equals(Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld))){
-    			LocationWaypointsList.add(new Waypoint(waypoint.name, waypoint.color, waypoint.coords[0], waypoint.coords[1], waypoint.coords[2], waypoint.world));
+    			LocationWaypointsList.add(new Waypoint(waypoint.name, waypoint.color, waypoint.coords[0], waypoint.coords[1], waypoint.coords[2], waypoint.world, waypoint.scale, waypoint.enabled));
     		}
 		}
 		return LocationWaypointsList;
@@ -222,7 +240,7 @@ public class Waypoints {
 		
 		for (Waypoint waypoint : Waypoints.waypointsList) {
 			if(!waypoint.world.equals(Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld))){
-    			LocationWaypointsList.add(new Waypoint(waypoint.name, waypoint.color, waypoint.coords[0], waypoint.coords[1], waypoint.coords[2], waypoint.world));
+    			LocationWaypointsList.add(new Waypoint(waypoint.name, waypoint.color, waypoint.coords[0], waypoint.coords[1], waypoint.coords[2], waypoint.world, waypoint.scale, waypoint.enabled));
     		}
 		}
 		return LocationWaypointsList;

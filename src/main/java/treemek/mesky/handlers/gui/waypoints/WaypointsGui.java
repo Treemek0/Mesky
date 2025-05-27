@@ -9,11 +9,14 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import com.google.common.collect.Lists;
+import com.ibm.icu.util.RangeValueIterator.Element;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -33,17 +36,20 @@ import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.features.BlockFlowerPlacing;
 import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.handlers.gui.alerts.AlertElement;
-import treemek.mesky.handlers.gui.elements.ChangingRegionWarning;
-import treemek.mesky.handlers.gui.elements.CloseWarning;
 import treemek.mesky.handlers.gui.elements.ColorPicker;
 import treemek.mesky.handlers.gui.elements.ScrollBar;
 import treemek.mesky.handlers.gui.elements.buttons.CheckButton;
 import treemek.mesky.handlers.gui.elements.buttons.DeleteButton;
 import treemek.mesky.handlers.gui.elements.buttons.EditButton;
 import treemek.mesky.handlers.gui.elements.buttons.MeskyButton;
+import treemek.mesky.handlers.gui.elements.sliders.Slider;
+import treemek.mesky.handlers.gui.elements.textFields.TextField;
+import treemek.mesky.handlers.gui.elements.warnings.ChangingRegionWarning;
+import treemek.mesky.handlers.gui.elements.warnings.CloseWarning;
 import treemek.mesky.utils.ColorUtils;
 import treemek.mesky.utils.HypixelCheck;
 import treemek.mesky.utils.Locations;
+import treemek.mesky.utils.MacroWaypoints;
 import treemek.mesky.utils.Locations.Location;
 import treemek.mesky.utils.Utils;
 import treemek.mesky.utils.Waypoints;
@@ -55,7 +61,7 @@ public class WaypointsGui extends GuiScreen {
 	
 	public static List<WaypointElement> waypoints = new ArrayList<>();
 	
-	public ScrollBar scrollbar = new ScrollBar(0,0,0,0,0);
+	public ScrollBar scrollbar = new ScrollBar();
 	CloseWarning closeWarning = new CloseWarning();
 	ChangingRegionWarning changingRegionWarning = new ChangingRegionWarning();
 	
@@ -72,7 +78,7 @@ public class WaypointsGui extends GuiScreen {
 	@Override
 	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
 		drawDefaultBackground();
-        
+		
 		drawRect(0, height/3 - 1, width, height, new Color(33, 33, 33,255).getRGB());
 		
 		// Draw text fields first
@@ -84,40 +90,37 @@ public class WaypointsGui extends GuiScreen {
                 continue;
        	 	}
 			
-			List<GuiTextField> inputs = waypoint.getListOfTextFields();
+			List<TextField> inputs = waypoint.getListOfTextFields();
 			
-			for (GuiTextField input : inputs) {
+			for (TextField input : inputs) {
 				input.drawTextBox();
 			}
 			
 			waypoint.color.drawTextBox();
-	    }
-
-	    // Reset color and blending state before drawing buttons
-	    GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
-	    GlStateManager.enableBlend();
-	    GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
-
-	    // Draw delete buttons
-	    for (int i = 0; i < waypoints.size(); i++) {
-	    	if(waypoints.get(i) == holdingElement) continue;
-	    	
-	    	if (waypoints.get(i).yPosition + waypoints.get(i).getHeight() <= ((height / 3))) {
-                continue;
-       	 	}
-	    	
-	    	for (GuiButton button : waypoints.get(i).getListOfButtons()) {	
+			
+			// Reset color and blending state before drawing buttons
+		    GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
+		    GlStateManager.enableBlend();
+		    GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
+		    
+		    for (GuiButton button : waypoints.get(i).getListOfButtons()) {	
 				button.drawButton(mc, mouseX, mouseY);
 			}
+		    
+		    waypoints.get(i).scale.drawButton(mc, mouseX, mouseY);
+		    
+		    if(!waypoint.enabled.isFull()) {
+				drawRect(waypoint.xPosition, waypoint.yPosition-2, waypoint.xPosition + waypoint.getWidth(), waypoint.yPosition + waypoint.getHeight()+2, new Color(33, 33, 33, 180).getRGB());
+			}
 	    }
-	    
+
 	    
     	if(holdingElement != null) {
 	    
-	    	drawRect(holdingElement.xPosition, holdingElement.yPosition, holdingElement.xPosition + holdingElement.getWidth(), holdingElement.yPosition + holdingElement.getHeight(), new Color(28, 28, 28,255).getRGB());
+	    	drawRect(holdingElement.xPosition, holdingElement.yPosition - inputMargin/2, holdingElement.xPosition + holdingElement.getWidth(), holdingElement.yPosition + holdingElement.getHeight() + inputMargin/2, new Color(28, 28, 28,255).getRGB());
 	    	
-	    	List<GuiTextField> inputs = holdingElement.getListOfTextFields();
-			for (GuiTextField input : inputs) {
+	    	List<TextField> inputs = holdingElement.getListOfTextFields();
+			for (TextField input : inputs) {
 				input.drawTextBox();
 			}
 			
@@ -130,14 +133,20 @@ public class WaypointsGui extends GuiScreen {
 			}
 			
 			holdingElement.color.drawTextBox();
+			holdingElement.scale.drawButton(mc, mouseX, mouseY);
+			
+			if(!holdingElement.enabled.isFull()) {
+				drawRect(holdingElement.xPosition, holdingElement.yPosition-2, holdingElement.xPosition + holdingElement.getWidth(), holdingElement.yPosition + holdingElement.getHeight()+2, new Color(28, 28, 28, 180).getRGB());
+			}
 	    }
-	    
+    	
 		drawRect(0, 0, width, height/3 - 1, new Color(33, 33, 33,255).getRGB());
 		
-        double scale = 3;
+		float scale = (float) ((height*0.1f) / mc.fontRendererObj.FONT_HEIGHT) / 2;
+
         int textLength = mc.fontRendererObj.getStringWidth("Waypoints");
         int titleX = (int) ((width / 2) - (textLength * scale / 2));
-        int titleY = (int) ((height / 4) / scale);
+        int titleY = (int) (height * 0.05f);
 
         RenderHandler.drawText("Waypoints", titleX, titleY, scale, true, 0x3e91b5);
         
@@ -145,21 +154,31 @@ public class WaypointsGui extends GuiScreen {
         	region.drawTextBox(); // Region input should be only visible on Hypixel (its in right upper corner)
     	}
         
-        int color_X = width / 20;
-        int name_X = color_X + width / 8;
-    	int coords_X = name_X + (width/4) + 15;
+        int scale_X = width / 20 + inputHeight + 10;
+        int name_X = scale_X + width / 8 + 5;
+    	int coords_X = name_X + (width/4) + 5;
     	int coords_width = width / 10;
         
-        int positionY = (int)((height / 3) - 15);
-        RenderHandler.drawText("Hex Color", color_X, positionY, 1, true, 0x7a7a7a);
-        RenderHandler.drawText("Name", name_X, positionY, 1, true, 0x7a7a7a);
-        RenderHandler.drawText("X", coords_X, positionY, 1, true, 0x7a7a7a);
-        RenderHandler.drawText("Y", coords_X + coords_width + 5, positionY, 1, true, 0x7a7a7a);
-        RenderHandler.drawText("Z", coords_X + (coords_width*2) + 10, positionY, 1, true, 0x7a7a7a);
+
+ 	    double widthOfCheckTexts = width / 20;
+        
+        double checksScale = RenderHandler.getTextScale("Players", widthOfCheckTexts); // "Players" is the longest in Alerts and i want all to have the same scale
+
+        int positionY = (int)((height / 3) - RenderHandler.getTextHeight(checksScale) - 3);
+
+        RenderHandler.drawText("Scale", scale_X, positionY, checksScale, true, 0x7a7a7a);
+        RenderHandler.drawText("Name", name_X, positionY, checksScale, true, 0x7a7a7a);
+        RenderHandler.drawText("X", coords_X, positionY, checksScale, true, 0x7a7a7a);
+        RenderHandler.drawText("Y", coords_X + coords_width + 5, positionY, checksScale, true, 0x7a7a7a);
+        RenderHandler.drawText("Z", coords_X + (coords_width*2) + 10, positionY, checksScale, true, 0x7a7a7a);
         
         scrollbar.updateScrollBar((int)Math.min(20, (width * 0.025)), (height - (height / 3) - 10), (int)(width * 0.95), height/3);
-        updateWaypointsY();
-        scrollbar.renderScrollBar();
+        if(scrollbar.isScrolling()) {
+        	snapToWaypointY();
+        }else {
+        	updateWaypointsY();
+        }
+        scrollbar.drawScrollBar();
        
 	    super.drawScreen(mouseX, mouseY, partialTicks);
 	    
@@ -203,14 +222,18 @@ public class WaypointsGui extends GuiScreen {
         	region.height = 20;
         }
         
-        int waypointColor_X = width / 20;
-        int waypointName_X = waypointColor_X + width / 8;
-		int coords_X = waypointName_X + (width/4) + 15;
-		int coord_Width = width / 10;
 		inputHeight = ((height / 25) < 12)?12:(height / 25);
 		inputMargin = ((height / 40) < 5)?5:(height / 40);
+        
+        int waypointColor_X = width / 20;
+        int waypointScale_X = waypointColor_X + inputHeight + 10;
+        int waypointName_X = waypointScale_X + width / 8 + 5;
+		int coords_X = waypointName_X + (width/4) + 5;
+		int coord_Width = width / 10;
+
 		
-		scrollbar.updateMaxBottomScroll(((Waypoints.GetLocationWaypoints().size() * (inputHeight + inputMargin))) - (height - (height/3)));
+		scrollbar.updateVisibleHeight(height - (height/3));
+		scrollbar.updateContentHeight((Waypoints.GetLocationWaypoints().size() * (inputHeight + inputMargin)));
 		int ScrollOffset = scrollbar.getOffset(); // so scrolloffset doesnt go below maxbottomscroll
 		
         int positionY = (int) (height / 3 + ScrollOffset);
@@ -220,11 +243,15 @@ public class WaypointsGui extends GuiScreen {
 	        	// Position 0 for inputs + every input height and their bottom margin
 	        	int inputFullPosition = positionY + ((inputHeight + inputMargin) * i);
 	        	
-	        	DeleteButton deleteButton = new DeleteButton(0 + (5*i), (int)(width * 0.8f), inputFullPosition, inputHeight, inputHeight, "");
+	        	DeleteButton deleteButton = new DeleteButton(0 + (5*i), (int)(width * 0.85f), inputFullPosition, inputHeight, inputHeight, "");
+	        	deleteButton.enabled = Waypoints.GetLocationWaypoints().get(i).enabled;
+	        	
+	        	CheckButton enabled = new CheckButton(0, (int)(width * 0.9f), inputFullPosition, inputHeight, inputHeight, "", Waypoints.GetLocationWaypoints().get(i).enabled);
 	        	
 	    		// Name text input
-	        	GuiTextField waypointName = new GuiTextField(0, this.fontRendererObj, waypointName_X, inputFullPosition, width / 4, inputHeight);
-	            waypointName.setMaxStringLength(32);
+	        	TextField waypointName = new TextField(0, waypointName_X, inputFullPosition, width / 4, inputHeight);
+	        	waypointName.setColoredField(true);
+	            waypointName.setMaxStringLength(512);
 	            waypointName.setCanLoseFocus(true);
 	            waypointName.setText(Waypoints.GetLocationWaypoints().get(i).name);
 	            
@@ -232,70 +259,83 @@ public class WaypointsGui extends GuiScreen {
 	            // color text input
 	            ColorPicker colorPicker = new ColorPicker(0, waypointColor_X, 0, inputHeight);	        	
 	            colorPicker.setText(Waypoints.GetLocationWaypoints().get(i).color);
+	            colorPicker.enabled = Waypoints.GetLocationWaypoints().get(i).enabled;
+	            
+	            // scale slider
+	            Slider scale = new Slider(0, waypointScale_X, inputFullPosition, width / 8, inputHeight, "", 0.5f, 5, 0.1f);
+	            scale.setValue(Waypoints.GetLocationWaypoints().get(i).scale);
 	            
 	            // X coordinate input
-	            GuiTextField waypointX = new GuiTextField(2, this.fontRendererObj, coords_X, inputFullPosition, coord_Width, inputHeight);
+	            TextField waypointX = new TextField(2, coords_X, inputFullPosition, coord_Width, inputHeight);
 	            waypointX.setMaxStringLength(16);
 	            waypointX.setCanLoseFocus(true);
 	            waypointX.setText(Float.toString(Waypoints.GetLocationWaypoints().get(i).coords[0]));
 	            
 	            // Y coordinate input
-	            GuiTextField waypointY = new GuiTextField(3, this.fontRendererObj, coords_X + coord_Width + 5, inputFullPosition, coord_Width, inputHeight);
+	            TextField waypointY = new TextField(3, coords_X + coord_Width + 5, inputFullPosition, coord_Width, inputHeight);
 	            waypointY.setMaxStringLength(16);
 	            waypointY.setCanLoseFocus(true);
 	            waypointY.setText(Float.toString(Waypoints.GetLocationWaypoints().get(i).coords[1]));
 	            
 	            // Z coordinate input
-	            GuiTextField waypointZ = new GuiTextField(4, this.fontRendererObj, coords_X + (width / 5) + 10, inputFullPosition, coord_Width, inputHeight);
+	            TextField waypointZ = new TextField(4, coords_X + (width / 5) + 10, inputFullPosition, coord_Width, inputHeight);
 	            waypointZ.setMaxStringLength(16);
 	            waypointZ.setCanLoseFocus(true);
 	            waypointZ.setText(Float.toString(Waypoints.GetLocationWaypoints().get(i).coords[2]));
 	
 	            
-	            waypoints.add(new WaypointElement(waypointName, colorPicker, waypointX, waypointY, waypointZ, deleteButton));
+	            waypoints.add(new WaypointElement(waypointName, colorPicker, scale, waypointX, waypointY, waypointZ, deleteButton, enabled, inputMargin));
 	        }
         }else {
         	for (int i = 0; i < waypoints.size(); i++) {
 	        	// Position 0 for inputs + every input height and their bottom margin
 	        	int inputFullPosition = positionY + ((inputHeight + inputMargin) * i);
 	        	
-	        	DeleteButton deleteButton = new DeleteButton(0 + (5*i), (int)(width * 0.8f), inputFullPosition, inputHeight, inputHeight, "");
+	        	DeleteButton deleteButton = new DeleteButton(0 + (5*i), (int)(width * 0.85f), inputFullPosition, inputHeight, inputHeight, "");
+	        	deleteButton.enabled = waypoints.get(i).enabled.isFull();
 	        	
+	        	CheckButton enabled = new CheckButton(0, (int)(width * 0.9f), inputFullPosition, inputHeight, inputHeight, "", waypoints.get(i).enabled.isFull());
 	        	
-	        	
+	        	// color text input
+	            ColorPicker colorPicker = new ColorPicker(0, waypointColor_X, 0, inputHeight);
+	            colorPicker.setText(waypoints.get(i).color.getColorString());
+	        	colorPicker.enabled = waypoints.get(i).enabled.isFull();
+	            
 	    		// Name text input
-	        	GuiTextField waypointName = new GuiTextField(0, this.fontRendererObj, waypointName_X, inputFullPosition, width / 4, inputHeight);
-	            waypointName.setMaxStringLength(32);
+	        	TextField waypointName = new TextField(0, waypointName_X, inputFullPosition, width / 4, inputHeight);
+	        	waypointName.setColoredField(true);
+	            waypointName.setMaxStringLength(512);
 	            waypointName.setCanLoseFocus(true);
 	            waypointName.setText(waypoints.get(i).name.getText());
 	            
-	            
-	            // color text input
-	            ColorPicker colorPicker = new ColorPicker(0, waypointColor_X, 0, inputHeight);
-	            colorPicker.setText(waypoints.get(i).color.getColorString());
+	            // scale slider
+	            Slider scale = new Slider(0, waypointScale_X, inputFullPosition, width / 8, inputHeight, "", 0.5f, 5, 0.1f);
+	            scale.setValue(waypoints.get(i).scale.getValue());
 	            
 	            // X coordinate input
-	            GuiTextField waypointX = new GuiTextField(2, this.fontRendererObj, coords_X, inputFullPosition, coord_Width, inputHeight);
+	            TextField waypointX = new TextField(2, coords_X, inputFullPosition, coord_Width, inputHeight);
 	            waypointX.setMaxStringLength(16);
 	            waypointX.setCanLoseFocus(true);
 	            waypointX.setText(waypoints.get(i).x.getText());
 	            
 	            // Y coordinate input
-	            GuiTextField waypointY = new GuiTextField(3, this.fontRendererObj, coords_X + coord_Width + 5, inputFullPosition, coord_Width, inputHeight);
+	            TextField waypointY = new TextField(3, coords_X + coord_Width + 5, inputFullPosition, coord_Width, inputHeight);
 	            waypointY.setMaxStringLength(16);
 	            waypointY.setCanLoseFocus(true);
 	            waypointY.setText(waypoints.get(i).y.getText());
 	            
 	            // Z coordinate input
-	            GuiTextField waypointZ = new GuiTextField(4, this.fontRendererObj, coords_X + (width / 5) + 10, inputFullPosition, coord_Width, inputHeight);
+	            TextField waypointZ = new TextField(4, coords_X + (width / 5) + 10, inputFullPosition, coord_Width, inputHeight);
 	            waypointZ.setMaxStringLength(16);
 	            waypointZ.setCanLoseFocus(true);
 	            waypointZ.setText(waypoints.get(i).z.getText());
 	
 	            
-	            waypoints.set(i, new WaypointElement(waypointName, colorPicker, waypointX, waypointY, waypointZ, deleteButton));
+	            waypoints.set(i, new WaypointElement(waypointName, colorPicker, scale, waypointX, waypointY, waypointZ, deleteButton, enabled, inputMargin));
 	        }
         }
+        
+        snapToWaypointY();
 	}
 	
 	@Override
@@ -314,40 +354,50 @@ public class WaypointsGui extends GuiScreen {
 			float z = Float.parseFloat(String.format("%.2f", player.posZ).replace(",", "."));
 
 			int waypointColor_X = width / 20;
-	        int waypointName_X = waypointColor_X + width / 8;
-			int coords_X = waypointName_X + (width/4) + 15;
+	        int waypointScale_X = waypointColor_X + inputHeight + 10;
+	        int waypointName_X = waypointScale_X + width / 8 + 5;
+			int coords_X = waypointName_X + (width/4) + 5;
 			int coord_Width = width / 10;
+			
+			int topOfWaypoints = height/3 - inputHeight - inputMargin;
     		
-        	DeleteButton deleteButton = new DeleteButton(0, (int)(width * 0.8f), 0, inputHeight, inputHeight, "");
+        	DeleteButton deleteButton = new DeleteButton(0, (int)(width * 0.85f), 0, inputHeight, inputHeight, "");
+        	
+        	CheckButton enabled = new CheckButton(0, (int)(width * 0.9f), 0, inputHeight, inputHeight, "", true);
         	
     		// Name text input
-        	GuiTextField waypointName = new GuiTextField(0, this.fontRendererObj, waypointName_X, 0, width / 4, inputHeight);
-            waypointName.setMaxStringLength(32);
+        	TextField waypointName = new TextField(0, waypointName_X, topOfWaypoints, width / 4, inputHeight);
+        	waypointName.setColoredField(true);
+            waypointName.setMaxStringLength(512);
             waypointName.setCanLoseFocus(true);
             waypointName.setText("Name");
             
             ColorPicker colorPicker = new ColorPicker(0, waypointColor_X, 0, inputHeight);
             colorPicker.setText("ffffff");
             
+            // scale slider
+            Slider scale = new Slider(0, waypointScale_X, 0, width / 8, inputHeight, "", 0.5f, 5, 0.1f);
+            scale.setValue(1);
+            
             // X coordinate input
-            GuiTextField waypointX = new GuiTextField(2, this.fontRendererObj, coords_X, 0, coord_Width, inputHeight);
+            TextField waypointX = new TextField(2, coords_X, 0, coord_Width, inputHeight);
             waypointX.setMaxStringLength(16);
             waypointX.setCanLoseFocus(true);
             waypointX.setText(Float.toString(x));
             
             // Y coordinate input
-            GuiTextField waypointY = new GuiTextField(3, this.fontRendererObj, coords_X + coord_Width + 5, 0, coord_Width, inputHeight);
+            TextField waypointY = new TextField(3, coords_X + coord_Width + 5, 0, coord_Width, inputHeight);
             waypointY.setMaxStringLength(16);
             waypointY.setCanLoseFocus(true);
             waypointY.setText(Float.toString(y));
 
         	// Z coordinate input
-            GuiTextField waypointZ = new GuiTextField(4, this.fontRendererObj, coords_X + (width / 5) + 10, 0, coord_Width, inputHeight);
+            TextField waypointZ = new TextField(4, coords_X + (width / 5) + 10, 0, coord_Width, inputHeight);
             waypointZ.setMaxStringLength(16);
             waypointZ.setCanLoseFocus(true);
             waypointZ.setText(Float.toString(z));
 
-            waypoints.add(0, new WaypointElement(waypointName, colorPicker, waypointX, waypointY, waypointZ, deleteButton));
+            waypoints.add(0, new WaypointElement(waypointName, colorPicker, scale, waypointX, waypointY, waypointZ, deleteButton, enabled, inputMargin));
             return;
 		}
 		
@@ -392,11 +442,11 @@ public class WaypointsGui extends GuiScreen {
 				
 				for (int i = 0; i < waypoints.size(); i++) {
 					WaypointElement waypoint = waypoints.get(i);
-					List<GuiTextField> inputs = waypoint.getListOfTextFields();
+					List<TextField> inputs = waypoint.getListOfTextFields();
 
 					waypoints.get(i).color.keyTyped(typedChar, keyCode);
 					
-					for (GuiTextField input : inputs) {
+					for (TextField input : inputs) {
 						if(input.isFocused()) {
 							if(input.getId() == 2 || input.getId() == 3 || input.getId() == 4) {
 								// Backspace / leftArrow / rightArrow / . / delete
@@ -427,11 +477,13 @@ public class WaypointsGui extends GuiScreen {
 	}
 	
 	
+	int offsetY = 0;
+	
 	@Override
 	protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
-		closeWarning.mouseClicked(mouseX, mouseY, mouseButton);
-		changingRegionWarning.mouseClicked(mouseX, mouseY, mouseButton, this);
 		if(!closeWarning.showElement && !changingRegionWarning.showElement) {
+			
+			saveButton.packedFGColour = 14737632;
 			
 			boolean isOpenedColorPicker = false; // made it like that because mouseClick also hides picker so it wouldnt hide if i would make return
 			for (int i = 0; i < waypoints.size(); i++) {
@@ -440,7 +492,7 @@ public class WaypointsGui extends GuiScreen {
 			
 			if(isOpenedColorPicker) {
 				for (int i = 0; i < waypoints.size(); i++) {
-					for (GuiTextField input : waypoints.get(i).getListOfTextFields()) {
+					for (TextField input : waypoints.get(i).getListOfTextFields()) {
 						input.setCursorPositionZero();
 						input.setFocused(false);
 					}
@@ -454,37 +506,59 @@ public class WaypointsGui extends GuiScreen {
 			for (int i = 0; i < waypoints.size(); i++) {
 				WaypointElement waypoint = waypoints.get(i);
 				boolean isAnythingPressed = false;
-				List<GuiTextField> inputs = waypoint.getListOfTextFields();
 				
+				List<TextField> inputs = waypoint.getListOfTextFields();
 				if (mouseY <= ((height / 3))) {
-	                 break;
-	        	}
-				
-				for (GuiTextField input : inputs) {
-					if (mouseX >= input.xPosition && mouseX <= input.xPosition + input.width && mouseY >= input.yPosition && mouseY <= input.yPosition + input.height) {
-						input.mouseClicked(mouseX, mouseY, mouseButton);
-						isAnythingPressed = true;
-					}else {
+					for (TextField input : inputs) {
 						input.setCursorPositionZero();
 						input.setFocused(false);
 					}
-				}
+	                 break;
+	        	}
 				
-				if (mouseButton == 0)
-		        {
-		            GuiButton guibutton = waypoint.deleteButton;
-		            
-		            if (guibutton.yPosition <= ((height / 3) - 20)) {
-		                 continue;
-		        	 }
-		            
-		            if (guibutton.mousePressed(Minecraft.getMinecraft(), mouseX, mouseY))
-		            {
-		            	isAnythingPressed = true;
-		                guibutton.playPressSound(Minecraft.getMinecraft().getSoundHandler());
-		                this.actionPerformed(guibutton);
-		            }
-		        }
+				if(waypoint.enabled.isFull()) {
+					for (TextField input : inputs) {
+						if (mouseX >= input.xPosition && mouseX <= input.xPosition + input.width && mouseY >= input.yPosition && mouseY <= input.yPosition + input.height) {
+							input.mouseClicked(mouseX, mouseY, mouseButton);
+							isAnythingPressed = true;
+						}else {
+							input.setCursorPositionZero();
+							input.setFocused(false);
+						}
+					}
+					
+					if (mouseButton == 0)
+			        {
+						if(waypoint.scale.mousePressed(mc, mouseX, mouseY)) {
+							isAnythingPressed = true;
+						};
+						
+						
+						for (GuiButton guibutton : waypoint.getListOfButtons()) {
+				            if (guibutton.yPosition <= ((height / 3) - 20)) {
+				                 continue;
+				        	 }
+				            
+				            if (guibutton.mousePressed(Minecraft.getMinecraft(), mouseX, mouseY))
+				            {
+				            	isAnythingPressed = true;
+				                guibutton.playPressSound(Minecraft.getMinecraft().getSoundHandler());
+				                this.actionPerformed(guibutton);
+				            }
+						}
+						
+			            waypoint.deleteButton.enabled = waypoint.enabled.isFull();
+			            waypoint.color.enabled = waypoint.enabled.isFull();
+			        }
+				}else {
+					if(waypoint.enabled.mousePressed(mc, mouseX, mouseY)) {
+	            		isAnythingPressed = true;
+	            		waypoint.enabled.playPressSound(Minecraft.getMinecraft().getSoundHandler());
+		                this.actionPerformed(waypoint.enabled);
+		                waypoint.deleteButton.enabled = waypoint.enabled.isFull();
+		                waypoint.color.enabled = waypoint.enabled.isFull();
+					};
+				}
 				
 				if(waypoint.isHovered(mouseX, mouseY)) {
 					if (waypoint.yPosition + waypoint.getHeight() <= ((height / 3) - 20)) {
@@ -493,6 +567,7 @@ public class WaypointsGui extends GuiScreen {
 					
 					if(!isAnythingPressed) {
 						holdingElement = waypoint;
+		                offsetY = mouseY - waypoint.yPosition;
 					}
 				}
 			}
@@ -506,12 +581,11 @@ public class WaypointsGui extends GuiScreen {
 			}
 			
 	
-			if(mouseX >= scrollbar.x && mouseX <= scrollbar.x + scrollbar.scrollbarWidth && mouseY >= scrollbar.y && mouseY <= scrollbar.y + scrollbar.scrollbarHeight) {
-				scrollbar.updateOffsetToMouseClick(mouseY);
-			}
-			
 			super.mouseClicked(mouseX, mouseY, mouseButton);
 		}
+		
+		closeWarning.mouseClicked(mouseX, mouseY, mouseButton);
+		changingRegionWarning.mouseClicked(mouseX, mouseY, mouseButton, this);
 	}
 	
 	
@@ -519,12 +593,13 @@ public class WaypointsGui extends GuiScreen {
 	protected void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton, long timeSinceLastClick)
     {
 		if (holdingElement != null) {
-			mouseY = Math.min(Math.max(mouseY, height/3 - 1), height - holdingElement.getHeight());
+			mouseY = Math.min(Math.max(mouseY - offsetY, height/3 - 1), height - holdingElement.getHeight());
             holdingElement.updateYposition(mouseY);
 		}
-		
+
 		for (int i = 0; i < waypoints.size(); i++) {
 			waypoints.get(i).color.mouseClickMoved(mouseX, mouseY, clickedMouseButton, timeSinceLastClick);
+			waypoints.get(i).scale.mouseClickMoved(mouseX, mouseY, clickedMouseButton, timeSinceLastClick);
 		}
     }
 	
@@ -539,15 +614,17 @@ public class WaypointsGui extends GuiScreen {
 				if(element.isHovered(mouseX, mouseY)) {
 					int elementIndex = i;
 					int holdingIndex = waypoints.indexOf(holdingElement);
-					
+					int sidePlus = (element.isHigherHalfHovered(mouseX, mouseY))?-1:0;
+
 					waypoints.remove(holdingElement);
-					if(elementIndex > holdingIndex) {
-						waypoints.add(waypoints.indexOf(element)+1, holdingElement);
-						break;
-					}else {
-						waypoints.add(waypoints.indexOf(element), holdingElement);
-						break;
-					}
+					waypoints.add(waypoints.indexOf(element)+1+sidePlus, holdingElement);
+					holdingElement = null;
+					break;
+				}else if(mouseY > waypoints.get(waypoints.size()-1).yPosition + waypoints.get(waypoints.size()-1).elementHeight) {
+					waypoints.remove(holdingElement);
+					waypoints.add(waypoints.size(), holdingElement);
+					holdingElement = null;
+					break;
 				}
 			}
 			holdingElement = null;
@@ -556,16 +633,20 @@ public class WaypointsGui extends GuiScreen {
 		
 		for (int i = 0; i < waypoints.size(); i++) {
 			waypoints.get(i).color.mouseReleased(mouseX, mouseY);
+			waypoints.get(i).scale.mouseReleased(mouseX, mouseY);
 		}
     }
 	
 	@Override
     public void handleMouseInput() throws IOException {
         super.handleMouseInput();
-        int scroll = Mouse.getEventDWheel();
         
-        if (scroll != 0 && !closeWarning.showElement && !changingRegionWarning.showElement) {
-        	scrollbar.handleMouseInput(scroll);
+        if (!closeWarning.showElement && !changingRegionWarning.showElement) {
+        	scrollbar.handleMouseInput();
+        	
+        	if(Mouse.getEventDWheel() > 0) {
+        		snapToWaypointY();
+        	}
         }
     }
 	
@@ -573,9 +654,9 @@ public class WaypointsGui extends GuiScreen {
 	public void updateScreen() {
 		for (int i = 0; i < waypoints.size(); i++) {
 			WaypointElement waypoint = waypoints.get(i);
-			List<GuiTextField> inputs = waypoint.getListOfTextFields();
+			List<TextField> inputs = waypoint.getListOfTextFields();
 			
-			for (GuiTextField input : inputs) {
+			for (TextField input : inputs) {
 				input.updateCursorCounter();
 			}
 			
@@ -608,6 +689,8 @@ public class WaypointsGui extends GuiScreen {
 	    	
 	        String name = waypoint.name.getText();
 	        String color = waypoint.color.getColorString().replace("#", ""); 
+	        double scale = waypoint.scale.getValue();
+	        boolean enabled = waypoint.enabled.isFull();
 	        
 	        if(color.length() == 0) color = "ffffff";
 	        
@@ -636,7 +719,7 @@ public class WaypointsGui extends GuiScreen {
 	        	return; // skip
 	        }
 	        
-	    	waypointsList.add(0, new Waypoint(name, color, x, y, z, Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld)));
+	    	waypointsList.add(0, new Waypoint(name, color, x, y, z, Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld), (float) scale, enabled));
 	        
 	    }
 	    saveButton.packedFGColour = 11131282;
@@ -656,7 +739,26 @@ public class WaypointsGui extends GuiScreen {
 	}
 	
 	public void updateWaypointsY() {
-		scrollbar.updateMaxBottomScroll(((waypoints.size() * (inputHeight + inputMargin))) - (height - (height/3)));
+		//scrollbar.updateMaxBottomScroll(((waypoints.size() * (inputHeight + inputMargin))) - (height - (height/3)));
+		scrollbar.updateContentHeight((waypoints.size() * (inputHeight + inputMargin)));
+		int ScrollOffset = scrollbar.getOffset();
+		
+		int positionY = (int) (height / 3 + ScrollOffset);
+		
+		for (int i = 0; i < waypoints.size(); i++) {
+			WaypointElement element = waypoints.get(i);
+			if(element == holdingElement) continue;
+			int inputFullPosition = positionY + ((inputHeight + inputMargin) * i);
+			
+			int l = (int) Math.signum((inputFullPosition - element.yPosition));
+			if(Math.abs(inputFullPosition - element.yPosition) > element.getHeight()*2) l *= 4;
+		    element.updateYposition(element.yPosition + l);
+		}
+	}
+	
+	public void snapToWaypointY() {
+	//	scrollbar.updateMaxBottomScroll(((waypoints.size() * (inputHeight + inputMargin))) - (height - (height/3)));
+		scrollbar.updateContentHeight((waypoints.size() * (inputHeight + inputMargin)));
 		int ScrollOffset = scrollbar.getOffset();
 		
 		int positionY = (int) (height / 3 + ScrollOffset);
@@ -664,6 +766,7 @@ public class WaypointsGui extends GuiScreen {
 		for (int i = 0; i < waypoints.size(); i++) {
 			if(waypoints.get(i) == holdingElement) continue;
 			int inputFullPosition = positionY + ((inputHeight + inputMargin) * i);
+			
 			waypoints.get(i).updateYposition(inputFullPosition);
 		}
 	}
@@ -681,6 +784,8 @@ public class WaypointsGui extends GuiScreen {
 		    	
 		        String name = waypoint.name.getText();
 		        String color = waypoint.color.getColorString().replace("#", "");
+		        float scale = (float) waypoint.scale.getValue();
+		        boolean enabled = waypoint.enabled.isFull();
 		        
 		        float x = 0, y = 0, z = 0;
 		        try {
@@ -690,10 +795,12 @@ public class WaypointsGui extends GuiScreen {
 		        	z = Float.parseFloat(waypoint.z.getText()); 
 		        } catch (NumberFormatException e) { isntEqual = true; break; }
 	
+		        if(Float.compare(waypointsList.get(i).scale, scale) != 0) { isntEqual = true; break; }
 		        if(Float.compare(waypointsList.get(i).coords[0], x) != 0) { isntEqual = true; break; }
 		        if(Float.compare(waypointsList.get(i).coords[1], y) != 0) { isntEqual = true; break; }
 		        if(Float.compare(waypointsList.get(i).coords[2], z) != 0) { isntEqual = true; break; }
 		        if(!name.equals(waypointsList.get(i).name)) { isntEqual = true; break; }
+		        if(enabled != waypointsList.get(i).enabled) { isntEqual = true; break; }
 		        if(!color.equalsIgnoreCase(ColorUtils.fixColor(waypointsList.get(i).color))) { isntEqual = true; break; }
 		    }
 		}
@@ -707,5 +814,5 @@ public class WaypointsGui extends GuiScreen {
 		region = null;
 		waypoints.clear();
 	}
-
+	
 }

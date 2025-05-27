@@ -33,15 +33,18 @@ import treemek.mesky.config.ConfigHandler;
 import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.features.BlockFlowerPlacing;
 import treemek.mesky.handlers.RenderHandler;
+import treemek.mesky.handlers.gui.GUI;
 import treemek.mesky.handlers.gui.chatfunctions.ChatFunctionElement;
-import treemek.mesky.handlers.gui.elements.CloseWarning;
 import treemek.mesky.handlers.gui.elements.ColorPicker;
 import treemek.mesky.handlers.gui.elements.ScrollBar;
 import treemek.mesky.handlers.gui.elements.buttons.CheckButton;
 import treemek.mesky.handlers.gui.elements.buttons.DeleteButton;
 import treemek.mesky.handlers.gui.elements.buttons.MeskyButton;
+import treemek.mesky.handlers.gui.elements.textFields.TextField;
+import treemek.mesky.handlers.gui.elements.warnings.CloseWarning;
 import treemek.mesky.handlers.gui.waypoints.WaypointElement;
 import treemek.mesky.handlers.gui.elements.buttons.MacroButton;
+import treemek.mesky.utils.Alerts;
 import treemek.mesky.utils.ChatFunctions;
 import treemek.mesky.utils.HypixelCheck;
 import treemek.mesky.utils.Locations;
@@ -59,7 +62,7 @@ public class MacroWaypointsGui extends GuiScreen {
 	public static List<MacroWaypointElement> waypoints = new ArrayList<>();
 	
 	CloseWarning closeWarning = new CloseWarning();
-	ScrollBar scrollbar = new ScrollBar(0,0,0,0,0);
+	ScrollBar scrollbar = new ScrollBar();
 	
 	int inputMargin;
 	int inputHeight;
@@ -85,40 +88,36 @@ public class MacroWaypointsGui extends GuiScreen {
                 continue;
        	 	}
 			
-			List<GuiTextField> inputs = waypoint.getListOfTextFields();
+			List<TextField> inputs = waypoint.getListOfTextFields();
 			
-			for (GuiTextField input : inputs) {
+			for (TextField input : inputs) {
 				input.drawTextBox();
 			}
 			
 			waypoint.color.drawTextBox();
-	    }
-
-	    // Reset color and blending state before drawing buttons
-	    GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
-	    GlStateManager.enableBlend();
-	    GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
-
-	    // Draw delete buttons
-	    for (int i = 0; i < waypoints.size(); i++) {
-	    	MacroWaypointElement waypoint = waypoints.get(i);
-	    	if(waypoint == holdingElement) continue;
-	    	
-	    	if (waypoint.yPosition + waypoint.getHeight() <= ((height / 3))) {
-                continue;
-       	 	}
-	    	
+			
+			// Reset color and blending state before drawing buttons
+		    GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
+		    GlStateManager.enableBlend();
+		    GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
+		    	
 	    	for (GuiButton button : waypoints.get(i).getListOfButtons()) {
 	    		button.drawButton(mc, mouseX, mouseY);
 	    	}
+	    	
+	    	if(!waypoint.enabled.isFull()) {
+				drawRect(waypoint.xPosition, waypoint.yPosition-2, waypoint.xPosition + waypoint.getWidth(), waypoint.yPosition + waypoint.getHeight()+2, new Color(33, 33, 33, 180).getRGB());
+			}
 	    }
+
+	    
 	    
 	    if(holdingElement != null) {
 	    	
-	    	drawRect(holdingElement.xPosition, holdingElement.yPosition, holdingElement.xPosition + holdingElement.getWidth(), holdingElement.yPosition + holdingElement.getHeight(), new Color(28, 28, 28,255).getRGB());
+	    	drawRect(holdingElement.xPosition, holdingElement.yPosition - inputMargin/2, holdingElement.xPosition + holdingElement.getWidth(), holdingElement.yPosition + holdingElement.getHeight() + inputMargin/2, new Color(28, 28, 28,255).getRGB());
 	    	
-	    	List<GuiTextField> inputs = holdingElement.getListOfTextFields();
-			for (GuiTextField input : inputs) {
+	    	List<TextField> inputs = holdingElement.getListOfTextFields();
+			for (TextField input : inputs) {
 				input.drawTextBox();
 			}
 			
@@ -131,35 +130,49 @@ public class MacroWaypointsGui extends GuiScreen {
 			}
 			
 			holdingElement.color.drawTextBox();
+			
+			if(!holdingElement.enabled.isFull()) {
+				drawRect(holdingElement.xPosition, holdingElement.yPosition-2, holdingElement.xPosition + holdingElement.getWidth(), holdingElement.yPosition + holdingElement.getHeight()+2, new Color(28, 28, 28, 180).getRGB());
+			}
 	    }
 	    
 		drawRect(0, 0, width, height/3 - 1, new Color(33, 33, 33,255).getRGB());
 		
-        double scale = 3;
+		float scale = (float) ((height*0.1f) / mc.fontRendererObj.FONT_HEIGHT) / 2;
+
         int textLength = mc.fontRendererObj.getStringWidth("Macro Waypoints");
         int titleX = (int) ((width / 2) - (textLength * scale / 2));
-        int titleY = (int) ((height / 4) / scale);
+        int titleY = (int) (height * 0.05f);
 
         RenderHandler.drawText("Macro Waypoints", titleX, titleY, scale, true, 0x3e91b5);
         
         int color_X = width / 20;
-        int name_X = color_X + width / 10 + 5;
+        int name_X = color_X + inputHeight*2 + 5;
     	int coords_X = name_X + (width/4) + 10;
     	int coords_width = width / 15;
-        
-        int positionY = (int)((height / 3) - 15);
-        RenderHandler.drawText("Hex Color", color_X, positionY, 1, true, 0x7a7a7a);
-        RenderHandler.drawText("Name", name_X, positionY, 1, true, 0x7a7a7a);
-        RenderHandler.drawText("X", coords_X, positionY, 1, true, 0x7a7a7a);
-        RenderHandler.drawText("Y", coords_X + (coords_width+5), positionY, 1, true, 0x7a7a7a);
-        RenderHandler.drawText("Z", coords_X + ((coords_width+5)*2), positionY, 1, true, 0x7a7a7a);
-        RenderHandler.drawText("Yaw", coords_X + ((coords_width+5)*3), positionY, 1, true, 0x7a7a7a);
-        RenderHandler.drawText("Pitch", coords_X + ((coords_width+5)*4), positionY, 1, true, 0x7a7a7a);
-        RenderHandler.drawText("Noise", coords_X + ((coords_width+5)*5), positionY, 1, true, 0x7a7a7a);
+    	
+	   double widthOfCheckTexts = width / 20;
+       
+       double checksScale = RenderHandler.getTextScale("Players", widthOfCheckTexts); // "Players" is the longest in Alerts and i want all to have the same scale
+
+       int positionY = (int)((height / 3) - RenderHandler.getTextHeight(checksScale) - 3);
+
+        RenderHandler.drawText("Color", color_X, positionY, checksScale, true, 0x7a7a7a);
+        RenderHandler.drawText("Name", name_X, positionY, checksScale, true, 0x7a7a7a);
+        RenderHandler.drawText("X", coords_X, positionY, checksScale, true, 0x7a7a7a);
+        RenderHandler.drawText("Y", coords_X + (coords_width+5), positionY, checksScale, true, 0x7a7a7a);
+        RenderHandler.drawText("Z", coords_X + ((coords_width+5)*2), positionY, checksScale, true, 0x7a7a7a);
+        RenderHandler.drawText("Yaw", coords_X + ((coords_width+5)*3), positionY, checksScale, true, 0x7a7a7a);
+        RenderHandler.drawText("Pitch", coords_X + ((coords_width+5)*4), positionY, checksScale, true, 0x7a7a7a);
+        RenderHandler.drawText("Noise", coords_X + ((coords_width+5)*5), positionY, checksScale, true, 0x7a7a7a);
         
         scrollbar.updateScrollBar((int)Math.min(20, (width * 0.025)), (height - (height / 3) - 10), (int)(width * 0.95), height/3);
-        updateWaypointsY();
-        scrollbar.renderScrollBar();
+        if(scrollbar.isScrolling()) {
+        	snapToWaypointY();
+        }else {
+        	updateWaypointsY();
+        }
+        scrollbar.drawScrollBar();
        
 	    super.drawScreen(mouseX, mouseY, partialTicks);
 	    
@@ -187,16 +200,22 @@ public class MacroWaypointsGui extends GuiScreen {
         // Updating location from tab
         Location.checkTabLocation();
         
-
+        inputHeight = ((height / 25) < 12)?12:(height / 25);
+        inputMargin = ((height / 40) < 5)?5:(height / 40);
+        
+        int spaceBetween = width/80;
+        
         int waypointColor_X = width / 20;
-        int waypointName_X = waypointColor_X + width / 10 + 5;
-		int coords_X = waypointName_X + (width/4) + 10;
-		int coord_Width = width / 15;
-		inputHeight = ((height / 25) < 12)?12:(height / 25);
+        int waypointName_X = waypointColor_X + inputHeight*2 + 5;
+		int coords_X = waypointName_X + (width/4) + spaceBetween*2;
+		int coord_Width = width / 17;
 		int waypointHeight = inputHeight*2 + 5;
-		inputMargin = ((height / 40) < 5)?5:(height / 40);
+		int deleteX = (int) (coords_X + ((coord_Width+spaceBetween)*6) + spaceBetween*1.5f);
 		
-		scrollbar.updateMaxBottomScroll(((MacroWaypoints.GetLocationWaypoints().size() * (waypointHeight + inputMargin))) - (height - (height/3)));
+		int macroButtonSize = Math.min(inputHeight, (width / 4)/6) - 3;
+		
+		scrollbar.updateVisibleHeight(height - (height/3));
+		scrollbar.updateContentHeight((MacroWaypoints.GetLocationWaypoints().size() * (waypointHeight + inputMargin)));
 		int ScrollOffset = scrollbar.getOffset(); // so scrolloffset doesnt go below maxbottomscroll
 		
         int positionY = (int) (height / 3 + ScrollOffset);
@@ -206,13 +225,15 @@ public class MacroWaypointsGui extends GuiScreen {
 	        	// Position 0 for inputs + every input height and their bottom margin
 	        	int inputFullPosition = positionY + ((waypointHeight + inputMargin) * i);
 	        	
-	        	DeleteButton deleteButton = new DeleteButton(0 + (5*i), (int)(width * 0.9f), inputFullPosition, inputHeight, inputHeight, "");
+	        	DeleteButton deleteButton = new DeleteButton(0 + (5*i), deleteX, inputFullPosition, inputHeight, inputHeight, "");
+	        	deleteButton.enabled = MacroWaypoints.GetLocationWaypoints().get(i).enabled;
 	        	
-	        	
+	        	CheckButton enabled = new CheckButton(0, (int) (deleteX + inputHeight + spaceBetween*1.5f), inputFullPosition, inputHeight, inputHeight, "", MacroWaypoints.GetLocationWaypoints().get(i).enabled);
 	        	
 	    		// Name text input
-	        	GuiTextField waypointName = new GuiTextField(0, this.fontRendererObj, waypointName_X, inputFullPosition, width / 4, inputHeight);
-	            waypointName.setMaxStringLength(128);
+	        	TextField waypointName = new TextField(0, waypointName_X, inputFullPosition, width / 4, inputHeight);
+	        	waypointName.setColoredField(true);
+	            waypointName.setMaxStringLength(512);
 	            waypointName.setCanLoseFocus(true);
 	            waypointName.setText(MacroWaypoints.GetLocationWaypoints().get(i).waypoint.name);
 	            
@@ -220,69 +241,72 @@ public class MacroWaypointsGui extends GuiScreen {
 	            // color text input
 	            ColorPicker colorPicker = new ColorPicker(0, waypointColor_X, 0, inputHeight);	        	
 	            colorPicker.setText(MacroWaypoints.GetLocationWaypoints().get(i).waypoint.color);
-	        	
+	            colorPicker.enabled = MacroWaypoints.GetLocationWaypoints().get(i).enabled;
 	            
 	            // X coordinate input
-	            GuiTextField waypointX = new GuiTextField(2, this.fontRendererObj, coords_X, inputFullPosition, coord_Width, inputHeight);
+	            TextField waypointX = new TextField(2, coords_X, inputFullPosition, coord_Width, inputHeight);
 	            waypointX.setMaxStringLength(16);
 	            waypointX.setCanLoseFocus(true);
 	            waypointX.setText(Float.toString(MacroWaypoints.GetLocationWaypoints().get(i).waypoint.coords[0]));
 	            
 	            // Y coordinate input
-	            GuiTextField waypointY = new GuiTextField(2, this.fontRendererObj, coords_X + coord_Width + 5, inputFullPosition, coord_Width, inputHeight);
+	            TextField waypointY = new TextField(2, coords_X + coord_Width + spaceBetween, inputFullPosition, coord_Width, inputHeight);
 	            waypointY.setMaxStringLength(16);
 	            waypointY.setCanLoseFocus(true);
 	            waypointY.setText(Float.toString(MacroWaypoints.GetLocationWaypoints().get(i).waypoint.coords[1]));
 	            
 	            // Z coordinate input
-	            GuiTextField waypointZ = new GuiTextField(2, this.fontRendererObj, coords_X + ((coord_Width+5)*2), inputFullPosition, coord_Width, inputHeight);
+	            TextField waypointZ = new TextField(2, coords_X + ((coord_Width+spaceBetween)*2), inputFullPosition, coord_Width, inputHeight);
 	            waypointZ.setMaxStringLength(16);
 	            waypointZ.setCanLoseFocus(true);
 	            waypointZ.setText(Float.toString(MacroWaypoints.GetLocationWaypoints().get(i).waypoint.coords[2]));
 	            
-	            GuiTextField yaw = new GuiTextField(2, this.fontRendererObj, coords_X + ((coord_Width+5)*3), inputFullPosition, coord_Width, inputHeight);
+	            TextField yaw = new TextField(2, coords_X + ((coord_Width+spaceBetween)*3), inputFullPosition, coord_Width, inputHeight);
 	            yaw.setMaxStringLength(16);
 	            yaw.setCanLoseFocus(true);
 	            String yawF = (MacroWaypoints.GetLocationWaypoints().get(i).yaw != null)?Float.toString(MacroWaypoints.GetLocationWaypoints().get(i).yaw):"";
 				yaw.setText(yawF);
 	            
-	            GuiTextField pitch = new GuiTextField(2, this.fontRendererObj, coords_X + ((coord_Width+5)*4), inputFullPosition, coord_Width, inputHeight);
+	            TextField pitch = new TextField(2, coords_X + ((coord_Width+spaceBetween)*4), inputFullPosition, coord_Width, inputHeight);
 	            pitch.setMaxStringLength(16);
 	            pitch.setCanLoseFocus(true);
 	            String pitchF = (MacroWaypoints.GetLocationWaypoints().get(i).pitch != null)?Float.toString(MacroWaypoints.GetLocationWaypoints().get(i).pitch):"";
 	            pitch.setText(pitchF);
 	
-	            GuiTextField noiseLevel = new GuiTextField(2, this.fontRendererObj, coords_X + ((coord_Width+5)*5), inputFullPosition, coord_Width, inputHeight);
+	            TextField noiseLevel = new TextField(2, coords_X + ((coord_Width+spaceBetween)*5), inputFullPosition, coord_Width, inputHeight);
 	            noiseLevel.setMaxStringLength(16);
 	            noiseLevel.setCanLoseFocus(true);
 	            noiseLevel.setText(Float.toString(MacroWaypoints.GetLocationWaypoints().get(i).noiseLevel));
 	            
-	            GuiTextField function = new GuiTextField(-1, this.fontRendererObj, coords_X, inputFullPosition + inputHeight+5, width / 4, inputHeight);
+	            TextField function = new TextField(-1, coords_X, inputFullPosition + inputHeight+5, width / 4, inputHeight);
 	            function.setMaxStringLength(128);
 	            function.setCanLoseFocus(true);
 	            function.setText(MacroWaypoints.GetLocationWaypoints().get(i).function);
 	            
-	            MacroButton leftClick = new MacroButton(0, waypointName_X, inputFullPosition + inputHeight+5, inputHeight, inputHeight, "", MacroWaypoints.GetLocationWaypoints().get(i).leftClick);
-	            MacroButton rightClick = new MacroButton(1, waypointName_X + (inputHeight+5), inputFullPosition + inputHeight+5, inputHeight, inputHeight, "", MacroWaypoints.GetLocationWaypoints().get(i).rightClick);
-	            MacroButton left = new MacroButton(2, waypointName_X + (inputHeight+5)*2, inputFullPosition + inputHeight+5, inputHeight, inputHeight, "", MacroWaypoints.GetLocationWaypoints().get(i).left);
-	            MacroButton right = new MacroButton(3, waypointName_X + (inputHeight+5)*3, inputFullPosition + inputHeight+5, inputHeight, inputHeight, "", MacroWaypoints.GetLocationWaypoints().get(i).right);
-	            MacroButton back = new MacroButton(4, waypointName_X + (inputHeight+5)*4, inputFullPosition + inputHeight+5, inputHeight, inputHeight, "", MacroWaypoints.GetLocationWaypoints().get(i).back);
-	            MacroButton forward = new MacroButton(5, waypointName_X + (inputHeight+5)*5, inputFullPosition + inputHeight+5, inputHeight, inputHeight, "", MacroWaypoints.GetLocationWaypoints().get(i).forward);
+	            MacroButton leftClick = new MacroButton(0, waypointName_X, inputFullPosition + inputHeight+5, macroButtonSize, macroButtonSize, "", MacroWaypoints.GetLocationWaypoints().get(i).leftClick);
+	            MacroButton rightClick = new MacroButton(1, waypointName_X + (macroButtonSize+spaceBetween), inputFullPosition + inputHeight+5, macroButtonSize, macroButtonSize, "", MacroWaypoints.GetLocationWaypoints().get(i).rightClick);
+	            MacroButton left = new MacroButton(2, waypointName_X + (macroButtonSize+spaceBetween)*2, inputFullPosition + inputHeight+5, macroButtonSize, macroButtonSize, "", MacroWaypoints.GetLocationWaypoints().get(i).left);
+	            MacroButton right = new MacroButton(3, waypointName_X + (macroButtonSize+spaceBetween)*3, inputFullPosition + inputHeight+5, macroButtonSize, macroButtonSize, "", MacroWaypoints.GetLocationWaypoints().get(i).right);
+	            MacroButton back = new MacroButton(4, waypointName_X + (macroButtonSize+spaceBetween)*4, inputFullPosition + inputHeight+5, macroButtonSize, macroButtonSize, "", MacroWaypoints.GetLocationWaypoints().get(i).back);
+	            MacroButton forward = new MacroButton(5, waypointName_X + (macroButtonSize+spaceBetween)*5, inputFullPosition + inputHeight+5, macroButtonSize, macroButtonSize, "", MacroWaypoints.GetLocationWaypoints().get(i).forward);
+	            MacroButton sneak = new MacroButton(6, waypointName_X + (macroButtonSize+spaceBetween)*6, inputFullPosition + inputHeight+5, macroButtonSize, macroButtonSize, "", MacroWaypoints.GetLocationWaypoints().get(i).sneak);
 	            
-	            waypoints.add(new MacroWaypointElement(waypointName, colorPicker, waypointX, waypointY, waypointZ, yaw, pitch, left, right, back, forward, leftClick, rightClick, noiseLevel, function, deleteButton));
+	            waypoints.add(new MacroWaypointElement(waypointName, colorPicker, waypointX, waypointY, waypointZ, yaw, pitch, left, right, back, forward, leftClick, rightClick, sneak, noiseLevel, function, deleteButton, enabled, inputMargin));
 	        }	
         }else {
         	for (int i = 0; i < waypoints.size(); i++) {
 	        	// Position 0 for inputs + every input height and their bottom margin
 	        	int inputFullPosition = positionY + ((waypointHeight + inputMargin) * i);
 	        	
-	        	DeleteButton deleteButton = new DeleteButton(0 + (5*i), (int)(width * 0.9f), inputFullPosition, inputHeight, inputHeight, "");
+	        	DeleteButton deleteButton = new DeleteButton(0 + (5*i), deleteX, inputFullPosition, inputHeight, inputHeight, "");
+	        	deleteButton.enabled = waypoints.get(i).enabled.isFull();
 	        	
-	        	
+	        	CheckButton enabled = new CheckButton(0, (int) (deleteX + inputHeight + spaceBetween*1.5f), inputFullPosition, inputHeight, inputHeight, "", waypoints.get(i).enabled.isFull());
 	        	
 	    		// Name text input
-	        	GuiTextField waypointName = new GuiTextField(0, this.fontRendererObj, waypointName_X, inputFullPosition, width / 4, inputHeight);
-	            waypointName.setMaxStringLength(128);
+	        	TextField waypointName = new TextField(0, waypointName_X, inputFullPosition, width / 4, inputHeight);
+	        	waypointName.setColoredField(true);
+	            waypointName.setMaxStringLength(512);
 	            waypointName.setCanLoseFocus(true);
 	            waypointName.setText(waypoints.get(i).name.getText());
 	            
@@ -290,57 +314,59 @@ public class MacroWaypointsGui extends GuiScreen {
 	            // color text input
 	            ColorPicker colorPicker = new ColorPicker(0, waypointColor_X, 0, inputHeight);
 	            colorPicker.setText(waypoints.get(i).color.getColorString());
-	        	
+	            colorPicker.enabled = waypoints.get(i).enabled.isFull();
 	            
 	            // X coordinate input
-	            GuiTextField waypointX = new GuiTextField(2, this.fontRendererObj, coords_X, inputFullPosition, coord_Width, inputHeight);
+	            TextField waypointX = new TextField(2, coords_X, inputFullPosition, coord_Width, inputHeight);
 	            waypointX.setMaxStringLength(16);
 	            waypointX.setCanLoseFocus(true);
 	            waypointX.setText(waypoints.get(i).x.getText());
 	            
 	            // Y coordinate input
-	            GuiTextField waypointY = new GuiTextField(2, this.fontRendererObj, coords_X + coord_Width + 5, inputFullPosition, coord_Width, inputHeight);
+	            TextField waypointY = new TextField(2, coords_X + coord_Width + spaceBetween, inputFullPosition, coord_Width, inputHeight);
 	            waypointY.setMaxStringLength(16);
 	            waypointY.setCanLoseFocus(true);
 	            waypointY.setText(waypoints.get(i).y.getText());
 	            
 	            // Z coordinate input
-	            GuiTextField waypointZ = new GuiTextField(2, this.fontRendererObj, coords_X + ((coord_Width+5)*2), inputFullPosition, coord_Width, inputHeight);
+	            TextField waypointZ = new TextField(2, coords_X + ((coord_Width+spaceBetween)*2), inputFullPosition, coord_Width, inputHeight);
 	            waypointZ.setMaxStringLength(16);
 	            waypointZ.setCanLoseFocus(true);
 	            waypointZ.setText(waypoints.get(i).z.getText());
 	            
-	            GuiTextField yaw = new GuiTextField(2, this.fontRendererObj, coords_X + ((coord_Width+5)*3), inputFullPosition, coord_Width, inputHeight);
+	            TextField yaw = new TextField(2, coords_X + ((coord_Width+spaceBetween)*3), inputFullPosition, coord_Width, inputHeight);
 	            yaw.setMaxStringLength(16);
 	            yaw.setCanLoseFocus(true);
 				yaw.setText(waypoints.get(i).yaw.getText());
 	            
-	            GuiTextField pitch = new GuiTextField(2, this.fontRendererObj, coords_X + ((coord_Width+5)*4), inputFullPosition, coord_Width, inputHeight);
+	            TextField pitch = new TextField(2, coords_X + ((coord_Width+spaceBetween)*4), inputFullPosition, coord_Width, inputHeight);
 	            pitch.setMaxStringLength(16);
 	            pitch.setCanLoseFocus(true);
 	            pitch.setText(waypoints.get(i).pitch.getText());
 	
-	            GuiTextField noiseLevel = new GuiTextField(2, this.fontRendererObj, coords_X + ((coord_Width+5)*5), inputFullPosition, coord_Width, inputHeight);
+	            TextField noiseLevel = new TextField(2, coords_X + ((coord_Width+spaceBetween)*5), inputFullPosition, coord_Width, inputHeight);
 	            noiseLevel.setMaxStringLength(16);
 	            noiseLevel.setCanLoseFocus(true);
 	            noiseLevel.setText(waypoints.get(i).noiseLevel.getText());
 	            
-	            GuiTextField function = new GuiTextField(-1, this.fontRendererObj, coords_X, inputFullPosition + inputHeight+5, width / 4, inputHeight);
+	            TextField function = new TextField(-1, coords_X, inputFullPosition + inputHeight+5, width / 4, inputHeight);
 	            function.setMaxStringLength(128);
 	            function.setCanLoseFocus(true);
 	            function.setText(waypoints.get(i).function.getText());
 	            
-	            MacroButton leftClick = new MacroButton(0, waypointName_X, inputFullPosition + inputHeight+5, inputHeight, inputHeight, "", waypoints.get(i).leftClick.isFull);
-	            MacroButton rightClick = new MacroButton(1, waypointName_X + (inputHeight+5), inputFullPosition + inputHeight+5, inputHeight, inputHeight, "", waypoints.get(i).rightClick.isFull);
-	            MacroButton left = new MacroButton(2, waypointName_X + (inputHeight+5)*2, inputFullPosition + inputHeight+5, inputHeight, inputHeight, "", waypoints.get(i).left.isFull);
-	            MacroButton right = new MacroButton(3, waypointName_X + (inputHeight+5)*3, inputFullPosition + inputHeight+5, inputHeight, inputHeight, "", waypoints.get(i).right.isFull);
-	            MacroButton back = new MacroButton(4, waypointName_X + (inputHeight+5)*4, inputFullPosition + inputHeight+5, inputHeight, inputHeight, "", waypoints.get(i).back.isFull);
-	            MacroButton forward = new MacroButton(5, waypointName_X + (inputHeight+5)*5, inputFullPosition + inputHeight+5, inputHeight, inputHeight, "", waypoints.get(i).forward.isFull);
+	            MacroButton leftClick = new MacroButton(0, waypointName_X, inputFullPosition + inputHeight+5, macroButtonSize, macroButtonSize, "", waypoints.get(i).leftClick.isFull);
+	            MacroButton rightClick = new MacroButton(1, waypointName_X + (macroButtonSize+spaceBetween), inputFullPosition + inputHeight+5, macroButtonSize, macroButtonSize, "", waypoints.get(i).rightClick.isFull);
+	            MacroButton left = new MacroButton(2, waypointName_X + (macroButtonSize+spaceBetween)*2, inputFullPosition + inputHeight+5, macroButtonSize, macroButtonSize, "", waypoints.get(i).left.isFull);
+	            MacroButton right = new MacroButton(3, waypointName_X + (macroButtonSize+spaceBetween)*3, inputFullPosition + inputHeight+5, macroButtonSize, macroButtonSize, "", waypoints.get(i).right.isFull);
+	            MacroButton back = new MacroButton(4, waypointName_X + (macroButtonSize+spaceBetween)*4, inputFullPosition + inputHeight+5, macroButtonSize, macroButtonSize, "", waypoints.get(i).back.isFull);
+	            MacroButton forward = new MacroButton(5, waypointName_X + (macroButtonSize+spaceBetween)*5, inputFullPosition + inputHeight+5, macroButtonSize, macroButtonSize, "", waypoints.get(i).forward.isFull);
+	            MacroButton sneak = new MacroButton(6, waypointName_X + (macroButtonSize+spaceBetween)*6, inputFullPosition + inputHeight+5, macroButtonSize, macroButtonSize, "", waypoints.get(i).sneak.isFull);
 	            
-	            waypoints.set(i, new MacroWaypointElement(waypointName, colorPicker, waypointX, waypointY, waypointZ, yaw, pitch, left, right, back, forward, leftClick, rightClick, noiseLevel, function, deleteButton));
-
-	        }	
+	            waypoints.set(i, new MacroWaypointElement(waypointName, colorPicker, waypointX, waypointY, waypointZ, yaw, pitch, left, right, back, forward, leftClick, rightClick, sneak, noiseLevel, function, deleteButton, enabled, inputMargin));
+	        }
         }
+        
+        snapToWaypointY();
 	}
 	
 	@Override
@@ -360,69 +386,81 @@ public class MacroWaypointsGui extends GuiScreen {
 			float yawF = Float.parseFloat(String.format("%.2f", player.rotationYaw).replace(",", "."));
 			float pitchF = Float.parseFloat(String.format("%.2f", player.rotationPitch).replace(",", "."));
 			
-			int waypointColor_X = width / 20;
-	        int waypointName_X = waypointColor_X + width / 10 + 5;
-			int coords_X = waypointName_X + (width/4) + 10;
-			int coord_Width = width / 15;
+	        int spaceBetween = width/80;
+	        
+	        int waypointColor_X = width / 20;
+	        int waypointName_X = waypointColor_X + inputHeight*2 + 5;
+			int coords_X = waypointName_X + (width/4) + spaceBetween*2;
+			int coord_Width = width / 17;
+			int waypointHeight = inputHeight*2 + 5;
+			int deleteX = (int) (coords_X + ((coord_Width+spaceBetween)*6) + spaceBetween*1.5f);
+			
+    		int macroButtonSize = Math.min(inputHeight, (width / 4)/6) - 3;
     		
-        	DeleteButton deleteButton = new DeleteButton(0, (int)(width * 0.9f), 0, inputHeight, inputHeight, "");
+			int topOfWaypoints = height/3 - waypointHeight - inputMargin;
+			
+        	DeleteButton deleteButton = new DeleteButton(0, deleteX, 0, inputHeight, inputHeight, "");
         	
     		// Name text input
-        	GuiTextField waypointName = new GuiTextField(0, this.fontRendererObj, waypointName_X, 0, width / 4, inputHeight);
-            waypointName.setMaxStringLength(32);
+        	TextField waypointName = new TextField(0, waypointName_X, topOfWaypoints, width / 4, inputHeight);
+        	waypointName.setColoredField(true);
+            waypointName.setMaxStringLength(512);
             waypointName.setCanLoseFocus(true);
             waypointName.setText("Name");
+            
+            CheckButton enabled = new CheckButton(0, (int) (deleteX + inputHeight + spaceBetween*1.5f), 0, inputHeight, inputHeight, "", true);
             
             // color text input
             ColorPicker colorPicker = new ColorPicker(0, waypointColor_X, 0, inputHeight);
             colorPicker.setText("ffffff");
             
             // X coordinate input
-            GuiTextField waypointX = new GuiTextField(2, this.fontRendererObj, coords_X, 0, coord_Width, inputHeight);
+            TextField waypointX = new TextField(2, coords_X, 0, coord_Width, inputHeight);
             waypointX.setMaxStringLength(16);
             waypointX.setCanLoseFocus(true);
             waypointX.setText(Float.toString(x));
             
             // Y coordinate input
-            GuiTextField waypointY = new GuiTextField(2, this.fontRendererObj, coords_X + coord_Width + 5, 0, coord_Width, inputHeight);
+            TextField waypointY = new TextField(2, coords_X + coord_Width + spaceBetween, 0, coord_Width, inputHeight);
             waypointY.setMaxStringLength(16);
             waypointY.setCanLoseFocus(true);
             waypointY.setText(Float.toString(y));
 
         	// Z coordinate input
-            GuiTextField waypointZ = new GuiTextField(2, this.fontRendererObj, coords_X + ((coord_Width+5)*2), 0, coord_Width, inputHeight);
+            TextField waypointZ = new TextField(2, coords_X + ((coord_Width+spaceBetween)*2), 0, coord_Width, inputHeight);
             waypointZ.setMaxStringLength(16);
             waypointZ.setCanLoseFocus(true);
             waypointZ.setText(Float.toString(z));
             
-            GuiTextField yaw = new GuiTextField(2, this.fontRendererObj, coords_X + ((coord_Width+5)*3), 0, coord_Width, inputHeight);
+            TextField yaw = new TextField(2, coords_X + ((coord_Width+spaceBetween)*3), 0, coord_Width, inputHeight);
             yaw.setMaxStringLength(16);
             yaw.setCanLoseFocus(true);
             yaw.setText(Float.toString(yawF));
             
-            GuiTextField pitch = new GuiTextField(2, this.fontRendererObj, coords_X + ((coord_Width+5)*4), 0, coord_Width, inputHeight);
+            TextField pitch = new TextField(2, coords_X + ((coord_Width+spaceBetween)*4), 0, coord_Width, inputHeight);
             pitch.setMaxStringLength(16);
             pitch.setCanLoseFocus(true);
             pitch.setText(Float.toString(pitchF));
 
-            GuiTextField noiseLevel = new GuiTextField(2, this.fontRendererObj, coords_X + ((coord_Width+5)*5), 0, coord_Width, inputHeight);
+            TextField noiseLevel = new TextField(2, coords_X + ((coord_Width+spaceBetween)*5), 0, coord_Width, inputHeight);
             noiseLevel.setMaxStringLength(16);
             noiseLevel.setCanLoseFocus(true);
             noiseLevel.setText("1");
             
-            GuiTextField function = new GuiTextField(-1, this.fontRendererObj, coords_X, 0 + inputHeight+5, width / 4, inputHeight);
-            function.setMaxStringLength(16);
+            TextField function = new TextField(-1,  coords_X, 0 + inputHeight+5, width / 4, inputHeight);
+            function.setMaxStringLength(128);
             function.setCanLoseFocus(true);
             function.setText("/");
             
-            MacroButton leftClick = new MacroButton(0, waypointName_X, 0 + inputHeight+5, inputHeight, inputHeight, "", false);
-            MacroButton rightClick = new MacroButton(1, waypointName_X + (inputHeight+5), 0 + inputHeight, inputHeight, inputHeight, "", false);
-            MacroButton left = new MacroButton(2, waypointName_X + (inputHeight+5)*2, 0 + inputHeight, inputHeight, inputHeight, "", false);
-            MacroButton right = new MacroButton(3, waypointName_X + (inputHeight+5)*3, 0 + inputHeight, inputHeight, inputHeight, "", false);
-            MacroButton back = new MacroButton(4, waypointName_X + (inputHeight+5)*4, 0 + inputHeight, inputHeight, inputHeight, "", false);
-            MacroButton forward = new MacroButton(5, waypointName_X + (inputHeight+5)*5, 0 + inputHeight, inputHeight, inputHeight, "", false);
+            MacroButton leftClick = new MacroButton(0, waypointName_X, 0 + inputHeight+5, macroButtonSize, macroButtonSize, "", false);
+            MacroButton rightClick = new MacroButton(1, waypointName_X + (macroButtonSize+spaceBetween), 0 + inputHeight, macroButtonSize, macroButtonSize, "", false);
+            MacroButton left = new MacroButton(2, waypointName_X + (macroButtonSize+spaceBetween)*2, 0 + inputHeight, macroButtonSize, macroButtonSize, "", false);
+            MacroButton right = new MacroButton(3, waypointName_X + (macroButtonSize+spaceBetween)*3, 0 + inputHeight, macroButtonSize, macroButtonSize, "", false);
+            MacroButton back = new MacroButton(4, waypointName_X + (macroButtonSize+spaceBetween)*4, 0 + inputHeight, macroButtonSize, macroButtonSize, "", false);
+            MacroButton forward = new MacroButton(5, waypointName_X + (macroButtonSize+spaceBetween)*5, 0 + inputHeight, macroButtonSize, macroButtonSize, "", false);
+            MacroButton sneak = new MacroButton(6, waypointName_X + (macroButtonSize+spaceBetween)*6, 0 + inputHeight, macroButtonSize, macroButtonSize, "", false);
             
-            waypoints.add(0, new MacroWaypointElement(waypointName, colorPicker, waypointX, waypointY, waypointZ, yaw, pitch, left, right, back, forward, leftClick, rightClick, noiseLevel, function, deleteButton));
+            waypoints.add(0, new MacroWaypointElement(waypointName, colorPicker, waypointX, waypointY, waypointZ, yaw, pitch, left, right, back, forward, leftClick, rightClick, sneak, noiseLevel, function, deleteButton, enabled, inputMargin));
             return;
 		}
 		
@@ -450,11 +488,11 @@ public class MacroWaypointsGui extends GuiScreen {
 			if(!closeWarning.showElement) {
 				for (int i = 0; i < waypoints.size(); i++) {
 					MacroWaypointElement waypoint = waypoints.get(i);
-					List<GuiTextField> inputs = waypoint.getListOfTextFields();
+					List<TextField> inputs = waypoint.getListOfTextFields();
 					
 					waypoints.get(i).color.keyTyped(typedChar, keyCode);
 					
-					for (GuiTextField input : inputs) {
+					for (TextField input : inputs) {
 						if(input.isFocused()) {
 							if(input.getId() == 2) {
 								// Backspace / leftArrow / rightArrow / . / delete
@@ -473,12 +511,13 @@ public class MacroWaypointsGui extends GuiScreen {
 			
 							}else if(input.getId() == -1) {
 								if(keyCode == Keyboard.KEY_SLASH && !isShiftKeyDown()) return;
-								if(keyCode == Keyboard.KEY_BACK && input.getCursorPosition() == 1) return;
-								if(keyCode != Keyboard.KEY_RIGHT && input.getCursorPosition() == 0) return;
+								int cursor = input.getCursorPosition();
+								
 								input.textboxKeyTyped(typedChar, keyCode);
 								
 								if(!input.getText().startsWith("/")) {
 									input.setText("/" + input.getText());
+									input.setCursorPosition(cursor);
 								}
 							}else{
 								input.textboxKeyTyped(typedChar, keyCode);
@@ -492,13 +531,13 @@ public class MacroWaypointsGui extends GuiScreen {
 		}
 	}
 	
-	
+	int offsetY = 0;
 	
 	@Override
 	protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
-		closeWarning.mouseClicked(mouseX, mouseY, mouseButton);
-		
 		if(!closeWarning.showElement) {
+			
+			saveButton.packedFGColour = 14737632;
 			
 			boolean isOpenedColorPicker = false; // made it like that because mouseClick also hides picker so it wouldnt hide if i would make return
 			for (int i = 0; i < waypoints.size(); i++) {
@@ -507,7 +546,7 @@ public class MacroWaypointsGui extends GuiScreen {
 
 			if(isOpenedColorPicker) {
 				for (int i = 0; i < waypoints.size(); i++) {
-					for (GuiTextField input : waypoints.get(i).getListOfTextFields()) {
+					for (TextField input : waypoints.get(i).getListOfTextFields()) {
 						input.setCursorPositionZero();
 						input.setFocused(false);
 					}
@@ -521,56 +560,74 @@ public class MacroWaypointsGui extends GuiScreen {
 				MacroWaypointElement waypoint = waypoints.get(i);
 				
 				if (mouseY <= ((height / 3))) {
+					List<TextField> inputs = waypoint.getListOfTextFields();
+					for (TextField input : inputs) {
+						input.setCursorPositionZero();
+						input.setFocused(false);
+					}
+					
 	                 break;
 	        	 }
 				
 				boolean isAnythingPressed = false;
-				List<GuiTextField> inputs = waypoint.getListOfTextFields();
 				
-				for (GuiTextField input : inputs) {
-					if (mouseX >= input.xPosition && mouseX <= input.xPosition + input.width && mouseY >= input.yPosition && mouseY <= input.yPosition + input.height) {
-						input.mouseClicked(mouseX, mouseY, mouseButton);
-						isAnythingPressed = true;
-					}else {
-						input.setCursorPositionZero();
-						input.setFocused(false);
+				if(waypoint.enabled.isFull()) {
+					List<TextField> inputs = waypoint.getListOfTextFields();
+					
+					for (TextField input : inputs) {
+						if (mouseX >= input.xPosition && mouseX <= input.xPosition + input.width && mouseY >= input.yPosition && mouseY <= input.yPosition + input.height) {
+							input.mouseClicked(mouseX, mouseY, mouseButton);
+							isAnythingPressed = true;
+						}else {
+							input.setCursorPositionZero();
+							input.setFocused(false);
+						}
 					}
+					
+		
+					if (mouseButton == 0)
+			        { 
+						for (GuiButton guibutton : waypoint.getListOfButtons()) {
+				            if (guibutton.mousePressed(Minecraft.getMinecraft(), mouseX, mouseY))
+				            {
+				            	isAnythingPressed = true;
+				                guibutton.playPressSound(Minecraft.getMinecraft().getSoundHandler());
+				                this.actionPerformed(guibutton);
+				            }
+						}
+						
+						waypoint.deleteButton.enabled = waypoint.enabled.isFull();
+						waypoint.color.enabled = waypoint.enabled.isFull();
+			        }
+				}else {
+					if(waypoint.enabled.mousePressed(mc, mouseX, mouseY)) {
+	            		isAnythingPressed = true;
+	            		waypoint.enabled.playPressSound(Minecraft.getMinecraft().getSoundHandler());
+		                this.actionPerformed(waypoint.enabled);
+		                waypoint.deleteButton.enabled = waypoint.enabled.isFull();
+		                waypoint.color.enabled = waypoint.enabled.isFull();
+					};
 				}
-				
-	
-				if (mouseButton == 0)
-		        { 
-					for (GuiButton guibutton : waypoint.getListOfButtons()) {
-			            if (guibutton.mousePressed(Minecraft.getMinecraft(), mouseX, mouseY))
-			            {
-			            	isAnythingPressed = true;
-			                guibutton.playPressSound(Minecraft.getMinecraft().getSoundHandler());
-			                this.actionPerformed(guibutton);
-			            }
-					}
-		        }
 				
 				if(waypoint.isHovered(mouseX, mouseY)) {
 					if(!isAnythingPressed) {
 						holdingElement = waypoint;
+						offsetY = mouseY - waypoint.yPosition;
 					}
 				}
 			}
 			
-	
-			if(mouseX >= scrollbar.x && mouseX <= scrollbar.x + scrollbar.scrollbarWidth && mouseY >= scrollbar.y && mouseY <= scrollbar.y + scrollbar.scrollbarHeight) {
-				scrollbar.updateOffsetToMouseClick(mouseY);
-			}
-			
 			super.mouseClicked(mouseX, mouseY, mouseButton);
 		}
+		
+		closeWarning.mouseClicked(mouseX, mouseY, mouseButton);
 	}
 	
 	@Override
 	protected void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton, long timeSinceLastClick)
     {
 		if (holdingElement != null) {
-			mouseY = Math.min(Math.max(mouseY, height/3 - 1), height - holdingElement.getHeight());
+			mouseY = Math.min(Math.max(mouseY - offsetY, height/3 - 1), height - holdingElement.getHeight());
             holdingElement.updateYposition(mouseY, inputHeight);
 		}
 		
@@ -590,15 +647,15 @@ public class MacroWaypointsGui extends GuiScreen {
 				if(element.isHovered(mouseX, mouseY)) {
 					int elementIndex = i;
 					int holdingIndex = waypoints.indexOf(holdingElement);
-					
+					int sidePlus = (element.isHigherHalfHovered(mouseX, mouseY))?-1:0;
+
 					waypoints.remove(holdingElement);
-					if(elementIndex > holdingIndex) {
-						waypoints.add(waypoints.indexOf(element)+1, holdingElement);
-						break;
-					}else {
-						waypoints.add(waypoints.indexOf(element), holdingElement);
-						break;
-					}
+					waypoints.add(waypoints.indexOf(element)+1+sidePlus, holdingElement);
+				}else if(mouseY > waypoints.get(waypoints.size()-1).yPosition + waypoints.get(waypoints.size()-1).getHeight()) {
+					waypoints.remove(holdingElement);
+					waypoints.add(waypoints.size(), holdingElement);
+					holdingElement = null;
+					break;
 				}
 			}
 			holdingElement = null;
@@ -612,10 +669,13 @@ public class MacroWaypointsGui extends GuiScreen {
 	@Override
     public void handleMouseInput() throws IOException {
         super.handleMouseInput();
-        int scroll = Mouse.getEventDWheel();
-        
-        if (scroll != 0 && !closeWarning.showElement) {
-        	scrollbar.handleMouseInput(scroll);
+
+        if (!closeWarning.showElement) {
+        	scrollbar.handleMouseInput();
+        	
+        	if(Mouse.getEventDWheel() > 0) {
+        		snapToWaypointY();
+        	}
         }
     }
 	
@@ -623,9 +683,9 @@ public class MacroWaypointsGui extends GuiScreen {
 	public void updateScreen() {
 		for (int i = 0; i < waypoints.size(); i++) {
 			MacroWaypointElement waypoint = waypoints.get(i);
-			List<GuiTextField> inputs = waypoint.getListOfTextFields();
+			List<TextField> inputs = waypoint.getListOfTextFields();
 			
-			for (GuiTextField input : inputs) {
+			for (TextField input : inputs) {
 				input.updateCursorCounter();
 			}
 			
@@ -655,6 +715,8 @@ public class MacroWaypointsGui extends GuiScreen {
 	        String name = waypoint.name.getText();
 	        String function = waypoint.function.getText();
 	        String color = waypoint.color.getColorString().replace("#", ""); 
+	        boolean enabled = waypoint.enabled.isFull();
+	        
 	        try {
 	        	Color.decode("#" + color);
 	        } catch (NumberFormatException e) {
@@ -694,13 +756,14 @@ public class MacroWaypointsGui extends GuiScreen {
 	        boolean right = waypoint.right.isFull;
 	        boolean back = waypoint.back.isFull;
 	        boolean forward = waypoint.forward.isFull;
+	        boolean sneak = waypoint.sneak.isFull;
 	        
 	        if(isError) {
 	        	saveButton.packedFGColour = 14258834;
 	        	return; // skip
 	        }
 	        
-	        waypointsList.add(0, new MacroWaypoint(new Waypoint(name, color, x, y, z, Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld)), yaw, pitch, left, right, back, forward, leftClick, rightClick, noiseLevel, function));
+	        waypointsList.add(0, new MacroWaypoint(new Waypoint(name, color, x, y, z, Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld), 1, true), yaw, pitch, left, right, back, forward, leftClick, rightClick, sneak, noiseLevel, function, enabled));
 	    	
 	        
 	    }
@@ -728,12 +791,15 @@ public class MacroWaypointsGui extends GuiScreen {
 		        String color = macroWaypoint.color.getColorString().replace("#", "");
 		        String function = macroWaypoint.function.getText();
 		        
+		        boolean enabled = macroWaypoint.enabled.isFull();
+		        
 		        boolean leftClick = macroWaypoint.leftClick.isFull;
 		        boolean rightClick = macroWaypoint.rightClick.isFull;
 		        boolean left = macroWaypoint.left.isFull;
 		        boolean right = macroWaypoint.right.isFull;
 		        boolean back = macroWaypoint.back.isFull;
 		        boolean forward = macroWaypoint.forward.isFull;
+		        boolean sneak = macroWaypoint.sneak.isFull;
 		        
 		        float x = 0, y = 0, z = 0, noiseLevel = 0f;
 		        Float yaw = 0f, pitch = 0f;
@@ -776,6 +842,8 @@ public class MacroWaypointsGui extends GuiScreen {
 		        if(right != waypointsList.get(i).right) { isntEqual = true; break; }
 		        if(back != waypointsList.get(i).back) { isntEqual = true; break; }
 		        if(forward != waypointsList.get(i).forward) { isntEqual = true; break; }
+		        if(sneak != waypointsList.get(i).sneak) { isntEqual = true; break; }
+		        if(enabled != waypointsList.get(i).enabled) { isntEqual = true; break; }
 			}
 		}
 		
@@ -788,7 +856,25 @@ public class MacroWaypointsGui extends GuiScreen {
 	
 	public void updateWaypointsY() {
 		int waypointHeight = inputHeight*2 + 5;
-		scrollbar.updateMaxBottomScroll(((waypoints.size() * (waypointHeight + inputMargin))) - (height - (height/3)));
+		scrollbar.updateContentHeight((waypoints.size() * (waypointHeight + inputMargin)));
+		int ScrollOffset = scrollbar.getOffset();
+		
+		int positionY = (int) (height / 3 + ScrollOffset);
+		
+		for (int i = 0; i < waypoints.size(); i++) {
+			MacroWaypointElement element = waypoints.get(i);
+			if(element == holdingElement) continue;
+			int inputFullPosition = positionY + ((waypointHeight + inputMargin) * i);
+			
+			int l = (int) Math.signum((inputFullPosition - element.yPosition));
+			if(Math.abs(inputFullPosition - element.yPosition) > element.getHeight()*2) l *= 4;
+		    element.updateYposition(element.yPosition + l, inputHeight);
+		}
+	}
+	
+	public void snapToWaypointY() {
+		int waypointHeight = inputHeight*2 + 5;
+		scrollbar.updateContentHeight((waypoints.size() * (waypointHeight + inputMargin)));
 		int ScrollOffset = scrollbar.getOffset();
 		
 		int positionY = (int) (height / 3 + ScrollOffset);
@@ -796,6 +882,7 @@ public class MacroWaypointsGui extends GuiScreen {
 		for (int i = 0; i < waypoints.size(); i++) {
 			if(waypoints.get(i) == holdingElement) continue;
 			int inputFullPosition = positionY + ((waypointHeight + inputMargin) * i);
+			
 			waypoints.get(i).updateYposition(inputFullPosition, inputHeight);
 		}
 	}

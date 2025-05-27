@@ -2,6 +2,8 @@ package treemek.mesky.handlers.gui.elements.sliders;
 
 import java.awt.Color;
 
+import org.lwjgl.opengl.GL11;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.util.ResourceLocation;
@@ -26,7 +28,7 @@ public class Slider extends GuiButton{
 		this.sliderPrecision = precision;
 	}
 	
-	ResourceLocation slider = new ResourceLocation(Reference.MODID, "gui/scrollbar.png");
+	ResourceLocation slider = new ResourceLocation(Reference.MODID, "gui/sliderHand.png");
 	private boolean clicked;
 	
 	public double getValue() {
@@ -38,21 +40,38 @@ public class Slider extends GuiButton{
 		current = Math.min(max, Math.max(min, value));
 	}
 
-	public void drawSlider(Minecraft mc, int mouseX, int mouseY) {
-		drawRect(xPosition, yPosition, xPosition + width, yPosition + height, new Color(8, 7, 10, 150).getRGB()); // bg
+	
+	public void drawButton(Minecraft mc, int mouseX, int mouseY) {
+		drawRect(xPosition, yPosition, xPosition + width, yPosition + height, new Color(8, 7, 10, 150).getRGB()); // background
 		
 		mc.renderEngine.bindTexture(slider);
-		int sliderWidth = Math.max(1, width/10);
+		int sliderWidth = Math.min(height/3, width/10);
 		float sliderPercent = (float) ((current-min)/(max-min));
 		int sliderPosition = (int) (xPosition + (sliderPercent * (width - sliderWidth)));
-		drawModalRectWithCustomSizedTexture(sliderPosition, yPosition, 0, 0, sliderWidth, height, sliderWidth, height);
+		GL11.glColor3f(1, 1, 1);
+		drawModalRectWithCustomSizedTexture(sliderPosition, yPosition, 0, 0, sliderWidth, height, sliderWidth, height); // slider hand
 		
-		float defaultFontHeight = mc.fontRendererObj.FONT_HEIGHT;
-		float scaleFactor = (float) (height / defaultFontHeight) / 2;
-		
-		float textY = yPosition + ((height / 2) - ((defaultFontHeight * scaleFactor) / 2));
 		double roundedCurrent = Math.round(current * 100.0) / 100.0;
-		RenderHandler.drawText(sliderText + " (" + roundedCurrent + ")", xPosition + (width*1.25), textY, scaleFactor, true, 0x3e91b5);
+		
+		double scaleFactor = Math.min(RenderHandler.getTextScale(height/2), RenderHandler.getTextScale(sliderText + " (" + roundedCurrent + ")", width/2.4 - 2));
+		
+
+		int textWidth = (int) (mc.fontRendererObj.getStringWidth(sliderText + " (" + roundedCurrent + ")") * scaleFactor);
+		if(textWidth < width/2) {
+			double textY = yPosition + ((height / 2) - (RenderHandler.getTextHeight(scaleFactor) / 2));
+			
+			int textX =  sliderPosition - textWidth - 2;
+			if(sliderPercent < 0.5) {
+				textX = sliderPosition + sliderWidth + 2;
+			}
+			
+			RenderHandler.drawText(sliderText + " (" + roundedCurrent + ")", textX, textY, scaleFactor, true, 0x3e91b5);
+		}else {
+			double textY = yPosition - scaleFactor;
+			int textX = xPosition;
+			
+			RenderHandler.drawText(sliderText + " (" + roundedCurrent + ")", textX, textY, scaleFactor, true, 0x3e91b5);
+		}
 	}
 
 	@Override

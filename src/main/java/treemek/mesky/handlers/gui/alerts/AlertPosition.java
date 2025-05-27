@@ -20,6 +20,7 @@ import treemek.mesky.handlers.gui.elements.buttons.MeskyButton;
 import treemek.mesky.utils.Alerts;
 import treemek.mesky.utils.Alerts.Alert;
 import treemek.mesky.utils.Alerts.AlertRenderInfo;
+import treemek.mesky.utils.ColorUtils;
 
 public class AlertPosition extends GuiScreen{
 
@@ -28,8 +29,8 @@ public class AlertPosition extends GuiScreen{
 	public static List<AlertElement> alertsGUI;
 	public static List<Alert> alertsList;
 	private boolean currentlyDragged = false;
-	int offsetX = 0;
-	int offsetY = 0;
+	float offsetX = 0;
+	float offsetY = 0;
 	
 	@Override
 	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
@@ -41,34 +42,33 @@ public class AlertPosition extends GuiScreen{
         int posY = (int) (resolution.getScaledHeight() * ((float)(alertInfo.position[1])/100));
         
 		if(alertInfo != null) {
-			if((alertInfo.message.endsWith(".png") || alertInfo.message.endsWith(".jpg") || alertInfo.message.endsWith(".jpeg")) && (alertInfo.message.contains("/") || alertInfo.message.contains("\\"))) { // rendering images
-        		if(alertInfo.bufferedImage != null && alertInfo.location != null) {
-        	        
-                    // Draw the texture on the screen
-                    int imgHeight = (int) (alertInfo.bufferedImage.getHeight() * (((double)resolution.getScaledHeight() / (double)alertInfo.bufferedImage.getHeight()) * alertInfo.scale));
-                    double ratio = (double)alertInfo.bufferedImage.getWidth() / (double)alertInfo.bufferedImage.getHeight() ;
-            		int imgWidth = (int) (imgHeight * ratio);
-                    Minecraft.getMinecraft().renderEngine.bindTexture(alertInfo.location);
-                    
-
-                    if ((mouseX >= posX - (imgWidth/2) && mouseX <= posX + (imgWidth/2) && mouseY >= posY - (imgHeight/2) && mouseY <= posY + (imgHeight/2)) || currentlyDragged) { // hovered
-                    	GlStateManager.color(0.5F, 0.5F, 0.5F, 1);
-                    	drawModalRectWithCustomSizedTexture(posX - imgWidth / 2, posY - imgHeight / 2, 0, 0, imgWidth, imgHeight, imgWidth, imgHeight);
-    	            }else {
-    	            	drawModalRectWithCustomSizedTexture(posX - imgWidth / 2, posY - imgHeight / 2, 0, 0, imgWidth, imgHeight, imgWidth, imgHeight);
-    	            }
-                    
-        		}
-        	}else {
-        		float TextWidth = fontRenderer.getStringWidth(alertInfo.message) * alert.scale;
-            	float TextHeight = fontRenderer.FONT_HEIGHT * alert.scale;
-
-            	if ((mouseX >= (posX - (TextWidth/2)) && mouseX <= (posX + (TextWidth/2)) && mouseY >= (posY - (2*alertInfo.scale)) && mouseY <= (posY + TextHeight + (1*alertInfo.scale))) || currentlyDragged) {
-            		RenderHandler.drawAlertText(alertInfo.message, resolution, 0xa93234, alertInfo.scale, posX, posY);
+    		if(alertInfo.bufferedImage != null && alertInfo.location != null) {     
+                int imgHeight = (int) (alertInfo.bufferedImage.getHeight() * (((double)resolution.getScaledHeight() / (double)alertInfo.bufferedImage.getHeight()) * alertInfo.scale));
+                double ratio = (double)alertInfo.bufferedImage.getWidth() / (double)alertInfo.bufferedImage.getHeight() ;
+        		int imgWidth = (int) (imgHeight * ratio);
+                Minecraft.getMinecraft().renderEngine.bindTexture(alertInfo.location);
+                
+                if ((mouseX >= posX - (imgWidth/2) && mouseX <= posX + (imgWidth/2) && mouseY >= posY - (imgHeight/2) && mouseY <= posY + (imgHeight/2)) || currentlyDragged) { // hovered
+                	GlStateManager.color(0.35F, 0.35F, 0.35F, 1);
+                	drawModalRectWithCustomSizedTexture(posX - imgWidth / 2, posY - imgHeight / 2, 0, 0, imgWidth, imgHeight, imgWidth, imgHeight);
 	            }else {
-	            	RenderHandler.drawAlertText(alertInfo.message, resolution, 0xf54245, alertInfo.scale, posX, posY);
+	            	drawModalRectWithCustomSizedTexture(posX - imgWidth / 2, posY - imgHeight / 2, 0, 0, imgWidth, imgHeight, imgWidth, imgHeight);
 	            }
-        		
+                    
+        	}else {
+        		float TextWidth = 0;
+            	float TextHeight = 0;
+            	
+            	for (String a : alertInfo.message.split("<br>")) {
+					TextHeight += fontRenderer.FONT_HEIGHT * alert.scale;
+					float w = fontRenderer.getStringWidth(a) * alert.scale;
+					if(TextWidth < w) {
+						TextWidth = w;
+					}
+				}
+
+            	// Gl11.color doesnt work lmao so no hover
+            	RenderHandler.drawAlertText(ColorUtils.getColoredText(alertInfo.message), resolution, 0xffffff, alertInfo.scale, posX, posY);
         	}
 			
 			if(currentlyDragged) {
@@ -90,15 +90,13 @@ public class AlertPosition extends GuiScreen{
 		if(alertInfo != null) {
 			ScaledResolution resolution = new ScaledResolution(Minecraft.getMinecraft());
 			
-			
-
             if(alertInfo.bufferedImage != null) { // image
             	int imgHeight = (int) (alertInfo.bufferedImage.getHeight() * (((double)resolution.getScaledHeight() / (double)alertInfo.bufferedImage.getHeight()) * alertInfo.scale));
                 double ratio = (double)alertInfo.bufferedImage.getWidth() / (double)alertInfo.bufferedImage.getHeight() ;
                 int imgWidth = (int) (imgHeight * ratio);
             	
-                int x = (int) (resolution.getScaledWidth() * ((float)alertInfo.position[0] / 100));
-                int y = (int) (resolution.getScaledHeight() * ((float)alertInfo.position[1] / 100));
+                float x = resolution.getScaledWidth() * ((float)alertInfo.position[0] / 100);
+                float y = resolution.getScaledHeight() * ((float)alertInfo.position[1] / 100);
 	            if (mouseX >= x - (imgWidth/2) && mouseX <= x + (imgWidth/2) && mouseY >= y - (imgHeight/2) && mouseY <= y + (imgHeight/2)) {
 	                currentlyDragged = true;
 	                offsetX = mouseX - x;
@@ -106,11 +104,19 @@ public class AlertPosition extends GuiScreen{
 	            }
             }else { // text
             	FontRenderer fontRenderer = mc.fontRendererObj;
-            	float TextWidth = fontRenderer.getStringWidth(alertInfo.message) * alert.scale;
-            	float TextHeight = fontRenderer.FONT_HEIGHT * alert.scale;
+            	float TextWidth = 0;
+            	float TextHeight = 0;
             	
-            	int x = (int) (width * ((float)alertInfo.position[0] / 100));
-            	int y = (int) (height * ((float)alertInfo.position[1] / 100));
+            	for (String a : alertInfo.message.split("<br>")) {
+					TextHeight += fontRenderer.FONT_HEIGHT * alert.scale;
+					float w = fontRenderer.getStringWidth(a) * alert.scale;
+					if(TextWidth < w) {
+						TextWidth = w;
+					}
+				}
+            	
+            	float x = width * ((float)alertInfo.position[0] / 100);
+            	float y = height * ((float)alertInfo.position[1] / 100);
             	
             	if (mouseX >= (x - (TextWidth/2)) && mouseX <= (x + (TextWidth/2)) && mouseY >= (y - (2*alertInfo.scale)) && mouseY <= (y + (TextHeight) + (1*alertInfo.scale))) {
 	                currentlyDragged = true;
@@ -125,13 +131,16 @@ public class AlertPosition extends GuiScreen{
 	protected void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton, long timeSinceLastClick)
     {
 		if (currentlyDragged) {
-			int x = (int) (((mouseX - offsetX) / (float) width) * 100);
-			int y = (int) (((mouseY - offsetY) / (float) height) * 100);
-					
-			x = Math.max(0, Math.min(x, 100));
-			y = Math.max(0, Math.min(y, 98));
+        	float TextHeight = 0;
+        	
+        	for (String a : alertInfo.message.split("<br>")) TextHeight += mc.fontRendererObj.FONT_HEIGHT * alert.scale;
 			
-            int[] newPosition = {x, y};
+			float x = ((mouseX - offsetX) / (float) width) * 100;
+			float y = ((Math.min(height - TextHeight/2, Math.max(-TextHeight/2, mouseY - offsetY))) / (float) height) * 100;
+			
+			x = Math.max(0, Math.min(x, 100)); // it renders from center on X axis
+			
+            Float[] newPosition = {x, y};
             alertInfo.position = newPosition;
 		}
     }

@@ -8,26 +8,33 @@ import net.minecraft.client.gui.GuiTextField;
 import treemek.mesky.handlers.gui.elements.buttons.CheckButton;
 import treemek.mesky.handlers.gui.elements.buttons.DeleteButton;
 import treemek.mesky.handlers.gui.elements.buttons.EditButton;
+import treemek.mesky.handlers.gui.elements.textFields.TextField;
 
 public class ChatFunctionElement {
-	GuiTextField trigger;
-	public GuiTextField function;
+	TextField trigger;
+	public TextField function;
 	DeleteButton deleteButton;
 	CheckButton onlyParty;
 	CheckButton ignorePlayers;
 	CheckButton isEqual;
+	CheckButton enabled;
 	public int yPosition;
 	public int xPosition;
 	public Integer elementHeight = null;
 	public Integer elementWidth = null;
+	private double margin;
+
 	
-	public ChatFunctionElement(GuiTextField trigger, GuiTextField function, DeleteButton deleteButton, CheckButton onlyParty, CheckButton ignorePlayers, CheckButton isEqual) {
+	public ChatFunctionElement(TextField trigger, TextField function, DeleteButton deleteButton, CheckButton onlyParty, CheckButton ignorePlayers, CheckButton isEqual, CheckButton enabled, double inputMargin) {
 		this.trigger = trigger;
+		this.yPosition = trigger.yPosition;
 		this.function = function;
 		this.deleteButton = deleteButton;
 		this.onlyParty = onlyParty;
 		this.ignorePlayers = ignorePlayers;
 		this.isEqual = isEqual;
+		this.enabled = enabled;
+		this.margin = inputMargin;
 	}
 	
 	public void updateYposition(int y) {
@@ -38,10 +45,11 @@ public class ChatFunctionElement {
 		this.onlyParty.yPosition = y;
 		this.ignorePlayers.yPosition = y;
 		this.isEqual.yPosition = y;
+		this.enabled.yPosition = y;
 	}
 	
-	public List<GuiTextField> getListOfTextFields() {
-		List<GuiTextField> inputs = new ArrayList<>();
+	public List<TextField> getListOfTextFields() {
+		List<TextField> inputs = new ArrayList<>();
 		inputs.add(trigger);
 		inputs.add(function);
 		return inputs;
@@ -53,6 +61,7 @@ public class ChatFunctionElement {
 		buttons.add(onlyParty);
 		buttons.add(ignorePlayers);
 		buttons.add(isEqual);
+		buttons.add(enabled);
 		return buttons;
 	}
 	
@@ -60,26 +69,24 @@ public class ChatFunctionElement {
 		if(elementWidth == null) {
 			int lowestX = 10000000;
 			int highestX = 0;
-			int highestX_width = 0;
+			
 			List<GuiButton> buttons = getListOfButtons();
 			for (int i = 0; i < buttons.size(); i++) {
 				if(buttons.get(i).xPosition < lowestX) lowestX = buttons.get(i).xPosition;
-				if(buttons.get(i).xPosition > highestX) {
-					highestX = buttons.get(i).xPosition;
-					highestX_width = buttons.get(i).width;
+				if(buttons.get(i).xPosition + buttons.get(i).width > highestX) {
+					highestX = buttons.get(i).xPosition + buttons.get(i).width;
 				}
 			}
 			
-			List<GuiTextField> inputs = getListOfTextFields();
+			List<TextField> inputs = getListOfTextFields();
 			for (int i = 0; i < inputs.size(); i++) {
 				if(inputs.get(i).xPosition < lowestX) lowestX = inputs.get(i).xPosition;
-				if(inputs.get(i).xPosition > highestX) {
-					highestX = inputs.get(i).xPosition;
-					highestX_width = inputs.get(i).width;
+				if(inputs.get(i).xPosition + inputs.get(i).width > highestX) {
+					highestX = inputs.get(i).xPosition + inputs.get(i).width;
 				}
 			}
 			
-			int width = lowestX + highestX + highestX_width;
+			int width = highestX - lowestX;
 			
 			xPosition = lowestX;
 			elementWidth = width;
@@ -100,7 +107,7 @@ public class ChatFunctionElement {
 				}
 			}
 			
-			List<GuiTextField> inputs = getListOfTextFields();
+			List<TextField> inputs = getListOfTextFields();
 			for (int i = 0; i < inputs.size(); i++) {
 				if(inputs.get(i).height > highestHeight) {
 					highestHeight = inputs.get(i).height;
@@ -117,6 +124,18 @@ public class ChatFunctionElement {
 	public boolean isHovered(int mouseX, int mouseY) {
 		getWidth();
 		getHeight();
-		return (mouseX >= xPosition && mouseX <= xPosition + elementWidth && mouseY >= yPosition && mouseY <= yPosition + elementHeight);
+		return (mouseX >= xPosition && mouseX <= xPosition + elementWidth && mouseY >= yPosition - margin/2 && mouseY <= yPosition + elementHeight + margin/2);
+	}
+	
+	public boolean isHigherHalfHovered(int mouseX, int mouseY) {
+		getWidth();
+		getHeight();
+		return (mouseX >= xPosition && mouseX <= xPosition + elementWidth && mouseY >= yPosition - margin/2 && mouseY <= yPosition + elementHeight/2);
+	}
+	
+	public boolean isLowerHalfHovered(int mouseX, int mouseY) {
+		getWidth();
+		getHeight();
+		return (mouseX >= xPosition && mouseX <= xPosition + elementWidth && mouseY >= yPosition + elementHeight/2 && mouseY <= yPosition + elementHeight + margin/2);
 	}
 }

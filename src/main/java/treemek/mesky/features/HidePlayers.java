@@ -17,6 +17,7 @@ import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.cosmetics.CosmeticHandler;
+import treemek.mesky.utils.Utils;
 
 public class HidePlayers {
 	
@@ -26,6 +27,7 @@ public class HidePlayers {
     public void onPreRenderLiving(RenderLivingEvent.Pre event) {
         if (event.entity instanceof EntityPlayer && SettingsConfig.HidePlayers.isOn) {
         	if(event.entity.getName().equals(Minecraft.getMinecraft().thePlayer.getName())) return;
+        	if(Utils.isNPC(event.entity)) return;
         	if(!playerList.contains(event.entity)) playerList.add(event.entity);
             // Cancel hitbox rendering for player entities
         	setSize(event.entity, 0, 0);
@@ -37,7 +39,6 @@ public class HidePlayers {
 		for (Entity player : playerList) {
 			setSize(player, 1.8f, 0.6f);
 		}
-		
 	}
 	
 	public static void setSize(Entity entity, float width, float height) {

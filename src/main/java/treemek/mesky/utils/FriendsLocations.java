@@ -264,12 +264,12 @@ public class FriendsLocations {
 		}
 		
 		String[] info = playerLocationMap.get(id);
-		Utils.writeMinecraftMessage("");
-		Utils.writeMinecraftMessage(EnumChatFormatting.DARK_AQUA + "Details about when your friendship with " + EnumChatFormatting.AQUA + playerNickname + EnumChatFormatting.DARK_AQUA + " began: ");
+		Utils.addMinecraftMessage("");
+		Utils.addMinecraftMessage(EnumChatFormatting.DARK_AQUA + "Details about when your friendship with " + EnumChatFormatting.AQUA + playerNickname + EnumChatFormatting.DARK_AQUA + " began: ");
 		for (String string : info) {
 			Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(string));
 		}
-		Utils.writeMinecraftMessage("");
+		Utils.addMinecraftMessage("");
 		
 		return info;
     }

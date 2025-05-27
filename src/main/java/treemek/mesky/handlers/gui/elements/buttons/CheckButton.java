@@ -9,7 +9,7 @@ import treemek.mesky.handlers.RenderHandler;
 public class CheckButton extends GuiButton{
 
 	String buttonText;
-	public boolean isFull;
+	private boolean isFull;
 	
 	
 	public CheckButton(int buttonId, int x, int y, int width, int height, String buttonText, boolean isFull) {
@@ -24,6 +24,10 @@ public class CheckButton extends GuiButton{
 	
 	public boolean isFull() {
 		return isFull;
+	}
+	
+	public void setFull(boolean a) {
+		isFull = a;
 	}
 	
 	@Override

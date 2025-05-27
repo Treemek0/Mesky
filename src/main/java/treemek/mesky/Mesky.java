@@ -1,8 +1,16 @@
 package treemek.mesky;
 
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.Enumeration;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiIngame;
 import net.minecraft.client.gui.GuiIngameMenu;
+import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.pathfinding.PathFinder;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.MinecraftForge;
@@ -27,6 +35,7 @@ import treemek.mesky.features.BlockFlowerPlacing;
 import treemek.mesky.features.FishingTimer;
 import treemek.mesky.features.HidePlayers;
 import treemek.mesky.features.MaskTimer;
+import treemek.mesky.features.SeaCreaturesDetection;
 import treemek.mesky.features.illegal.AutoFish;
 import treemek.mesky.features.illegal.EntityDetector;
 import treemek.mesky.features.illegal.Freelook;
@@ -43,18 +52,22 @@ import treemek.mesky.utils.FriendsLocations;
 import treemek.mesky.utils.HypixelCheck;
 import treemek.mesky.utils.Locations;
 import treemek.mesky.utils.MacroWaypoints;
+import treemek.mesky.utils.MiningUtils;
+import treemek.mesky.utils.MovementUtils;
 import treemek.mesky.utils.PathfinderUtils;
 import treemek.mesky.utils.RotationUtils;
 import treemek.mesky.utils.Waypoints;
 import treemek.mesky.utils.chat.CoordsDetector;
 import treemek.mesky.utils.chat.NickMentionDetector;
 import treemek.mesky.utils.manager.CameraManager;
+import treemek.mesky.utils.manager.PartyManager;
 import treemek.mesky.utils.manager.RecordHeadMovement;
 
 @Mod(modid = Reference.MODID, name = Reference.NAME, version = Reference.VERSION, clientSideOnly = true)
 public class Mesky {
 
 	public static String configDirectory;
+	public static boolean debug = false;
 	//public static IProxy proxy;
 	
 	@Mod.EventHandler
@@ -68,8 +81,9 @@ public class Mesky {
 	public static void init(FMLInitializationEvent event) {
 		ClientCommandHandler.instance.registerCommand(new Commands());
 		ConfigHandler.reloadConfig();
-		
+
 		MinecraftForge.EVENT_BUS.register(new HypixelCheck());
+		MinecraftForge.EVENT_BUS.register(new PartyManager());
 		MinecraftForge.EVENT_BUS.register(new CameraManager());
 		MinecraftForge.EVENT_BUS.register(new Locations());
 		MinecraftForge.EVENT_BUS.register(new GuiHandler());
@@ -92,6 +106,7 @@ public class Mesky {
 		MinecraftForge.EVENT_BUS.register(new AntyGhostBlocks());
 		MinecraftForge.EVENT_BUS.register(new NickMentionDetector());
 		MinecraftForge.EVENT_BUS.register(new JawbusDetector());
+		MinecraftForge.EVENT_BUS.register(new SeaCreaturesDetection());
 		MinecraftForge.EVENT_BUS.register(new Freelook());
 		MinecraftForge.EVENT_BUS.register(new Cat());
 		MinecraftForge.EVENT_BUS.register(new FireAura());
@@ -101,21 +116,19 @@ public class Mesky {
 		MinecraftForge.EVENT_BUS.register(new RotationUtils());
 		MinecraftForge.EVENT_BUS.register(new RecordHeadMovement());
 		MinecraftForge.EVENT_BUS.register(new MacroWaypoints());
-		//MinecraftForge.EVENT_BUS.register(new PathfinderUtils());
+		MinecraftForge.EVENT_BUS.register(new PathfinderUtils());
+		MinecraftForge.EVENT_BUS.register(new MovementUtils());
+		MinecraftForge.EVENT_BUS.register(new MiningUtils());
 		
 		ClientRegistry.registerKeyBinding(GhostBlock.GKEY);
-		//ClientRegistry.registerKeyBinding(Freelook.KEY);
-		
-		//if(Minecraft.getMinecraft().getSession().getUsername().equals("Treemek")){
-			//ClientRegistry.registerKeyBinding(PathfinderUtils.PathFindKey);
-			ClientRegistry.registerKeyBinding(RecordHeadMovement.HeadRecorder);
-			ClientRegistry.registerKeyBinding(RecordHeadMovement.HeadPlayer);
-		//}
+		ClientRegistry.registerKeyBinding(Freelook.KEY);
+		//ClientRegistry.registerKeyBinding(RecordHeadMovement.HeadRecorder);
+		//ClientRegistry.registerKeyBinding(RecordHeadMovement.HeadPlayer);
 	}
 		
 	@Mod.EventHandler
 	public static void postInit(FMLPostInitializationEvent event) {
 	
 	}
-	
+
 }

@@ -9,17 +9,23 @@ import net.minecraft.util.Vec3;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import treemek.mesky.config.SettingsConfig;
+import treemek.mesky.utils.Utils;
 
 public class CameraManager {
 	
     static double defaultDistance = 4;
 	static CameraSetup camera;
 	
-	static boolean lockCamera;
+	public static boolean lockCamera;
 	private static float cameraYaw;
 	private static float cameraPitch;
+	
+	private static float targetCameraYaw;
+	private static float targetCameraPitch;
 	
 	@SideOnly(Side.CLIENT)
     @SubscribeEvent
@@ -33,6 +39,30 @@ public class CameraManager {
     	}
     }
 	
+	@SideOnly(Side.CLIENT)
+    @SubscribeEvent
+    public void onRenderTick(TickEvent.RenderTickEvent event) {
+		if(lockCamera) {
+			Minecraft.getMinecraft().gameSettings.thirdPersonView = 1;
+			
+			if(targetCameraYaw != cameraYaw) {
+				cameraYaw += (targetCameraYaw - cameraYaw) / 5;
+				
+				if(Math.abs(targetCameraYaw - cameraYaw) < 0.2f) {
+					cameraYaw = targetCameraYaw;
+				}
+			}
+			
+			if(targetCameraPitch != cameraPitch) {
+				cameraPitch += (targetCameraPitch - cameraPitch) / 5;
+				
+				if(Math.abs(targetCameraPitch - cameraPitch) < 0.2f) {
+					cameraPitch = targetCameraPitch;
+				}
+			}
+		}
+	}
+	
 	public static void lockCamera(boolean t, Float yaw, Float pitch) {
 		if(yaw == null) {
 			cameraYaw = Minecraft.getMinecraft().thePlayer.rotationYaw + 180;
@@ -45,7 +75,19 @@ public class CameraManager {
 		}else {
 			cameraPitch = pitch;
 		}
+		
+		targetCameraYaw = cameraYaw;
+		targetCameraPitch = cameraPitch;
 		lockCamera = t;
+	}
+	
+	public static void addRotation(float yaw, float pitch) {
+		targetCameraYaw += yaw;
+		targetCameraPitch += pitch;
+		
+		if(SettingsConfig.FreeLookClampAngles.isOn) {
+			targetCameraPitch = MathHelper.clamp_float(targetCameraPitch, -90, 90);
+		}
 	}
 	
 	public static float getYaw() {
@@ -158,12 +200,10 @@ public class CameraManager {
     	// coming back to 0 translation
     	if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 2) d3 *= -1;
         GlStateManager.translate(0.0F, 0.0F, d3);
-        System.out.println(d3);
         
         // translating to camera colission
         double d4 = getCameraDistanceUsingCameraRotation();
         if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 2) d4 *= -1;
         GlStateManager.translate(0.0F, 0.0F, -d4);
-        System.out.println(-d4);
     }
 }

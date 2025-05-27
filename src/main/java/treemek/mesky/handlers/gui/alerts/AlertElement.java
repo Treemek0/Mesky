@@ -8,28 +8,38 @@ import net.minecraft.client.gui.GuiTextField;
 import treemek.mesky.handlers.gui.elements.buttons.CheckButton;
 import treemek.mesky.handlers.gui.elements.buttons.DeleteButton;
 import treemek.mesky.handlers.gui.elements.buttons.EditButton;
+import treemek.mesky.handlers.gui.elements.buttons.ListBox;
+import treemek.mesky.handlers.gui.elements.sliders.Slider;
+import treemek.mesky.handlers.gui.elements.textFields.TextField;
 
 public class AlertElement {
-	GuiTextField trigger;
-	public GuiTextField display;
-	GuiTextField time;
+	TextField trigger;
+	public TextField display;
+	TextField time;
+	ListBox sound;
+	Slider volume;
+	Slider pitch;
 	DeleteButton deleteButton;
 	EditButton editButton;
 	CheckButton onlyParty;
 	CheckButton ignorePlayers;
 	CheckButton isEqual;
+	CheckButton enabled;
 	public int yPosition;
 	public int xPosition;
-	public int[] position;
+	public Float[] position;
 	public Float scale;
-	public Integer elementHeight = null;
-	public Integer elementWidth = null;
+	private double margin;
+	private double inputHeight;
 	
-	
-	public AlertElement(GuiTextField trigger, GuiTextField display, GuiTextField time, DeleteButton deleteButton, EditButton editButton, CheckButton onlyParty, CheckButton ignorePlayers, CheckButton isEqual, int[] position, Float scale) {
+	public AlertElement(TextField trigger, TextField display, TextField time, ListBox sound, Slider volume, Slider pitch, DeleteButton deleteButton, EditButton editButton, CheckButton onlyParty, CheckButton ignorePlayers, CheckButton isEqual, Float[] position, Float scale, CheckButton enabled, double inputMargin) {
 		this.trigger = trigger;
+		this.yPosition = trigger.yPosition;
 		this.display = display;
 		this.time = time;
+		this.sound = sound;
+		this.volume = volume;
+		this.pitch = pitch;
 		this.deleteButton = deleteButton;
 		this.editButton = editButton;
 		this.onlyParty = onlyParty;
@@ -37,22 +47,30 @@ public class AlertElement {
 		this.isEqual = isEqual;
 		this.position = position;
 		this.scale = scale;
+		this.enabled = enabled;
+		this.margin = inputMargin;
+		
+		this.xPosition = onlyParty.xPosition - 1;
 	}
 	
-	public void updateYposition(int y) {
+	public void updateYposition(int y, int inputHeight) {
 		this.yPosition = y;
 		this.trigger.yPosition = y;
 		this.display.yPosition = y;
 		this.time.yPosition = y;
+		this.sound.yPosition = (int) (y + inputHeight + 5);
+		this.volume.yPosition = (int) (y + inputHeight + 5);
+		this.pitch.yPosition = (int) (y + inputHeight + 5);
 		this.deleteButton.yPosition = y;
 		this.editButton.yPosition = y;
 		this.onlyParty.yPosition = y;
 		this.ignorePlayers.yPosition = y;
 		this.isEqual.yPosition = y;
+		this.enabled.yPosition = y;
 	}
 	
-	public List<GuiTextField> getListOfTextFields() {
-		List<GuiTextField> inputs = new ArrayList<>();
+	public List<TextField> getListOfTextFields() {
+		List<TextField> inputs = new ArrayList<>();
 		inputs.add(trigger);
 		inputs.add(display);
 		inputs.add(time);
@@ -66,71 +84,30 @@ public class AlertElement {
 		buttons.add(onlyParty);
 		buttons.add(ignorePlayers);
 		buttons.add(isEqual);
+		buttons.add(enabled);
+		buttons.add(volume);
+		buttons.add(pitch);
 		return buttons;
 	}
 	
 	public int getWidth() {
-		if(elementWidth == null) {
-			int lowestX = 10000000;
-			int highestX = 0;
-			int highestX_width = 0;
-			List<GuiButton> buttons = getListOfButtons();
-			for (int i = 0; i < buttons.size(); i++) {
-				if(buttons.get(i).xPosition < lowestX) lowestX = buttons.get(i).xPosition;
-				if(buttons.get(i).xPosition > highestX) {
-					highestX = buttons.get(i).xPosition;
-					highestX_width = buttons.get(i).width;
-				}
-			}
-			
-			List<GuiTextField> inputs = getListOfTextFields();
-			for (int i = 0; i < inputs.size(); i++) {
-				if(inputs.get(i).xPosition < lowestX) lowestX = inputs.get(i).xPosition;
-				if(inputs.get(i).xPosition > highestX) {
-					highestX = inputs.get(i).xPosition;
-					highestX_width = inputs.get(i).width;
-				}
-			}
-			
-			int width = lowestX + highestX + highestX_width;
-			
-			xPosition = lowestX;
-			elementWidth = width;
-			return width;
-		}else {
-			return elementWidth;
-		}
+		return (enabled.xPosition + enabled.width) - xPosition + 2;
 	}
 	
 	public int getHeight() {
-		if(elementHeight == null) {
-		int highestHeight = 0;
-			
-			List<GuiButton> buttons = getListOfButtons();
-			for (int i = 0; i < buttons.size(); i++) {
-				if(buttons.get(i).height > highestHeight) {
-					highestHeight = buttons.get(i).height;
-				}
-			}
-			
-			List<GuiTextField> inputs = getListOfTextFields();
-			for (int i = 0; i < inputs.size(); i++) {
-				if(inputs.get(i).height > highestHeight) {
-					highestHeight = inputs.get(i).height;
-				}
-			}
-			
-			elementHeight = highestHeight;
-			return highestHeight;
-		}else {
-			return elementHeight;
-		}
+		return (trigger.height * 2) + 5;
 	}
 	
 	public boolean isHovered(int mouseX, int mouseY) {
-		getWidth();
-		getHeight();
-		return (mouseX >= xPosition && mouseX <= xPosition + elementWidth && mouseY >= yPosition && mouseY <= yPosition + elementHeight);
+		return (mouseX >= xPosition && mouseX <= xPosition + getWidth() && mouseY >= yPosition - margin/2 && mouseY <= yPosition + getHeight() + margin/2);
+	}
+	
+	public boolean isHigherHalfHovered(int mouseX, int mouseY) {
+		return (mouseX >= xPosition && mouseX <= xPosition + getWidth() && mouseY >= yPosition - margin/2 && mouseY <= yPosition + getHeight()/2);
+	}
+	
+	public boolean isLowerHalfHovered(int mouseX, int mouseY) {
+		return (mouseX >= xPosition && mouseX <= xPosition + getWidth() && mouseY >= yPosition + getHeight()/2 && mouseY <= yPosition + getHeight() + margin/2);
 	}
 	
 }

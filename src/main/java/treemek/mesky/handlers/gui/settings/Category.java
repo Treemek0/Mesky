@@ -10,6 +10,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
 import treemek.mesky.handlers.RenderHandler;
+import treemek.mesky.handlers.gui.elements.SettingColorPicker;
+import treemek.mesky.handlers.gui.elements.buttons.FoldableSettingButton;
+import treemek.mesky.utils.Utils;
+import treemek.mesky.utils.Utils.smoothFunction;
 
 public class Category extends Gui{
 	public String name;
@@ -22,26 +26,29 @@ public class Category extends Gui{
 		this.list = list;
 	}
 	
+	public smoothFunction animationForText = new smoothFunction(1, 1.02, 1, 0.05, false);
 	public void drawCategory(int width, int height, int y, int contentOffset, boolean isOpened) {
 		this.y = y;
 		Minecraft mc = Minecraft.getMinecraft();
+		animationForText.next();
 		
 		int x = (int)(width * 0.1f);
 		int categoryHeight = (int) (height * 0.075f);
 		int categoryWidth =  (int) (width * 0.2f);
 		
 		float defaultFontHeight = mc.fontRendererObj.FONT_HEIGHT;
-		float scaleFactor = (float) (categoryHeight / defaultFontHeight) / 2;
+		float scaleFactor = (float) ((float) (categoryHeight / defaultFontHeight) / 2 * animationForText.getCurrent());
 		
 		float scaledFontHeight = defaultFontHeight * scaleFactor;
 		
 		if(isOpened) {
 			drawRect(x, y, x + categoryWidth, y + categoryHeight, 0x85151515);
-			RenderHandler.drawText(name, x + 5, y + (categoryHeight/2) - scaledFontHeight/2, scaleFactor, true, 0xd9d9d9);
+			drawRect((int)(x-1*scaleFactor), y+1, x, y + categoryHeight-1, 0x85FFFFFF);
+			RenderHandler.drawText(name, x + 6*scaleFactor, y + (categoryHeight/2) - scaledFontHeight/2, scaleFactor, true, 0xd9d9d9);
 			drawCategorySubs(width, height, contentOffset);
 		}else {
 			drawRect(x, y, x + categoryWidth, y + categoryHeight, 0x15212121);
-			RenderHandler.drawText(name, x + 5, y + (categoryHeight/2) - scaledFontHeight/2, scaleFactor, true, 0xb3b3b3);
+			RenderHandler.drawText(name, x + 4*scaleFactor, y + (categoryHeight/2) - scaledFontHeight/2, scaleFactor, true, 0xb3b3b3);
 		}
 	}
 	
@@ -68,6 +75,20 @@ public class Category extends Gui{
 			
 			list.get(i).drawSubCategory(y, width, height);
 		}
+		
+		for (int i = 0; i < list.size(); i++) { // drawing elements on top like this because Z level doesnt work for some reason 
+			SubCategory sub = list.get(i);
+			for (Object ob : sub.list) {
+				if(ob instanceof SettingColorPicker) {
+					((SettingColorPicker)ob).drawPickerOpened();
+				}
+				
+				if(ob instanceof FoldableSettingButton) {
+					((FoldableSettingButton)ob).drawElementOnTop(); 
+				}
+			}
+		}
+		
 		GL11.glDisable(GL11.GL_SCISSOR_TEST);
 	}
 	

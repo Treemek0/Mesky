@@ -7,42 +7,53 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
 import treemek.mesky.handlers.gui.elements.ColorPicker;
+import treemek.mesky.handlers.gui.elements.buttons.CheckButton;
 import treemek.mesky.handlers.gui.elements.buttons.DeleteButton;
+import treemek.mesky.handlers.gui.elements.sliders.Slider;
+import treemek.mesky.handlers.gui.elements.textFields.TextField;
 
 public class WaypointElement {
-	GuiTextField name;
+	TextField name;
 	ColorPicker color;
-	GuiTextField x;
-	GuiTextField y;
-	GuiTextField z;
+	Slider scale;
+	TextField x;
+	TextField y;
+	TextField z;
 	DeleteButton deleteButton;
+	CheckButton enabled;
 	public int yPosition;
 	public int xPosition;
 	public Integer elementHeight = null;
 	public Integer elementWidth = null;
+	private double margin;
 	
-	public WaypointElement(GuiTextField name, ColorPicker color, GuiTextField x, GuiTextField y, GuiTextField z, DeleteButton deleteButton) {
+	public WaypointElement(TextField name, ColorPicker color, Slider scale, TextField x, TextField y, TextField z, DeleteButton deleteButton, CheckButton enabled, double inputMargin) {
 		this.name = name;
+		this.yPosition = name.yPosition;
 		this.color = color;
+		this.scale = scale;
 		this.x = x;
 		this.y = y;
 		this.z = z;
 		this.deleteButton = deleteButton;
-		
+		this.margin = inputMargin;
+		this.enabled = enabled;
 	}
 	
 	public void updateYposition(int y) {
 		this.yPosition = y;
 		this.name.yPosition = y;
 		this.color.yPosition = y;
+		this.scale.yPosition = y;
+		this.enabled.yPosition = y;
 		this.x.yPosition = y;
 		this.y.yPosition = y;
 		this.z.yPosition = y;
 		this.deleteButton.yPosition = y;
 	}
 	
-	public List<GuiTextField> getListOfTextFields() {
-		List<GuiTextField> inputs = new ArrayList<>();
+	public List<TextField> getListOfTextFields() {
+		List<TextField> inputs = new ArrayList<>();
 		inputs.add(name);
 		inputs.add(x);
 		inputs.add(y);
@@ -53,6 +64,7 @@ public class WaypointElement {
 	public List<GuiButton> getListOfButtons() {
 		List<GuiButton> buttons = new ArrayList<>();
 		buttons.add(deleteButton);
+		buttons.add(enabled);
 		return buttons;
 	}
 	
@@ -61,33 +73,29 @@ public class WaypointElement {
 		if(elementWidth == null) {
 			int lowestX = 10000000;
 			int highestX = 0;
-			int highestX_width = 0;
 			
 			if(color.xPosition < lowestX) lowestX = color.xPosition;
-			if(color.xPosition > highestX) {
-				highestX = color.xPosition;
-				highestX_width = color.width;
+			if(color.xPosition + color.width > highestX) {
+				highestX = color.xPosition + color.width;
 			}
 			
 			List<GuiButton> buttons = getListOfButtons();
 			for (int i = 0; i < buttons.size(); i++) {
 				if(buttons.get(i).xPosition < lowestX) lowestX = buttons.get(i).xPosition;
-				if(buttons.get(i).xPosition > highestX) {
-					highestX = buttons.get(i).xPosition;
-					highestX_width = buttons.get(i).width;
+				if(buttons.get(i).xPosition + buttons.get(i).width > highestX) {
+					highestX = buttons.get(i).xPosition + buttons.get(i).width;
 				}
 			}
 			
-			List<GuiTextField> inputs = getListOfTextFields();
+			List<TextField> inputs = getListOfTextFields();
 			for (int i = 0; i < inputs.size(); i++) {
 				if(inputs.get(i).xPosition < lowestX) lowestX = inputs.get(i).xPosition;
-				if(inputs.get(i).xPosition > highestX) {
-					highestX = inputs.get(i).xPosition;
-					highestX_width = inputs.get(i).width;
+				if(inputs.get(i).xPosition + inputs.get(i).width > highestX) {
+					highestX = inputs.get(i).xPosition + inputs.get(i).width;
 				}
 			}
 			
-			int width = lowestX + highestX + highestX_width;
+			int width = highestX - lowestX;
 			
 			xPosition = lowestX;
 			elementWidth = width;
@@ -112,7 +120,7 @@ public class WaypointElement {
 				}
 			}
 			
-			List<GuiTextField> inputs = getListOfTextFields();
+			List<TextField> inputs = getListOfTextFields();
 			for (int i = 0; i < inputs.size(); i++) {
 				if(inputs.get(i).height > highestHeight) {
 					highestHeight = inputs.get(i).height;
@@ -129,6 +137,18 @@ public class WaypointElement {
 	public boolean isHovered(int mouseX, int mouseY) {
 		getWidth();
 		getHeight();
-		return (mouseX >= xPosition && mouseX <= xPosition + elementWidth && mouseY >= yPosition && mouseY <= yPosition + elementHeight);
+		return (mouseX >= xPosition && mouseX <= xPosition + elementWidth && mouseY >= yPosition - margin/2 && mouseY <= yPosition + elementHeight + margin/2);
+	}
+	
+	public boolean isHigherHalfHovered(int mouseX, int mouseY) {
+		getWidth();
+		getHeight();
+		return (mouseX >= xPosition && mouseX <= xPosition + elementWidth && mouseY >= yPosition - margin/2 && mouseY <= yPosition + elementHeight/2);
+	}
+	
+	public boolean isLowerHalfHovered(int mouseX, int mouseY) {
+		getWidth();
+		getHeight();
+		return (mouseX >= xPosition && mouseX <= xPosition + elementWidth && mouseY >= yPosition + elementHeight/2 && mouseY <= yPosition + elementHeight + margin/2);
 	}
 }

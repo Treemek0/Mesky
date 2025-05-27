@@ -25,17 +25,20 @@ public class MacroButton extends GuiButton{
 	ResourceLocation unclickedRightClick = new ResourceLocation(Reference.MODID, "gui/unclicked_RightClick.png");
 	ResourceLocation clickedRightClick = new ResourceLocation(Reference.MODID, "gui/clicked_RightClick.png");
 	
-	ResourceLocation emptyLeft = new ResourceLocation(Reference.MODID, "gui/unclicked_left.png");
-	ResourceLocation checkLeft = new ResourceLocation(Reference.MODID, "gui/clicked_left.png");
+	ResourceLocation unclickedLeft = new ResourceLocation(Reference.MODID, "gui/unclicked_left.png");
+	ResourceLocation clickedLeft = new ResourceLocation(Reference.MODID, "gui/clicked_left.png");
 	
-	ResourceLocation emptyRight = new ResourceLocation(Reference.MODID, "gui/unclicked_right.png");
-	ResourceLocation checkRight = new ResourceLocation(Reference.MODID, "gui/clicked_right.png");
+	ResourceLocation unclickedRight = new ResourceLocation(Reference.MODID, "gui/unclicked_right.png");
+	ResourceLocation clickedRight = new ResourceLocation(Reference.MODID, "gui/clicked_right.png");
 	
-	ResourceLocation emptyBack = new ResourceLocation(Reference.MODID, "gui/unclicked_back.png");
-	ResourceLocation checkBack = new ResourceLocation(Reference.MODID, "gui/clicked_back.png");
+	ResourceLocation unclickedBack = new ResourceLocation(Reference.MODID, "gui/unclicked_back.png");
+	ResourceLocation clickedBack = new ResourceLocation(Reference.MODID, "gui/clicked_back.png");
 	
 	ResourceLocation unclickedForward = new ResourceLocation(Reference.MODID, "gui/unclicked_forward.png");
 	ResourceLocation clickedForward = new ResourceLocation(Reference.MODID, "gui/clicked_forward.png");
+	
+	ResourceLocation unclickedSneak = new ResourceLocation(Reference.MODID, "gui/unclicked_sneak.png");
+	ResourceLocation clickedSneak = new ResourceLocation(Reference.MODID, "gui/sneak.png");
 	
 	public boolean isFull() {
 		return isFull;
@@ -52,16 +55,19 @@ public class MacroButton extends GuiButton{
 				mc.renderEngine.bindTexture(clickedRightClick);
 				break;
 			case 2:
-				mc.renderEngine.bindTexture(checkLeft);
+				mc.renderEngine.bindTexture(clickedLeft);
 				break;
 			case 3:
-				mc.renderEngine.bindTexture(checkRight);
+				mc.renderEngine.bindTexture(clickedRight);
 				break;
 			case 4:
-				mc.renderEngine.bindTexture(checkBack);
+				mc.renderEngine.bindTexture(clickedBack);
 				break;
 			case 5:
 				mc.renderEngine.bindTexture(clickedForward);
+				break;
+			case 6:
+				mc.renderEngine.bindTexture(clickedSneak);
 				break;
 			}
 			
@@ -74,16 +80,19 @@ public class MacroButton extends GuiButton{
 				mc.renderEngine.bindTexture(unclickedRightClick);
 				break;
 			case 2:
-				mc.renderEngine.bindTexture(emptyLeft);
+				mc.renderEngine.bindTexture(unclickedLeft);
 				break;
 			case 3:
-				mc.renderEngine.bindTexture(emptyRight);
+				mc.renderEngine.bindTexture(unclickedRight);
 				break;
 			case 4:
-				mc.renderEngine.bindTexture(emptyBack);
+				mc.renderEngine.bindTexture(unclickedBack);
 				break;
 			case 5:
 				mc.renderEngine.bindTexture(unclickedForward);
+				break;
+			case 6:
+				mc.renderEngine.bindTexture(unclickedSneak);
 				break;
 			}
 		}

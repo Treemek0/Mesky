@@ -3,12 +3,15 @@ package treemek.mesky.handlers.gui.settings;
 import java.io.IOException;
 import java.util.List;
 
+import org.lwjgl.opengl.GL11;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 import treemek.mesky.handlers.RenderHandler;
+import treemek.mesky.handlers.gui.elements.SettingColorPicker;
 import treemek.mesky.handlers.gui.elements.buttons.FoldableSettingButton;
 import treemek.mesky.handlers.gui.elements.buttons.SettingButton;
 import treemek.mesky.handlers.gui.elements.sliders.SettingSlider;
@@ -53,16 +56,31 @@ public class SubCategory extends GuiScreen{
 					button.drawButton(mc, x, subEndY);
 					if(list.get(i) instanceof FoldableSettingButton) {
 						subEndY += ((FoldableSettingButton)list.get(i)).foldHeight + 2;
-					}else {
-						subEndY += button.height + 2;
+					}
+					if(list.get(i) instanceof SettingButton) {
+						subEndY += ((SettingButton)list.get(i)).allHeight + 2;
+					}
+					if(list.get(i) instanceof SettingSlider) {
+						subEndY += ((SettingSlider)list.get(i)).allHeight + 2;
 					}
 				}
 				
 				if(list.get(i) instanceof GuiTextField) {
-           		 SettingTextField input = (SettingTextField)this.list.get(i);
+					if(list.get(i) instanceof SettingTextField) {
+		           		 SettingTextField input = (SettingTextField)this.list.get(i);
+							
+						input.drawTextField(x, subEndY);
+						subEndY += input.height + 6;
+					}
 					
-					input.drawTextField(x, subEndY);
-					subEndY += input.height + 6;
+					if(list.get(i) instanceof SettingColorPicker) {
+		           		 SettingColorPicker input = (SettingColorPicker)this.list.get(i);
+		           		 	GL11.glPushMatrix();
+		                    GL11.glDisable(GL11.GL_DEPTH_TEST);
+							input.drawTextField(x, subEndY);
+							GL11.glPopMatrix();
+							subEndY += input.height + 6;
+						}
 				}
 			}
 			
@@ -79,50 +97,46 @@ public class SubCategory extends GuiScreen{
             for (int i = 0; i < this.list.size(); ++i)
             {
             	if(list.get(i) instanceof GuiButton) {
-	                GuiButton guibutton = (GuiButton)this.list.get(i);
-	
-	                if(guibutton instanceof FoldableSettingButton) {
-	                	for (int j = 0; j < ((FoldableSettingButton)guibutton).hiddenObjects.size(); ++j)
-	                    {
-	                		if(((FoldableSettingButton)guibutton).hiddenObjects.get(j) instanceof GuiButton) {
-		                		GuiButton guiButton = (GuiButton)((FoldableSettingButton)guibutton).hiddenObjects.get(j);
-		                		
-		                		if (guiButton.mousePressed(this.mc, mouseX, mouseY))
-		                        {
-		                            guiButton.playPressSound(Minecraft.getMinecraft().getSoundHandler());
-		                            SettingsGUI.buttonClicked(guiButton); // here is function to buttonClicked maybe for future searching XD
-		                        }
-	                		}
-	                		
-	                		if(((FoldableSettingButton)guibutton).hiddenObjects.get(j) instanceof GuiTextField) {
-	                			SettingTextField input = (SettingTextField)((FoldableSettingButton)guibutton).hiddenObjects.get(j);
-	                			
-	                			if (input.isHovered(mouseX, mouseY)) {
-	             					input.mouseClicked(mouseX, mouseY, mouseButton);
-	             				}else {
-	             					input.setCursorPositionZero();
-	             					input.setFocused(false);
-	             				}
-	                		}
-	                    }
-	                }
-	                
-	                if (guibutton.mousePressed(this.mc, mouseX, mouseY))
-	                {
-	                    guibutton.playPressSound(Minecraft.getMinecraft().getSoundHandler());
-	                    SettingsGUI.buttonClicked(guibutton); // here is function to buttonClicked maybe for future searching XD
-	                }
+            		if(list.get(i) instanceof FoldableSettingButton) {
+                		FoldableSettingButton guiButton = (FoldableSettingButton)list.get(i);
+                		
+                		if (guiButton.mouseClicked(mouseX, mouseY, mouseButton))
+                        {
+                            guiButton.playPressSound(Minecraft.getMinecraft().getSoundHandler());
+                            SettingsGUI.buttonClicked(guiButton); // here is function to buttonClicked maybe for future searching XD
+                        }
+            		}else {
+            		
+		                GuiButton guibutton = (GuiButton)this.list.get(i);
+		                
+		                if(this.list.get(i) instanceof SettingSlider) {
+		                	((SettingSlider)this.list.get(i)).mouseClicked(mouseX, mouseY, mouseButton);
+		                }else {
+			                if (guibutton.mousePressed(this.mc, mouseX, mouseY))
+			                {
+			                    guibutton.playPressSound(Minecraft.getMinecraft().getSoundHandler());
+			                    SettingsGUI.buttonClicked(guibutton); // here is function to buttonClicked maybe for future searching XD
+			                }
+		                }
+            		}
 	            }
             	
             	if(list.get(i) instanceof GuiTextField) {
-            		 SettingTextField input = (SettingTextField)this.list.get(i);
-            		 
-            		 if (input.isHovered(mouseX, mouseY)) {
-     					input.mouseClicked(mouseX, mouseY, mouseButton);
-     				}else {
-     					input.setCursorPositionZero();
-     					input.setFocused(false);
-     				}
+            		if(list.get(i) instanceof SettingTextField) {
+	            		 SettingTextField input = (SettingTextField)this.list.get(i);
+	            		 
+	            		 if (input.isHovered(mouseX, mouseY)) {
+	     					input.mouseClicked(mouseX, mouseY, mouseButton);
+	     				}else {
+	     					input.setCursorPositionZero();
+	     					input.setFocused(false);
+	     				}
+            		}
+            		
+            		if(list.get(i) instanceof SettingColorPicker) {
+            			 SettingColorPicker input = (SettingColorPicker)this.list.get(i);
+            			 input.mouseClick(mouseX, mouseY, mouseButton);
+            		}
             	}
             }
         }
@@ -133,16 +147,15 @@ public class SubCategory extends GuiScreen{
 		for (int i = 0; i < this.list.size(); ++i)
         {
 			if(list.get(i) instanceof SettingSlider) { // SettingSlider not GuiButton is because GuiButton doesnt have that function and its custom made lol
-				((SettingSlider)list.get(i)).mouseClickMoved(mouseX, mouseY, clickedMouseButton, timeSinceLastClick);
+				((SettingSlider)list.get(i)).mouseDragged(mc, mouseX, mouseY);
 			}
 			
 			if(list.get(i) instanceof FoldableSettingButton) {
-				List<Object> foldableList = ((FoldableSettingButton)list.get(i)).hiddenObjects;
-				for (int j = 0; j < foldableList.size(); ++j){
-					if(foldableList.get(j) instanceof SettingSlider) {
-						((SettingSlider)foldableList.get(j)).mouseClickMoved(mouseX, mouseY, clickedMouseButton, timeSinceLastClick);
-					}
-				}
+				((FoldableSettingButton)list.get(i)).mouseDragged(mc, mouseX, mouseY);
+			}
+			
+			if(list.get(i) instanceof SettingColorPicker) {
+				((SettingColorPicker)list.get(i)).mouseClickMoved(mouseX, mouseY);
 			}
         }
 	}
@@ -155,13 +168,8 @@ public class SubCategory extends GuiScreen{
 				((GuiButton)list.get(i)).mouseReleased(mouseX, mouseY);
 			}
 			
-			if(list.get(i) instanceof FoldableSettingButton) {
-				List<Object> foldableList = ((FoldableSettingButton)list.get(i)).hiddenObjects;
-				for (int j = 0; j < foldableList.size(); ++j){
-					if(foldableList.get(j) instanceof GuiButton) {
-						((GuiButton)foldableList.get(j)).mouseReleased(mouseX, mouseY);;
-					}
-				}
+			if(list.get(i) instanceof SettingColorPicker) {
+				((SettingColorPicker)list.get(i)).mouseReleased(mouseX, mouseY);
 			}
         }
     }
@@ -169,24 +177,24 @@ public class SubCategory extends GuiScreen{
 	protected void keyTyped(char typedChar, int keyCode) {
 		for (int i = 0; i < this.list.size(); ++i)
         {
-			if(list.get(i) instanceof GuiTextField) {
+			if(list.get(i) instanceof SettingTextField) {
 				SettingTextField input = (SettingTextField)this.list.get(i);
 				if(input.isFocused()) {
 					input.keyTyped(typedChar, keyCode);
 				}
 			}
 			
+			if(list.get(i) instanceof SettingColorPicker) {
+       			SettingColorPicker input = (SettingColorPicker)this.list.get(i);
+				input.keyTyped(typedChar, keyCode);
+			}
+			
 			if(list.get(i) instanceof FoldableSettingButton) {
-				List<Object> foldableList = ((FoldableSettingButton)list.get(i)).hiddenObjects;
-				for (int j = 0; j < foldableList.size(); ++j){
-					if(foldableList.get(j) instanceof GuiTextField) {
-						SettingTextField input = (SettingTextField)foldableList.get(j);
-						
-						if(input.isFocused()) {
-							input.keyTyped(typedChar, keyCode);
-						}
-					}
-                }
+				((FoldableSettingButton)list.get(i)).keyTyped(typedChar, keyCode);
+			}
+			
+			if(list.get(i) instanceof SettingSlider) {
+				((SettingSlider)list.get(i)).keyTyped(typedChar, keyCode);
 			}
         }
 	}

@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,6 +24,15 @@ public class ImageCache {
 		public static Map<String, BufferedImage> bufferedTextureCache = new ConcurrentHashMap<>();
 		public static Map<BufferedImage, ResourceLocation> resourceLocationCache = new ConcurrentHashMap<>();
 	   
+		public static ResourceLocation getLocationOfPath(String path) {
+			BufferedImage buff = bufferedTextureCache.get(path);
+			if(buff != null) {
+				return resourceLocationCache.getOrDefault(buff, new ResourceLocation(""));
+			}
+			
+			return new ResourceLocation("");
+		}
+		
 		public static void deleteFromImageCache(String path) {
 			if(bufferedTextureCache.containsKey(path)) {
 				BufferedImage buff = bufferedTextureCache.get(path);
@@ -31,7 +41,7 @@ public class ImageCache {
 			}
 		}
 		
-		public static void removeImageFolderFromImageCache(String folderPath) {
+		public static void removeFolderImagesFromCache(String folderPath) {
 	        Iterator<Map.Entry<String, BufferedImage>> iterator = bufferedTextureCache.entrySet().iterator();
 	        
 	        while (iterator.hasNext()) {
@@ -51,39 +61,40 @@ public class ImageCache {
 	        	
 	            public void run() {
 	                try {
-	                    // Download the image
 	                    URL url = new URL(urlString);
-	                    InputStream inputStream = url.openStream();
+	                    URLConnection connection = url.openConnection();
+	                    connection.setRequestProperty("User-Agent", "Mozilla/5.0");
+	                    InputStream inputStream = connection.getInputStream();
 	                    bufferedimage = ImageIO.read(inputStream);
-	                    // Switch back to the main thread for OpenGL operations
+
 	                    Minecraft.getMinecraft().addScheduledTask(new Runnable() {
 							public void run() {
 	                            try {
-	                            	resourceLocation = Minecraft.getMinecraft().getTextureManager().getDynamicTextureLocation("custom_image", new DynamicTexture(bufferedimage));
+	                            	resourceLocation = Minecraft.getMinecraft().getTextureManager().getDynamicTextureLocation(urlString, new DynamicTexture(bufferedimage));
 			                    	bufferedTextureCache.put(urlString, bufferedimage);
 	                            	resourceLocationCache.put(bufferedimage, resourceLocation);
 	                            } catch (Exception e) {
 	                            	if(Minecraft.getMinecraft().thePlayer != null) {
 	                            		if(e.getLocalizedMessage() == null) {
-	                            			Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]" + EnumChatFormatting.WHITE + " in " + EnumChatFormatting.AQUA + errorWhere + EnumChatFormatting.WHITE + ": " + EnumChatFormatting.BOLD.RED + "There was a problem with downloading this image (BufferedImage is null)"));
-	                            		}else {
-	                            			Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]" + EnumChatFormatting.WHITE + " in " + EnumChatFormatting.AQUA + errorWhere + EnumChatFormatting.WHITE + ": " + EnumChatFormatting.BOLD.RED + e.getLocalizedMessage()));
-	                            		}
+	                            			Utils.addMinecraftMessageWithPrefix("Error in " + EnumChatFormatting.AQUA + errorWhere + EnumChatFormatting.WHITE + ": " + EnumChatFormatting.BOLD.RED + "There was a problem with downloading this image (BufferedImage is null)");
+                            			}else {
+	                            			Utils.addMinecraftMessageWithPrefix("Error in " + EnumChatFormatting.AQUA + errorWhere + EnumChatFormatting.WHITE + ": ");
+	                                		Utils.addMinecraftMessage(EnumChatFormatting.BOLD.RED + e.getLocalizedMessage());
+	                                	}
 	                            	}
 	                        	}
 	                        }
 	                    });
 	                } catch (Exception e) {
-	                	if(Minecraft.getMinecraft().thePlayer != null) {
-	                		Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]" + EnumChatFormatting.WHITE + " in " + EnumChatFormatting.AQUA + errorWhere + EnumChatFormatting.WHITE + ": " + EnumChatFormatting.BOLD.RED + e.getLocalizedMessage()));
-	                		e.printStackTrace();
-	                	}	             
-	            	}
+                		Utils.addMinecraftMessageWithPrefix("Error in " + EnumChatFormatting.AQUA + errorWhere + EnumChatFormatting.WHITE + ": ");
+                		Utils.addMinecraftMessage(EnumChatFormatting.BOLD.RED + e.getLocalizedMessage());
+                		e.printStackTrace();
+	                }
 	            }
 	        }).start();
 	    }
 		
-		 public static void findImageFromFiles(final String path, final String errorWhere) {
+		 public static void downloadImageFromFile(final String path, final String errorWhere) {
 	    	new Thread(new Runnable() {
 	            private BufferedImage bufferedimage;
 	            private ResourceLocation resourceLocation;
@@ -98,7 +109,7 @@ public class ImageCache {
 			            Minecraft.getMinecraft().addScheduledTask(new Runnable() {
 			                public void run() {
 			                    try {
-			                    	resourceLocation = Minecraft.getMinecraft().getTextureManager().getDynamicTextureLocation("custom_image", new DynamicTexture(bufferedimage));
+			                    	resourceLocation = Minecraft.getMinecraft().getTextureManager().getDynamicTextureLocation(path, new DynamicTexture(bufferedimage));
 			                    	bufferedTextureCache.put(path, bufferedimage);
 	                            	resourceLocationCache.put(bufferedimage, resourceLocation);
 			                    }catch (Exception e) {

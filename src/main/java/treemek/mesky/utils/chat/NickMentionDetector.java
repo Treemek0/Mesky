@@ -28,47 +28,47 @@ public class NickMentionDetector {
 	
 	// crimson isle doestroys everything
 	
-//	@SubscribeEvent(priority = EventPriority.LOWEST)
-//	public void onChat(ClientChatReceivedEvent event) {
-//		if(Minecraft.getMinecraft().theWorld != null && Minecraft.getMinecraft().theWorld.isRemote && (event.type == 0 || event.type == 1)) {
-//			if(event.isCanceled()) return;
-//			if(!SettingsConfig.NickMentionDetection.isOn) return;
-//			
-//	        String message = event.message.getFormattedText();
-//	        IChatComponent chatComponent = event.message;
-//	        
-//	        
-//	        if(!message.contains(":")) return;
-//	        String[] splitMessage = splitMessageAndAuthor(message);
-//	        
-//	        
-//	        if(splitMessage[1].contains(Minecraft.getMinecraft().thePlayer.getGameProfile().getName())) {
-//		        List<IChatComponent> siblings = chatComponent.getSiblings();
-//		  
-//		        IChatComponent newChatComponent = new ChatComponentText("");
-//		        
-//		        if(siblings.size() > 0) {
-//		        	newChatComponent = getMessageWithNickMention(siblings, chatComponent);
-//		        }else {
-//		        	newChatComponent = getMessageWithNickMention(splitMessage[1]);
-//		        	
-//		        	if(chatComponent.getChatStyle().getChatClickEvent() != null) {
-//			        	ChatStyle click = new ChatStyle();
-//			            click.setChatClickEvent(chatComponent.getChatStyle().getChatClickEvent());
-//			            newChatComponent = newChatComponent.setChatStyle(click);
-//		        	}	        
-//	        	}
-//      	
-//		        
-//		        if(!newChatComponent.equals(new ChatComponentText(""))) {
-//			        event.setCanceled(true);
-////					Minecraft.getMinecraft().thePlayer.addChatMessage(newChatComponent);
-//			        System.out.println(newChatComponent.getFormattedText());
-//					Minecraft.getMinecraft().thePlayer.addChatComponentMessage(newChatComponent);
-//		        }
-//	        }
-//		}
-//	}
+	@SubscribeEvent(priority = EventPriority.LOWEST)
+	public void onChat(ClientChatReceivedEvent event) {
+		if(Minecraft.getMinecraft().theWorld != null && Minecraft.getMinecraft().theWorld.isRemote && (event.type == 0 || event.type == 1)) {
+			if(event.isCanceled()) return;
+			if(!SettingsConfig.NickMentionDetection.isOn) return;
+			
+	        String message = event.message.getFormattedText();
+	        IChatComponent chatComponent = event.message;
+	        
+	        
+	        if(!message.contains(":")) return;
+	        String[] splitMessage = splitMessageAndAuthor(message);
+	        
+	        
+	        if(splitMessage[1].contains(Minecraft.getMinecraft().thePlayer.getGameProfile().getName())) {
+		        List<IChatComponent> siblings = chatComponent.getSiblings();
+		  
+		        IChatComponent newChatComponent = new ChatComponentText("");
+		        
+		        if(siblings.size() > 0) {
+		        	newChatComponent = getMessageWithNickMention(siblings, chatComponent);
+		        }else {
+		        	newChatComponent = getMessageWithNickMention(splitMessage[1]);
+		        	
+		        	if(chatComponent.getChatStyle().getChatClickEvent() != null) {
+			        	ChatStyle click = new ChatStyle();
+			            click.setChatClickEvent(chatComponent.getChatStyle().getChatClickEvent());
+			            newChatComponent = newChatComponent.setChatStyle(click);
+		        	}	        
+	        	}
+      	
+		        
+		        if(!newChatComponent.equals(new ChatComponentText(""))) {
+			        event.setCanceled(true);
+			        event.message = newChatComponent;
+//					Minecraft.getMinecraft().thePlayer.addChatMessage(newChatComponent);
+			        System.out.println(newChatComponent.getFormattedText());
+		        }
+	        }
+		}
+	}
 	
 	public IChatComponent getMessageWithNickMention(String message){
 		// without siblings
@@ -76,6 +76,8 @@ public class NickMentionDetector {
 		String onlyMessage = splitMessageAndAuthor(message)[1];
 		
 		String nick = Minecraft.getMinecraft().thePlayer.getGameProfile().getName();
+		
+		System.out.println(onlyMessage);
 		
 		String componentText = author;
 		for (Integer i : findWordPositions(onlyMessage, nick)) {

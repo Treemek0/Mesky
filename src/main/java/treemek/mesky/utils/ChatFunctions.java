@@ -23,16 +23,28 @@ public class ChatFunctions {
 	public static class ChatFunction {
 		private String triggerMessage;
         private String function;
-        public boolean onlyParty;
-        public boolean ignorePlayers;
-        public boolean isEqual;
+        public Boolean enabled;
+        public Boolean onlyParty;
+        public Boolean ignorePlayers;
+        public Boolean isEqual;
+        public Boolean ignoreSender;
         
-        public ChatFunction(String trigger, String function, boolean onlyParty, boolean ignorePlayers, boolean isEqual) {
+        public ChatFunction(String trigger, String function, boolean onlyParty, boolean ignorePlayers, boolean isEqual, boolean enabled) {
 	        this.triggerMessage = trigger;
 	        this.function = function;
 	        this.onlyParty = onlyParty;
 	        this.ignorePlayers = ignorePlayers;
 	        this.isEqual = isEqual;
+	        this.enabled = enabled;
+        }
+        
+        public void fixNulls() {
+        	if(triggerMessage == null) triggerMessage = "";
+        	if(function == null) function = "";
+        	if(enabled == null) enabled = true;
+        	if(onlyParty == null) onlyParty = false;
+        	if(ignorePlayers == null) ignorePlayers = false;
+        	if(isEqual == null) isEqual = false;
         }
         
         public String getTrigger() {
@@ -53,11 +65,15 @@ public class ChatFunctions {
         public boolean getIsEqual() {
         	return isEqual;
         }
+
+		public boolean isEnabled() {
+			return enabled;
+		}
     }
 	
 	// Method to add data
     public static void addChatFunction(String trigger, String function, boolean onlyParty, boolean ignorePlayers, boolean isEqual) {
-    	chatFunctionsList.add(new ChatFunction(trigger, function, onlyParty, ignorePlayers, isEqual));
+    	chatFunctionsList.add(new ChatFunction(trigger, function, onlyParty, ignorePlayers, isEqual, true));
 		ConfigHandler.SaveChatFunction(chatFunctionsList);
     }
     
@@ -93,21 +109,22 @@ public class ChatFunctions {
 		
 		
 		for(int i = 0; i < chatFunctionsList.size(); i++) {
+			if(!chatFunctionsList.get(i).enabled) continue;
 			if(chatFunctionsList.get(i).triggerMessage.equals("")) continue;
 			if(chatFunctionsList.get(i).getIsEqual()) {
 				if(onlyNonColorMessage.equals(chatFunctionsList.get(i).getTrigger())) {
-					if(chatFunctionsList.get(i).getOnlyParty() && !nonColorMessage.startsWith("Party >")) return;
-					if(chatFunctionsList.get(i).getIgnorePlayers() && nonColorMessage.contains(": ")) return;
+					if(chatFunctionsList.get(i).getOnlyParty() && !nonColorMessage.startsWith("Party >")) continue;
+					if(chatFunctionsList.get(i).getIgnorePlayers() && nonColorMessage.contains(": ")) continue;
 					if(autor) return;
-					Minecraft.getMinecraft().thePlayer.sendChatMessage(chatFunctionsList.get(i).function);
+					Utils.executeCommand(chatFunctionsList.get(i).function);
 					System.out.println("[Mesky] Executed from chatFunction: " + chatFunctionsList.get(i).function);
 				}
 			}else {
 				if(message.contains(chatFunctionsList.get(i).getTrigger())) {
-					if(chatFunctionsList.get(i).getOnlyParty() && !nonColorMessage.startsWith("Party >")) return;
-					if(chatFunctionsList.get(i).getIgnorePlayers() && nonColorMessage.contains(": ")) return;
+					if(chatFunctionsList.get(i).getOnlyParty() && !nonColorMessage.startsWith("Party >")) continue;
+					if(chatFunctionsList.get(i).getIgnorePlayers() && nonColorMessage.contains(": ")) continue;
 					if(autor) return; // ignores messages written by yourself
-					Minecraft.getMinecraft().thePlayer.sendChatMessage(chatFunctionsList.get(i).function);
+					Utils.executeCommand(chatFunctionsList.get(i).function);
 					System.out.println("[Mesky] Executed from chatFunction: " + chatFunctionsList.get(i).function);
 				}
 			}

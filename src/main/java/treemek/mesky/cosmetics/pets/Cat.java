@@ -148,7 +148,7 @@ public class Cat extends ModelBase{
         
         float yaw = player.prevRotationYawHead + (player.rotationYawHead - player.prevRotationYawHead) * partialTicks;
         float pitch = player.prevRotationPitch + (player.rotationPitch - player.prevRotationPitch) * partialTicks;
-
+        
         GlStateManager.rotate(-yaw, 0.0F, 1.0F, 0.0F);      
         GlStateManager.rotate(pitch - 10, 1.0F, 0.0F, 0.0F); // vertical movement of mouse (front and back rotation)
 

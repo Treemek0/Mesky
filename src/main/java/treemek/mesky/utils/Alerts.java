@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
 
 import javax.imageio.ImageIO;
 
@@ -40,6 +41,8 @@ import treemek.mesky.handlers.GuiHandler;
 import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.handlers.gui.alerts.AlertElement;
 import treemek.mesky.handlers.gui.alerts.AlertPosition;
+import treemek.mesky.handlers.soundHandler.Sound;
+import treemek.mesky.handlers.soundHandler.SoundsHandler;
 import treemek.mesky.utils.Waypoints.Waypoint;
 
 public class Alerts extends GuiScreen {
@@ -47,14 +50,18 @@ public class Alerts extends GuiScreen {
 	public static class Alert {
 		private String triggerMessage;
         private String displayedMessage;
-        private float time; // [ms]
-        public boolean onlyParty;
-        public boolean ignorePlayers;
-        public boolean isEqual; // will be added but it requires fixing all code in AlertGui (and i dont have time for that rn)
-        public int[] position = new int[] {50,50};
+        private Float time; // [ms]
+        public Boolean onlyParty;
+        public Boolean ignorePlayers;
+        public Boolean isEqual;
+        public Boolean enabled;
+        public Float[] position = new Float[] {50f,50f};
         public Float scale = 1f;
+        public String sound;
+        public Float volume;
+        public Float pitch;
         
-        public Alert(String trigger, String displayed, float time, boolean onlyParty, boolean ignorePlayers, boolean isEqual, int[] position, Float scale) {
+        public Alert(String trigger, String displayed, float time, boolean onlyParty, boolean ignorePlayers, boolean isEqual, Float[] position, Float scale, String sound, float volume, float pitch, boolean enabled) {
 	        this.triggerMessage = trigger;
 	        this.displayedMessage = displayed;
 	        this.time = time;
@@ -63,6 +70,29 @@ public class Alerts extends GuiScreen {
 	        this.isEqual = isEqual;
 	        this.position = position;
 	        this.scale = scale;
+	        this.sound = sound;
+	        this.volume = volume;
+	        this.pitch = pitch;
+	        this.enabled = enabled;
+        }
+        
+        public void fixNulls() {
+        	if(triggerMessage == null) triggerMessage = "";
+        	if(displayedMessage == null) displayedMessage = "";
+        	if(time == null) time = 1000f;
+        	if(onlyParty == null) onlyParty = false;
+        	if(ignorePlayers == null) ignorePlayers = false;
+        	if(isEqual == null) isEqual = false;
+        	if(enabled == null) enabled = true;
+        	if(position == null) position = new Float[] {50f,50f};
+        	if(scale == null) scale = 1f;
+        	if(sound == null) sound = "minecraft:random.anvil_land";
+        	if(volume == null) volume = 1f;
+        	if(pitch == null) pitch = 1f;
+        }
+        
+        public String getSound() {
+        	return sound;
         }
         
         public String getTrigger() {
@@ -95,10 +125,10 @@ public class Alerts extends GuiScreen {
         private long startTime;
         public ResourceLocation location;
         public BufferedImage bufferedImage;
-        public int[] position;
+        public Float[] position;
         public float scale;
         
-        public AlertRenderInfo(String displayed, float time, long startTime, ResourceLocation location, BufferedImage buffered, int[] position, float scale) {
+        public AlertRenderInfo(String displayed, float time, long startTime, ResourceLocation location, BufferedImage buffered, Float[] position, float scale) {
 	        this.message = displayed;
 	        this.time = time;
 	        this.startTime = startTime;
@@ -111,10 +141,10 @@ public class Alerts extends GuiScreen {
     }
 	
 	// Method to add data
-    public static void addAlert(String trigger, String display, float time, int[] position, float scale) {
+    public static void addAlert(String trigger, String display, float time, Float[] position, float scale) {
     	EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
     	
-    	alertsList.add(new Alert(trigger, display, time * 1000, false, false, false, position, scale));
+    	alertsList.add(new Alert(trigger, display, time * 1000, false, false, false, position, scale, "minecraft:random.anvil_land", 1, 1, true));
 		ConfigHandler.SaveAlert(alertsList);
     }
     
@@ -168,6 +198,7 @@ public class Alerts extends GuiScreen {
 			
 			
 			for(int i = 0; i < alertsList.size(); i++) {
+				if(!alertsList.get(i).enabled) continue;
 				if(alertsList.get(i).triggerMessage.equals("")) continue;
 				if(alertsList.get(i).getIsEqual()) {
 					if(onlyNonColorMessage.equals(alertsList.get(i).getTrigger())) {
@@ -175,7 +206,11 @@ public class Alerts extends GuiScreen {
 						if(alertsList.get(i).getIgnorePlayers() && nonColorMessage.contains(": ")) return;
 						if(autor) return;
 	
-						registerAlert(i);
+						try {
+							registerAlert(alertsList.get(i));
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
 					}
 				}else {
 					if(message.contains(alertsList.get(i).getTrigger())) {
@@ -183,7 +218,11 @@ public class Alerts extends GuiScreen {
 						if(alertsList.get(i).getIgnorePlayers() && nonColorMessage.contains(": ")) return;
 						if(autor) return; // ignores messages written by yourself
 						
-						registerAlert(i);
+						try {
+							registerAlert(alertsList.get(i));
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
 					}
 				}
 			}
@@ -191,32 +230,37 @@ public class Alerts extends GuiScreen {
 	}
 	
 	
-	private void registerAlert(int i) {
-		String message = Alerts.alertsList.get(i).getDisplay();
+	private void registerAlert(Alert alert) {
+		String message = alert.getDisplay();
 		
-		if((message.endsWith(".png") || message.endsWith(".jpg") || message.endsWith(".jpeg")) && (message.contains("/") || message.contains("\\"))) { // rendering images
-			getTextureFromCache(Alerts.alertsList.get(i)); // image
+		if(isImage(alert.displayedMessage)) { // rendering images
+			getTextureFromCache(alert); // image
 		}else { // text
-			ResourceLocation soundLocation = new ResourceLocation("minecraft", "random.anvil_land");
-		    Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.create(soundLocation));
-		    if(!renderingQueue.contains(new AlertRenderInfo(message, Alerts.alertsList.get(i).getTime(), System.currentTimeMillis(), null, null, Alerts.alertsList.get(i).position, Alerts.alertsList.get(i).scale))) {
-		    	renderingQueue.add(new AlertRenderInfo(message, Alerts.alertsList.get(i).getTime(), System.currentTimeMillis(), null, null, Alerts.alertsList.get(i).position, Alerts.alertsList.get(i).scale));
+			SoundsHandler.playSound(alert.sound, alert.volume, alert.pitch);
+			
+		    if(!renderingQueue.contains(new AlertRenderInfo(message,  alert.getTime(), System.currentTimeMillis(), null, null,  alert.position, alert.scale))) {
+		    	renderingQueue.add(new AlertRenderInfo(message,  alert.getTime(), System.currentTimeMillis(), null, null,  alert.position, alert.scale));
 		    }
 		}
 	}
 	
-	
-	public static void DisplayCustomAlerts(String display, int dur, int soundIteration, int[] position, float scale) {
+	public static void DisplayCustomAlert(String display, int dur, int soundIteration, Float[] position, float scale, ResourceLocation soundLocation, float pitch) {
 		AlertRenderInfo info = new AlertRenderInfo(display, dur, System.currentTimeMillis(), null, null, position, scale);
 		renderingQueue.add(info);
-		ResourceLocation soundLocation = new ResourceLocation("minecraft", "random.anvil_land");
+		
+		if(soundLocation == null) return;
 		for (int i = 0; i < soundIteration; i++) {
-			 Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.create(soundLocation));
-		}      
+			 Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.create(soundLocation, pitch));
+		}
+	}
+	
+	public static void DisplayCustomAlert(String display, int dur, Float[] position, float scale) {
+		AlertRenderInfo info = new AlertRenderInfo(display, dur, System.currentTimeMillis(), null, null, position, scale);
+		renderingQueue.add(info);     
 	}
 	
 	 @SubscribeEvent
-	    public void onRenderOverlay(RenderGameOverlayEvent.Text event) {
+	    public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
 		 // its done this way because u cant remove element from list while its iterating
 		 Iterator<AlertRenderInfo> iterator = new ArrayList<>(renderingQueue).iterator();
 		 while (iterator.hasNext()) {
@@ -228,10 +272,8 @@ public class Alerts extends GuiScreen {
 		            renderingQueue.remove(info);
 		        }
 			    
-	        	if((alert.endsWith(".png") || alert.endsWith(".jpg") || alert.endsWith(".jpeg")) && (alert.contains("/") || alert.contains("\\"))) { // rendering images
-	        		if(info.bufferedImage != null && info.location != null) {
-	        			renderAlertImage(event.resolution, info);
-	        		}
+        		if(info.bufferedImage != null && info.location != null) {
+        			renderAlertImage(event.resolution, info);
 	        	}else {
 	        		renderAlertText(event.resolution, info);
 	        	}
@@ -245,7 +287,7 @@ public class Alerts extends GuiScreen {
 	        int posX = (int) (resolution.getScaledWidth() * ((float)(info.position[0])/100));
 	        int posY = (int) (resolution.getScaledHeight() * ((float)(info.position[1])/100));
 	        
-	        RenderHandler.drawAlertText(info.message, resolution, 0xf54245, info.scale, posX, posY);
+	        RenderHandler.drawAlertText(ColorUtils.getColoredText(info.message), resolution, 0xffffff, info.scale, posX, posY);
 	    }
 	    
 	    private void renderAlertImage(ScaledResolution resolution, AlertRenderInfo info) {
@@ -271,9 +313,11 @@ public class Alerts extends GuiScreen {
             GlStateManager.pushMatrix();
             GlStateManager.color(1.0F, 1.0F, 1.0F, opacity);
             GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+            GlStateManager.disableDepth();
             
             Minecraft.getMinecraft().renderEngine.bindTexture(info.location);
             drawModalRectWithCustomSizedTexture(posX - imgWidth / 2, posY - imgHeight / 2, 0, 0, imgWidth, imgHeight, imgWidth, imgHeight);
+            GlStateManager.enableDepth();
             GlStateManager.disableBlend();
             GlStateManager.popMatrix();
 	    }
@@ -286,26 +330,26 @@ public class Alerts extends GuiScreen {
 	    public void getTextureFromCache(Alert alert) {
 	        if (!ImageCache.bufferedTextureCache.containsKey(alert.displayedMessage)) {
 	            // If the texture is not in the cache, load it
-	        	if(alert.displayedMessage.contains("https://")) {
+	        	if(alert.displayedMessage.startsWith("https:") || alert.displayedMessage.startsWith("http:")) {
 	        		ImageCache.downloadImageFromInternet(alert.displayedMessage, "Alerts " + EnumChatFormatting.DARK_AQUA + "('" + alert.triggerMessage + "')");
 	        	}else {
-	        		ImageCache.findImageFromFiles(alert.displayedMessage, "Alerts " + EnumChatFormatting.DARK_AQUA + "('" + alert.triggerMessage + "')");
+	        		ImageCache.downloadImageFromFile(alert.displayedMessage, "Alerts " + EnumChatFormatting.DARK_AQUA + "('" + alert.triggerMessage + "')");
 	        	}
 	        }
+	        
 	        // Return the texture from the cache
 	        BufferedImage buff = ImageCache.bufferedTextureCache.getOrDefault(alert.displayedMessage, null);
 	        
 	        if(buff != null) {
 	        	ResourceLocation location = ImageCache.resourceLocationCache.getOrDefault(buff, null);
-		        ResourceLocation soundLocation = new ResourceLocation("minecraft", "random.anvil_land");
-	            Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.create(soundLocation));
+	        	SoundsHandler.playSound(alert.sound, alert.volume, alert.pitch);
 	            
 	            // adds alert to rendering queue so it can render
 	            if(!renderingQueue.contains(new AlertRenderInfo(alert.displayedMessage, alert.time, System.currentTimeMillis(), location, buff, alert.position, alert.scale))) {
 	            	renderingQueue.add(new AlertRenderInfo(alert.displayedMessage, alert.time, System.currentTimeMillis(), location, buff, alert.position, alert.scale));
 	            }
 	        }else {
-	        	DisplayCustomAlerts("Alert is still downloading...", 3000, 0, new int[] {50, 50}, 2);
+	        	DisplayCustomAlert("Alert is still downloading...", 3000, new Float[] {50f, 50f}, 2);
 	        }
 	    }
 	    
@@ -314,13 +358,13 @@ public class Alerts extends GuiScreen {
 	    	List<String> paths = new ArrayList();
 	    	
 	    	for (Alert alert : alertsList) {
-				if((alert.displayedMessage.endsWith(".png") || alert.displayedMessage.endsWith(".jpg") || alert.displayedMessage.endsWith(".jpeg")) && (alert.displayedMessage.contains("/") || alert.displayedMessage.contains("\\"))) {
+				if(isImage(alert.displayedMessage)) {
 					paths.add(alert.displayedMessage);
 					if(!ImageCache.bufferedTextureCache.containsKey(alert.displayedMessage)) {
-						if(alert.displayedMessage.contains("https://")) {
+						if(alert.displayedMessage.startsWith("https:") || alert.displayedMessage.startsWith("http:")) {
 							ImageCache.downloadImageFromInternet(alert.displayedMessage, "Alerts " + EnumChatFormatting.DARK_AQUA + "('" + alert.triggerMessage + "')");
 			        	}else {
-			        		ImageCache.findImageFromFiles(alert.displayedMessage, "Alerts " + EnumChatFormatting.DARK_AQUA + "('" + alert.triggerMessage + "')");
+			        		ImageCache.downloadImageFromFile(alert.displayedMessage, "Alerts " + EnumChatFormatting.DARK_AQUA + "('" + alert.triggerMessage + "')");
 			        	}
 					}
 				}
@@ -339,15 +383,15 @@ public class Alerts extends GuiScreen {
 	    	}
 	    }
 	    
-	    public static void editAlertPositionAndScale(int[] position, float scale, int i, List<AlertElement> alerts) {
+	    public static void editAlertPositionAndScale(Float[] position, float scale, int i, List<AlertElement> alerts) {
 	    	String alert = alerts.get(i).display.getText();
 	    	
-    		if((alert.endsWith(".png") || alert.endsWith(".jpg") || alert.endsWith(".jpeg")) && (alert.contains("/") || alert.contains("\\"))) {
+    		if(isImage(alert)) {
     			if(!ImageCache.bufferedTextureCache.containsKey(alert)) {
-					if(alert.contains("https://")) {
+					if(alert.startsWith("https:") || alert.startsWith("http:")) {
 						ImageCache.downloadImageFromInternet(alert, "Alerts " + EnumChatFormatting.DARK_AQUA + "('" + "edit" + "')");
 		        	}else {
-		        		ImageCache.findImageFromFiles(alert, "Alerts " + EnumChatFormatting.DARK_AQUA + "(" + "edit" + ")");
+		        		ImageCache.downloadImageFromFile(alert, "Alerts " + EnumChatFormatting.DARK_AQUA + "(" + "edit" + ")");
 		        	}
     			}
 			}
@@ -371,4 +415,12 @@ public class Alerts extends GuiScreen {
 
 	    }
 	    
+	    
+	    private static boolean isImage(String alert) {
+	    	if((alert.contains(".png") || alert.contains(".jpg") || alert.contains(".jpeg") || alert.contains(".avif")) && (alert.contains("/") || alert.contains("\\"))) {
+	    		return true;
+	    	}
+	    	
+	    	return false;
+	    }
 }

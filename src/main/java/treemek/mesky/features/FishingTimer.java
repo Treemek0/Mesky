@@ -33,13 +33,14 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import treemek.mesky.Reference;
 import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.handlers.RenderHandler;
+import treemek.mesky.utils.ColorUtils;
 import treemek.mesky.utils.Locations;
 
 public class FishingTimer extends GuiScreen{
 	
 	// this shit is also used in AutoFish so if changing change there also
 	public static boolean isFishing = false;
-	public static boolean isInWater = false;
+	public static boolean isInLiquid = false;
     public static EntityFishHook fishingHook = null;
     private float fishingTimer = 0;
 
@@ -102,20 +103,20 @@ public class FishingTimer extends GuiScreen{
                     // No bobber = no fishing
                     isFishing = false;
                     fishingHook = null;
-                    isInWater = false;
+                    isInLiquid = false;
                 }else{
                 	// Yes Bobber = yes fishing (updating timer)
                 	
                 	if(fishingHook.caughtEntity != null && !(fishingHook.caughtEntity instanceof EntityArmorStand) && fishingHook.caughtEntity instanceof EntityLivingBase) {
-                		isInWater = false;
+                		isInLiquid = false;
                 	}else {
                 		AxisAlignedBB boundingBox = fishingHook.getEntityBoundingBox();
 
                 		if (Minecraft.getMinecraft().theWorld.isAABBInMaterial(boundingBox, Material.water) || Minecraft.getMinecraft().theWorld.isAABBInMaterial(boundingBox, Material.lava))
                         {
-                            isInWater = true;
+                            isInLiquid = true;
                         }else {
-                        	isInWater = false;
+                        	isInLiquid = false;
                         }
                 	}
                 	
@@ -132,10 +133,11 @@ public class FishingTimer extends GuiScreen{
     	if (fishingHook != null && SettingsConfig.FishingTimerIs3d.isOn && SettingsConfig.FishingTimer.isOn) {
     		Minecraft mc = Minecraft.getMinecraft();
 		    FontRenderer fontRenderer = mc.fontRendererObj;
-		      
+		    
 		    String timerText = String.format(java.util.Locale.US, "%.1f", fishingTimer);
-		    RenderHandler.draw3DStringWithShadow(fishingHook.posX, fishingHook.posY + 0.6f, fishingHook.posZ, timerText, 0xbfbfbf, 0xbb000000, event.partialTicks, 2);
-      }
+		    RenderHandler.draw3DStringWithShadow(fishingHook.posX, fishingHook.posY + SettingsConfig.FishingTimer3dY.number, fishingHook.posZ, timerText, ColorUtils.getColorInt(SettingsConfig.FishingTimer3dColor.text), ColorUtils.rgbToArgb(ColorUtils.getColorInt(SettingsConfig.FishingTimer3dBackgroundColor.text), 0xbb), event.partialTicks, SettingsConfig.FishingTimer3dScale.number.floatValue());
+		    if(SettingsConfig.FishingTimer3dRenderImage.isOn) RenderHandler.draw3DImage(fishingHook.posX, fishingHook.posY + SettingsConfig.FishingTimer3dY.number + (0.15f*SettingsConfig.FishingTimer3dScale.number), fishingHook.posZ, 0, 0, SettingsConfig.FishingTimer3dScale.number * 0.695f / 4, SettingsConfig.FishingTimer3dScale.number/4, new ResourceLocation(Reference.MODID, "textures/bobber.png"), 0xFFFFFF, true, event.partialTicks);
+    	}
     }
     
     
@@ -152,7 +154,8 @@ public class FishingTimer extends GuiScreen{
 
         float x = resolution.getScaledWidth() * (SettingsConfig.FishingTimer.position[0]/100);
         float y = resolution.getScaledHeight() * (SettingsConfig.FishingTimer.position[1]/100);
-        Float scale = SettingsConfig.FishingTimer.scale;
+        float scale = (float) (SettingsConfig.FishingTimer.scale * RenderHandler.getResolutionScale());
+        
         
         String timerText = String.format(java.util.Locale.US, "%.1f", timer) + "s";
         float textY = y + ((8.5f*scale) - (Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT * scale)/2);

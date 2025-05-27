@@ -19,8 +19,8 @@ public class EditButton extends GuiButton{
 	
 	@Override
 	public void drawButton(Minecraft mc, int mouseX, int mouseY) {
-		
 		 this.hovered = mouseX >= this.xPosition && mouseY >= this.yPosition && mouseX < this.xPosition + this.width && mouseY < this.yPosition + this.height;
+		 
 		 if(this.enabled) {
 	         if(this.hovered) {
 	        	 mc.renderEngine.bindTexture(delete_hovered);

@@ -25,7 +25,7 @@ public class ColorBrightnessSlider extends GuiButton{
 	}
 	
 	private boolean clicked;
-	ResourceLocation slider = new ResourceLocation(Reference.MODID, "gui/scrollbar.png");
+	ResourceLocation slider = new ResourceLocation(Reference.MODID, "gui/sliderHand.png");
 	ResourceLocation backgroundSlider = new ResourceLocation(Reference.MODID, "gui/brightnessSlider.png");
 	
 	public double getValue() {
@@ -44,10 +44,10 @@ public class ColorBrightnessSlider extends GuiButton{
 		mc.renderEngine.bindTexture(backgroundSlider);
 		drawModalRectWithCustomSizedTexture(xPosition, yPosition, 0, 0, width, height, width, height);
 		
-		GL11.glColor3f(1, 0, 0);
+		GL11.glColor3f(1, 1, 1);
 		mc.renderEngine.bindTexture(slider);
 
-		int sliderWidth = Math.max(1, width/25);
+		int sliderWidth = Math.min(height/3, width/25);
 		float sliderPercent = (float) ((current-min)/(max-min));
 		int sliderPosition = (int) (xPosition + (sliderPercent * (width - sliderWidth)));
 		drawModalRectWithCustomSizedTexture(sliderPosition, yPosition, 0, 0, sliderWidth, height, sliderWidth, height);
@@ -75,7 +75,7 @@ public class ColorBrightnessSlider extends GuiButton{
 		clicked = false;
     }
 	
-	public boolean mouseClickMoved(int mouseX, int mouseY, int clickedMouseButton, long timeSinceLastClick) {
+	public boolean mouseClickMoved(int mouseX, int mouseY) {
 		if(clicked) {
 			float percent = (float)(mouseX - xPosition)/width;
 			double rawValue = Utils.getPrecentAverage((float)min, (float)max, percent);

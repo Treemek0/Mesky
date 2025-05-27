@@ -11,6 +11,8 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -32,60 +34,70 @@ import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.handlers.gui.alerts.AlertElement;
 import treemek.mesky.handlers.gui.elements.buttons.FileSelectorButton;
 import treemek.mesky.handlers.gui.elements.textFields.SettingTextField;
+import treemek.mesky.handlers.gui.elements.textFields.TextField;
 import treemek.mesky.utils.ImageCache;
 import treemek.mesky.utils.Utils;
 
 public class CustomCapeGui  extends GuiScreen{
 	
-	GuiTextField folderPathField;
+	TextField folderPathField;
 	SettingTextField animationFreqField;
 	
+	int amounthOfAnimations = 0;
+	private int inputHeight;
+	
 	public CustomCapeGui() {
-		ImageCache.removeImageFolderFromImageCache(CosmeticHandler.CustomCapeTexture.text); // remove all images from cache on opening gui
+		ImageCache.removeFolderImagesFromCache(CosmeticHandler.CustomCapeTexture.text); // remove all images from cache on opening gui
 	}
 	
 	@Override
 	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
 		drawRect(0, 0, width, height, new Color(33, 33, 33,255).getRGB());
 		
-		double scale = 3;
+		float scale = (float) ((height*0.1f) / mc.fontRendererObj.FONT_HEIGHT) / 2;
+
         int textLength = mc.fontRendererObj.getStringWidth("Custom Cape");
         int titleX = (int) ((width / 2) - (textLength * scale / 2));
-        int titleY = (int) ((height / 4) / scale);
+        int titleY = (int) (height * 0.05f);
 
         RenderHandler.drawText("Custom Cape", titleX, titleY, scale, true, 0x3e91b5);
 		
-        int fontHeight = fontRendererObj.FONT_HEIGHT;
-        
-        int folderPathWidth = fontRendererObj.getStringWidth("Folder path");
-        RenderHandler.drawText("Folder path", width/2 - (width/2)/2 - folderPathWidth - 5, height/2 + fontHeight/2, 1, true, 0xFFFFFFFF);
+        float scaleForTexts = (float) RenderHandler.getTextScale(inputHeight/2);
+        float fontHeight = fontRendererObj.FONT_HEIGHT * scaleForTexts;
+
+        RenderHandler.drawText("Folder path", 2, height/4 - fontHeight - 1, scaleForTexts, true, 0xFFFFFFFF);
 		folderPathField.drawTextBox();
 		
-		
-		
-		int AnimationFreqWidth = fontRendererObj.getStringWidth("Animation frequency");
-		RenderHandler.drawText("Animation frequency", width/2 - (width/2)/2 - AnimationFreqWidth - 5, height/2 + 30 + fontHeight/2, 1, true, 0xFFFFFFFF);
-		animationFreqField.drawTextField(width/2 - (width/2)/2, height/2 + 30);
-		
+		if(amounthOfAnimations > 1) {
+			RenderHandler.drawText("Animation frequency [Every" + EnumChatFormatting.AQUA + " X " + EnumChatFormatting.WHITE + "render ticks]" + EnumChatFormatting.GRAY + " (Found " + amounthOfAnimations + " animations)", 2, (int) (height/4 + fontHeight + inputHeight * 2f) - fontHeight - 1, scaleForTexts, true, 0xFFFFFFFF);
+			animationFreqField.drawTextField(1, (int) (height/4 + fontHeight + inputHeight * 2f));
+		}else {
+			RenderHandler.drawText(EnumChatFormatting.GRAY + " (Found " + amounthOfAnimations + " animations)", 2, (int) (height/4 + fontHeight + inputHeight * 2f) - fontHeight - 1, scaleForTexts, true, 0xFFFFFFFF);
+		}
 		
 		super.drawScreen(mouseX, mouseY, partialTicks);
 	}
 	
 	@Override
 	public void initGui() {
-		int pathsX = width/2 - (width/2)/2;
-		
 		if(CosmeticHandler.CustomCapeTexture.text.isEmpty()) {
 			CosmeticHandler.CustomCapeTexture.text = Mesky.configDirectory;
 		}
 		
-		folderPathField = new GuiTextField(1, fontRendererObj, pathsX, height/2, width/2, 20);
+		inputHeight = ((height / 25) < 12)?12:(height / 25);
+		
+		folderPathField = new TextField(1, 1, height/4, width/2, inputHeight);
 		folderPathField.setMaxStringLength(256);
 		folderPathField.setText(CosmeticHandler.CustomCapeTexture.text);
 		
-		this.buttonList.add(new FileSelectorButton(0, pathsX + width/2 + 10, height/2, 20, folderPathField));
+		FileSelectorButton fileSelector = new FileSelectorButton(0, 1 + width/2 + 11, height/4, inputHeight, folderPathField);
+		fileSelector.setOnlyDirectories(true);
+		fileSelector.setFilter(new ArrayList<>(Arrays.asList(".png", ".jpg", ".jpeg")));
 		
-		animationFreqField = new SettingTextField(2, "", width/5, 20, CosmeticHandler.CustomCapeFrequency, 16, true, false);
+		this.buttonList.add(fileSelector);
+		
+		amounthOfAnimations = getAmountOfAnimationsInFolder(getCapePath());
+		animationFreqField = new SettingTextField(2, "", width/8, inputHeight, CosmeticHandler.CustomCapeFrequency, 16, true, false);
 		super.initGui();
 	}
 	
@@ -94,6 +106,8 @@ public class CustomCapeGui  extends GuiScreen{
 		if(folderPathField.isFocused()) {
 			folderPathField.textboxKeyTyped(typedChar, keyCode);
 			CosmeticHandler.CustomCapeTexture.text = folderPathField.getText();
+			
+			amounthOfAnimations = getAmountOfAnimationsInFolder(getCapePath());
 		}
 		
 		if(animationFreqField.isFocused()) {
@@ -137,7 +151,7 @@ public class CustomCapeGui  extends GuiScreen{
             for (Path entry : stream) {
             	if (pattern.matcher(entry.getFileName().toString()).matches()) {
             		a++;
-            		findImageFromFilesWithoutFormatSaving(entry.toString(), errorWhere);
+            		downloadImageFromFilesWithoutFormatSaving(entry.toString(), errorWhere);
             	}
             }
             
@@ -156,7 +170,7 @@ public class CustomCapeGui  extends GuiScreen{
         return filePath.substring(0, lastDotIndex);
     }
 
-	private static void findImageFromFilesWithoutFormatSaving(final String path, final String errorWhere) {
+	private static void downloadImageFromFilesWithoutFormatSaving(final String path, final String errorWhere) {
     	new Thread(new Runnable() {
             private BufferedImage bufferedimage;
             private ResourceLocation resourceLocation;
@@ -171,7 +185,7 @@ public class CustomCapeGui  extends GuiScreen{
 		            Minecraft.getMinecraft().addScheduledTask(new Runnable() {
 		                public void run() {
 		                    try {
-		                    	resourceLocation = Minecraft.getMinecraft().getTextureManager().getDynamicTextureLocation("custom_image", new DynamicTexture(bufferedimage));
+		                    	resourceLocation = Minecraft.getMinecraft().getTextureManager().getDynamicTextureLocation(path, new DynamicTexture(bufferedimage));
 		                    	ImageCache.bufferedTextureCache.put(removeFileExtension(path), bufferedimage);
 		                    	ImageCache.resourceLocationCache.put(bufferedimage, resourceLocation);
 		                    }catch (Exception e) {
@@ -182,7 +196,7 @@ public class CustomCapeGui  extends GuiScreen{
 		                }
 		            });
 		        } catch (Exception e) {
-		        	Utils.writeMinecraftMessage(EnumChatFormatting.BOLD.AQUA + "[Mesky]" + EnumChatFormatting.WHITE + " in " + EnumChatFormatting.AQUA + errorWhere + EnumChatFormatting.WHITE + ": " + EnumChatFormatting.BOLD.RED + e.getLocalizedMessage());
+		        	Utils.addMinecraftMessage(EnumChatFormatting.BOLD.AQUA + "[Mesky]" + EnumChatFormatting.WHITE + " in " + EnumChatFormatting.AQUA + errorWhere + EnumChatFormatting.WHITE + ": " + EnumChatFormatting.BOLD.RED + e.getLocalizedMessage());
 		        }
             }
     	}).start();
@@ -190,6 +204,13 @@ public class CustomCapeGui  extends GuiScreen{
 
 	@Override
     public void onGuiClosed() {
+		CosmeticHandler.CustomCapeTexture.text = getCapePath();
+		iterateImagesInFolder(CosmeticHandler.CustomCapeTexture.text, "CustomCape");
+		ConfigHandler.saveSettings();
+		GuiHandler.GuiType = new CosmeticsGui();
+	}
+	
+	public String getCapePath() {
 		String folderPath = folderPathField.getText();
 
 		if(folderPath.endsWith(".png") || folderPath.endsWith(".jpg") || folderPath.endsWith(".jpeg")) {
@@ -207,11 +228,23 @@ public class CustomCapeGui  extends GuiScreen{
 			folderPath = folderPath.replace("/", "\\");
 		}
 		
-		
-		
-		CosmeticHandler.CustomCapeTexture.text = folderPath;
-		iterateImagesInFolder(CosmeticHandler.CustomCapeTexture.text, "CustomCape");
-		ConfigHandler.saveSettings();
-		GuiHandler.GuiType = new CosmeticsGui();
+		return folderPath;
+	}
+	
+	public int getAmountOfAnimationsInFolder(String folderPath) {
+		Path folder = Paths.get(folderPath);
+        Pattern pattern = Pattern.compile("cape\\d+\\.(png|jpg|jpeg)");
+        int a = 0;
+        
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(folder, "*.{png,jpg,jpeg}")) {
+            for (Path entry : stream) {
+            	if (pattern.matcher(entry.getFileName().toString()).matches()) {
+            		a++;
+            	}
+            }
+        } catch (IOException e) {
+        }
+        
+        return a;
 	}
 }

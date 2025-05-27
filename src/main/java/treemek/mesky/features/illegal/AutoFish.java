@@ -10,6 +10,8 @@ import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.boss.EntityWither;
+import net.minecraft.entity.boss.IBossDisplayData;
 import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.item.EntityXPOrb;
@@ -18,10 +20,12 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.entity.projectile.EntityFishHook;
 import net.minecraft.init.Items;
 import net.minecraft.item.EnumAction;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.IChatComponent;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StringUtils;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
@@ -33,10 +37,13 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import treemek.mesky.Reference;
 import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.features.FishingTimer;
 import treemek.mesky.utils.Alerts;
 import treemek.mesky.utils.Locations;
+import treemek.mesky.utils.Locations.Location;
+import treemek.mesky.utils.MovementUtils;
 import treemek.mesky.utils.RotationUtils;
 import treemek.mesky.utils.Utils;
 
@@ -45,7 +52,7 @@ public class AutoFish {
 	int rightClick = Minecraft.getMinecraft().gameSettings.keyBindUseItem.getKeyCode();
 	int leftClick = Minecraft.getMinecraft().gameSettings.keyBindAttack.getKeyCode();
 	int shift = Minecraft.getMinecraft().gameSettings.keyBindSneak.getKeyCode();
-	float[] lastFishingHeadRotation = null;
+	BlockPos fishingPlace;
 	BlockPos lastBlockPos;
 	BlockPos hookPos;
 	
@@ -63,6 +70,11 @@ public class AutoFish {
 	private String lastMessage = "";
     private static final long UPDATE_INTERVAL = 2500;
 	
+	int fishedNothing = 0;
+	Entity fishedItem;
+	
+	boolean detectSeaCreature = false;
+    
     // make entity killing from entitylastjoin event in detection (not that important but yk)
     
     // if blocked then casting hook will unblock it
@@ -70,23 +82,43 @@ public class AutoFish {
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (event.entityLiving == Minecraft.getMinecraft().thePlayer && !FishingTimer.isFishing) {
             if (event.action == PlayerInteractEvent.Action.RIGHT_CLICK_AIR || event.action == PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK) {
-                if (Minecraft.getMinecraft().thePlayer.getHeldItem() != null && Minecraft.getMinecraft().thePlayer.getHeldItem().getItem() == Items.fishing_rod) {
+                if (isFishingRod(Minecraft.getMinecraft().thePlayer.getHeldItem())) {
+                	EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
+                	
                     if (blokEverything) {
-                    	if(!Locations.getRegion().contains("Carnival")) {
+                    	if(!Locations.getRegion().contains("Carnival") && Locations.currentLocation != Location.KUUDRA && Locations.currentLocation != Location.CATACOMBS) {
                     		blokEverything = false;
                     	}
                     	
-                        lastBlockPos = Minecraft.getMinecraft().thePlayer.getPosition();
+                        lastBlockPos = player.getPosition();
                     }else {
-                    	if(Locations.getRegion().contains("Carnival")) {
+                    	if(Locations.getRegion().contains("Carnival") || Locations.currentLocation == Location.KUUDRA || Locations.currentLocation == Location.CATACOMBS) {
                     		blokEverything = true;
                     	}
                     }
                     
-                    originalRotation = new float[] {Minecraft.getMinecraft().thePlayer.rotationYaw, Minecraft.getMinecraft().thePlayer.rotationPitch};
+                    if(!MovementUtils.isCurrentlyMoving()) fishingPlace = Utils.playerPosition();
+                    originalRotation = new float[] {player.rotationYaw, player.rotationPitch};
                 }
             }
         }
+    }
+    
+    float previousHealth = 20;
+    
+    private boolean isFishingRod(ItemStack item) {
+    	 if (item.getItem() != null && item.getItem() == Items.fishing_rod) {
+	        	 String itemId = Utils.getSkyblockId(item);
+	        	 
+	        	 if(itemId != null) { 
+	        		 if(!itemId.equals("SOUL_WHIP") && !itemId.equals("FLAMING_FLAY")) {
+	        			 return true;
+	        		 }
+	        	 }
+
+    	 }
+    	
+    	return false;
     }
     
 	@SideOnly(Side.CLIENT)
@@ -101,15 +133,39 @@ public class AutoFish {
 			
 				if(!JawbusDetector.detectedJawbuses.isEmpty()) { // blok autofish if jawbus
 					blokEverything = true;
+					MovementUtils.stopMoving();
             		if(fishingCycle != null && fishingCycle.isAlive())  fishingCycle.interrupt();
             		RotationUtils.clearAllRotations();
 				}
 				
-				if(Minecraft.getMinecraft().thePlayer.hurtTime > 0 && attacker == null && !blokEverything) { // if missed sea creature then it will attack us and we can detect that
-					if(killingCreatures) return; // is already killing
-					attacker = detectAttackerSeaCreature();
-					if(attacker != null) killAttackingSeaCreature(attacker);
-				}
+				float currentHealth = Minecraft.getMinecraft().thePlayer.getHealth();
+			    if (previousHealth > currentHealth && SettingsConfig.KillSeaCreatures.isOn) {
+			    	 previousHealth = currentHealth;
+			    	 
+			    	 if(attacker == null && !blokEverything) {
+						Utils.debug("lost hearts");
+						if(Location.checkTabLocation() == Location.CRIMSON_ISLE){
+							if(Minecraft.getMinecraft().thePlayer.isInLava()) {
+								int number_of_magmaLords = 0;
+								if(Utils.getSkyblockId(Minecraft.getMinecraft().thePlayer.getCurrentArmor(0)).equals("MAGMA_LORD_BOOTS")) number_of_magmaLords++; 
+								if(Utils.getSkyblockId(Minecraft.getMinecraft().thePlayer.getCurrentArmor(1)).equals("MAGMA_LORD_LEGGINGS")) number_of_magmaLords++; 
+								if(Utils.getSkyblockId(Minecraft.getMinecraft().thePlayer.getCurrentArmor(2)).equals("MAGMA_LORD_CHESTPLATE")) number_of_magmaLords++;
+								if(Utils.getSkyblockId(Minecraft.getMinecraft().thePlayer.getCurrentArmor(3)).equals("MAGMA_LORD_HELMET")) number_of_magmaLords++;
+								
+								if(number_of_magmaLords < 2) {
+									return; // probably from fire (even if not who fishes in lava without resistance)
+								}
+							}
+						} // im not checking other island for burning because who tf doesnt have fire talisman and i dont have things to check accesory bag
+						
+						Utils.debug("player isnt in lava or is immune");
+						if(killingCreatures) return; // is already killing
+						attacker = detectAttackerSeaCreature();
+						if(attacker != null) killAttackingSeaCreature(attacker);
+					}
+			    }else {
+			    	previousHealth = currentHealth;
+			    }
 			}
 		}
 		
@@ -122,12 +178,13 @@ public class AutoFish {
             	double distanceSq = lastBlockPos.distanceSq(player.posX, lastBlockPos.getY(), player.posZ);
             	double distance = Math.sqrt(distanceSq);
             	
-            	if(distance > 10f) {
+            	if(distance > 10f && !MovementUtils.isCurrentlyMoving()) {
             		blokEverything = true;
+            		MovementUtils.stopMoving();
             		if(fishingCycle != null && fishingCycle.isAlive())  fishingCycle.interrupt();
             		RotationUtils.clearAllRotations();
-            		if(FishingTimer.fishingHook != null) {
-            			Alerts.DisplayCustomAlerts("Stopped AutoFish (distance moved > 10)", 1000, 0, new int[] {50, 50}, 2f);
+            		if(FishingTimer.fishingHook != null && SettingsConfig.AutoFish.isOn) {
+            			Alerts.DisplayCustomAlert("Stopped AutoFish (distance moved > 10)", 1000, new Float[] {50f, 50f}, 2f);
             		}
             	}
             }
@@ -146,25 +203,50 @@ public class AutoFish {
 	@SubscribeEvent
     public void onPacketReceived(PlaySoundEvent event) {
         if (Minecraft.getMinecraft().theWorld != null) {
-        	if(FishingTimer.isFishing && FishingTimer.isInWater && SettingsConfig.AutoFish.isOn) {
-        		if(FishingTimer.fishingHook.ticksExisted < 10) return;
+        	if(FishingTimer.isFishing && FishingTimer.isInLiquid && SettingsConfig.AutoFish.isOn) {
 	            if (event.name.equals("game.player.swim.splash")) {
+	            	if(FishingTimer.fishingHook.ticksExisted < 10) return;
 	            	
-	                if(lastMessage.contains("swims back beneath the lava...") && !lastMessage.contains(":")){ // golden fish
-	                	return;
-	                }
+	            	if(event.sound.getVolume() != 0.25f) return;
 	            	
+	            	float[] soundPosition = new float[] {Math.round(event.sound.getXPosF()*10)/10f, Math.round(event.sound.getYPosF()*10)/10f, Math.round(event.sound.getZPosF()*10)/10f};
 	            	
-	            	fishingRodSlot = Minecraft.getMinecraft().thePlayer.inventory.currentItem;
-					readyToFish();
-					Alerts.DisplayCustomAlerts("AutoFish", 500, 0, new int[] {50, 20}, 2f);
+	            	Utils.debug("Splash distance: " + (soundPosition[0] - Math.round(FishingTimer.fishingHook.posX*10)/10f) + " " + (soundPosition[1] - Math.round(FishingTimer.fishingHook.posY*10)/10f) + " " + (soundPosition[2] - Math.round(FishingTimer.fishingHook.posZ*10)/10f));
+	            	
+	            	if(soundPosition[0] - Math.round(FishingTimer.fishingHook.posX*10)/10f <= 0.25f) {
+	            		if(soundPosition[1] - Math.round(FishingTimer.fishingHook.posY*10)/10f <= 0.25f) {
+	            			if(soundPosition[2] - Math.round(FishingTimer.fishingHook.posZ*10)/10f <= 0.25f) {
+				        		
+	            				boolean hasArmorStand = Minecraft.getMinecraft().theWorld.loadedEntityList.stream().anyMatch(e -> e.getCustomNameTag().contains("!!!") || e.getCustomNameTag().contains("0.1"));
+
+            					if(!hasArmorStand) return;
+	            				
+				                if(lastMessage.contains("swims back beneath the lava...") && !lastMessage.contains(":")){ // golden fish
+				                	Utils.debug("Golden fish splash");
+				                	lastMessage = "";
+				                	return;
+				                }
+
+				                if(isFishingRod(Minecraft.getMinecraft().thePlayer.getCurrentEquippedItem())) {
+				                	fishingRodSlot = Minecraft.getMinecraft().thePlayer.inventory.currentItem;
+				                }
+				                
+								readyToFish();
+								Alerts.DisplayCustomAlert("AutoFish", 500, new Float[] {50f, 20f}, 2f);
+			                }
+		            	}
+	            	}
 	            }
         	}
         }
 	}
 	
-	
-	private void antyAfk() {
+	public void antyAfk() {
+		if(!SettingsConfig.AutoFishAntyAfk.isOn) {
+			Alerts.DisplayCustomAlert("AFK", 3000, 1, new Float[] {50f, 50f}, 2, new ResourceLocation(Reference.MODID, "pululu"), 1);
+			return;
+		}
+		
 		if(fishingCycle != null && fishingCycle.isAlive()) fishingCycle.interrupt(); 
 		if(antyAfkCycle != null && antyAfkCycle.isAlive()) antyAfkCycle.interrupt(); 
 		
@@ -174,37 +256,47 @@ public class AutoFish {
 				if(FishingTimer.isFishing) {
 					KeyBinding.onTick(rightClick);
 				}
-				Alerts.DisplayCustomAlerts("AntyAFK", 7000, 0, new int[] {50, 40}, 2f);
-				long delay = 150 + Math.round((new Random().nextFloat()*100));
+				
+				long delay = 200;
 				int randomInt = 15 + new Random().nextInt(11); // 15 - 25
 				
-				float yawControlPoint = Utils.getRandomizedMinusOrPlus(80 + new Random().nextInt(10));
-				float pitch = -120 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10));
-				RotationUtils.rotateBezierCurveTo(0, pitch, yawControlPoint, -70, 1.25f, true);
-				RotationUtils.rotateBezierCurveTo(0, -pitch, -yawControlPoint, 70, 1.25f, true);
-				boolean isShifting = false;
+				float pitch = -35 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10));
+				float rotationTime = (((delay+50) * randomInt) + 10);
+				Alerts.DisplayCustomAlert("AntyAFK (" + rotationTime/1000 + "s)", (int) rotationTime, new Float[] {50f, 40f}, 2f);
+				RotationUtils.rotateBezierCurveTo(originalRotation[0]+180, -pitch, originalRotation[0]+90, -(pitch+5), rotationTime/3000, true);
+				RotationUtils.rotateBezierCurveTo(originalRotation[0], originalRotation[1], originalRotation[0]-90, originalRotation[1]+5, rotationTime/3000, true);
+				
+				RotationUtils.addTask(() -> {
+					Utils.debug("blokEverything is" + blokEverything);
+					if(!blokEverything) {
+						if(fishingCycle != null && fishingCycle.isAlive()) fishingCycle.interrupt(); 
 
+						fishingCycle = new Thread(() -> {
+							throwNewHook();
+						});
+						
+						fishingCycle.start();
+					}
+				});
+				
 				for (int i = 0; i < randomInt; i++) {
-					Thread.sleep(delay + Math.round((new Random().nextFloat()*10)));
-		            KeyBinding.onTick(leftClick);
-		            if(isShifting) {
-		            	KeyBinding.setKeyBindState(shift, false);
-		            	isShifting = false;
-		            }else {
-		            	KeyBinding.setKeyBindState(shift, true);
-		            	isShifting = true;
-		            }
-		            
-		            if(blokEverything) {
-						KeyBinding.setKeyBindState(shift, false);
+					Thread.sleep(delay + Math.round((new Random().nextFloat()*50)));
+					
+					if(RotationUtils.isListEmpty()) {
 						return;
 					}
-				}
-				
-				RotationUtils.clearAllRotations();
-				KeyBinding.setKeyBindState(shift, false);
-				if(!blokEverything) {
-			    	throwNewHook();
+					
+					if (Thread.currentThread().isInterrupted()) {
+						RotationUtils.clearAllRotations();
+						Utils.debug("Reset all rotations - antyafk");
+						return;
+					}
+					
+		            KeyBinding.onTick(leftClick);
+		            
+		            if(blokEverything) {
+						return;
+					}
 				}
 			} catch (InterruptedException e) {
                 e.printStackTrace();
@@ -226,7 +318,9 @@ public class AutoFish {
         		long endTime = (long)Math.round(randomTime * 100);
         		Thread.sleep(endTime);
         		
-        		if(FishingTimer.fishingHook != null && FishingTimer.isInWater) {
+        		if (Thread.currentThread().isInterrupted()) return;
+        		
+        		if(FishingTimer.fishingHook != null && FishingTimer.isInLiquid) {
         			originalRotation = new float[] {Minecraft.getMinecraft().thePlayer.rotationYaw, Minecraft.getMinecraft().thePlayer.rotationPitch};
 				}
         		
@@ -235,7 +329,37 @@ public class AutoFish {
         			hookPos = FishingTimer.fishingHook.getPosition();
         			KeyBinding.onTick(rightClick);
         		}
-                killSeaCreature();
+        		
+                detectSeaCreature = true;
+                new Thread(() -> {
+                	try {
+						Thread.sleep(500);
+						if(FishingTimer.isFishing) Thread.sleep(500); // if bad internet (1000ms)
+						if(FishingTimer.isFishing) Thread.sleep(500); // (1500ms)
+						if(FishingTimer.isFishing) Thread.sleep(500); // (2000ms)
+						
+						if(detectSeaCreature) {
+							if((!lastMessage.contains("GOOD CATCH!") && !lastMessage.contains("GREAT CATCH!") && !lastMessage.contains("TROPHY FISH!")) || lastMessage.contains(":")) {
+								fishedNothing++;
+								Utils.debug("fishedItem == null, ++");
+							}else {
+								Utils.debug("fishedItem == null, but got chat messsage");;
+								lastMessage = "";
+								fishedNothing = 0;
+							}
+							
+							detectSeaCreature = false;
+							if(fishedNothing >= 2) {
+								fishedNothing = 0;
+								antyAfk();
+							}else {
+								throwNewHook();
+							}
+						}
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+                }).start();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -246,8 +370,7 @@ public class AutoFish {
 	
 	
 	// something isnt working (idk what because i didnt debuged it)
-	
-	public void killSeaCreature() {
+	public void killSeaCreature(Entity seaCreature) {
         try {
 			if(SettingsConfig.KillSeaCreatures.isOn && !blokEverything) {
 				InventoryPlayer inventory = Minecraft.getMinecraft().thePlayer.inventory;
@@ -256,29 +379,29 @@ public class AutoFish {
 	                if (item != null && item.getItem() == Items.iron_sword) {
 	                	List<String> itemLore = Utils.getItemLore(item);
 	                	
-	                	if(itemLore == null || itemLore.size() == 0) return; 
-	                	if(!Utils.containsWord(itemLore, "Wither Impact")) return;
-	                	
-	                	Thread.sleep(400);
-	                	
-	                	Entity seaCreature = detectNewSeaCreature();
+	                	if(itemLore == null || itemLore.size() == 0) continue; 
+	                	if(!Utils.containsWord(itemLore, "Wither Impact")) continue;
 	                	
 	                	if(seaCreature == null) {
 	                		throwNewHook();
 	                		return;
 	                	}
 	                	
+	                	Utils.debug(seaCreature.getClass() + " " + seaCreature.getName());
+	                	
+	                	if (Thread.currentThread().isInterrupted()) return;
+	                	
 	                	if(Minecraft.getMinecraft().thePlayer.rotationPitch < 88) {
 	                		RotationUtils.rotateCurveTo(0, RotationUtils.getNeededPitchFromMinecraftRotation(90), 0.1f, true);
 	                	}
 	                	
 	                	killingCreatures = true;
-	                	Alerts.DisplayCustomAlerts("Killing " + seaCreature.getName(), 1500, 0, new int[] {50, 20}, 2f);
+	                	if(seaCreature.getName().contains("Objective:")) return;
+	                	Alerts.DisplayCustomAlert("Killing " + seaCreature.getName(), 1500, new Float[] {50f, 20f}, 2f);
 	                	
 	                	Minecraft.getMinecraft().thePlayer.inventory.currentItem = i;
 	                	
 	                	Thread.sleep(150 + Math.round((new Random().nextFloat()*10)));
-	                	
 	                	
 	                	long delay = 120 + Math.round((new Random().nextFloat()/2*100));
 	                	
@@ -286,21 +409,25 @@ public class AutoFish {
 	                	
 	                	int antyWrongDetection = 0;
 	                	while(seaCreature.isEntityAlive() && antyWrongDetection < 20) {
-	                			if(Minecraft.getMinecraft().thePlayer.inventory.currentItem != i) { blokEverything = true; return; }
-	                			if(Minecraft.getMinecraft().thePlayer.rotationPitch > 88) {
-		                			if(seaCreature.getDistance(player.posX, player.posY, player.posZ) < 7) {
-		                				killingCreatures = true;
-		                				KeyBinding.onTick(rightClick);
-		                			}else {
-		                				killingCreatures = false;
-		                			}
+	                		if (Thread.currentThread().isInterrupted()) {
+	                			killingCreatures = false;
+	                			return;
+	                		}
+                			if(Minecraft.getMinecraft().thePlayer.inventory.currentItem != i) { killingCreatures = false; blokEverything = true; MovementUtils.stopMoving(); return; }
+                			if(Minecraft.getMinecraft().thePlayer.rotationPitch > 88) {
+	                			if(seaCreature.getDistance(player.posX, player.posY, player.posZ) < 7) {
+	                				killingCreatures = true;
+	                				KeyBinding.onTick(rightClick);
 	                			}else {
-	                				RotationUtils.clearAllRotations();
-	                				RotationUtils.rotateCurveTo(0, RotationUtils.getNeededPitchFromMinecraftRotation(90), 0.1f, true);
+	                				killingCreatures = false;
 	                			}
-	                			
-	                			Thread.sleep(delay + Math.round((new Random().nextFloat()*10)));
-	                			antyWrongDetection++;
+                			}else {
+                				RotationUtils.clearAllRotations();
+                				RotationUtils.rotateCurveTo(0, RotationUtils.getNeededPitchFromMinecraftRotation(90), 0.1f, true);
+                			}
+                			
+                			Thread.sleep(delay + Math.round((new Random().nextFloat()*10)));
+                			antyWrongDetection++;
 	        			}
 	                	
 	                	// because sometimes these small slimes dont die and i dont really want to make system for that lol
@@ -309,11 +436,12 @@ public class AutoFish {
             				Thread.sleep(delay + Math.round((new Random().nextFloat()*10)));
             			}
 
-	    				killingCreatures = false;
-	                	throwNewHook();
 	                    break;
 	                }
 	            }
+	            
+	            killingCreatures = false;
+            	throwNewHook();
 			}else {
 				throwNewHook();
 			}
@@ -327,10 +455,16 @@ public class AutoFish {
 	private void throwNewHook() {
 		try {
 			if(SettingsConfig.AutoThrowHook.isOn) {
+				if (Thread.currentThread().isInterrupted()) return;
+				if(Utils.playerPosition().distanceSq(fishingPlace) != 0) {
+					MovementUtils.quietlyMovePlayerToWithoutRotation(fishingPlace);
+				}
+				
 				if(Math.abs(Minecraft.getMinecraft().thePlayer.rotationYaw - originalRotation[0]) > 5 || Math.abs(Minecraft.getMinecraft().thePlayer.rotationPitch - originalRotation[1]) > 2) {
 					float noise = Utils.getRandomizedMinusOrPlus(new Random().nextFloat());
-					RotationUtils.rotateCurveTo(RotationUtils.getNeededYawFromMinecraftRotation(originalRotation[0] + noise*2), RotationUtils.getNeededPitchFromMinecraftRotation(originalRotation[1] + noise), 0.2f, true);
+					RotationUtils.rotateCurveTo(RotationUtils.getNeededYawFromMinecraftRotation(originalRotation[0] + noise), RotationUtils.getNeededPitchFromMinecraftRotation(originalRotation[1] + noise/2), 0.2f, true);
 				}
+
 				
 				Minecraft.getMinecraft().thePlayer.inventory.currentItem = fishingRodSlot;
 				
@@ -339,14 +473,16 @@ public class AutoFish {
 				
 				if(Minecraft.getMinecraft().thePlayer.inventory.currentItem != fishingRodSlot) {
 					blokEverything = true;
+					MovementUtils.stopMoving();
 					return;
 				}
 				
+				if (Thread.currentThread().isInterrupted()) return;
 				if(!FishingTimer.isFishing) {
-					Alerts.DisplayCustomAlerts("Auto hook", 1000, 0, new int[] {50, 20}, 2f);
+					Alerts.DisplayCustomAlert("Auto hook", 1000, new Float[] {50f, 20f}, 2f);
 					KeyBinding.onTick(rightClick);
 				}else {
-					Alerts.DisplayCustomAlerts("Bugged Auto hook", 1000, 0, new int[] {50, 20}, 2f);
+					Alerts.DisplayCustomAlert("Bugged Auto hook", 1000, new Float[] {50f, 20f}, 2f);
 					KeyBinding.onTick(rightClick);
 					Thread.sleep(500);
 					KeyBinding.onTick(rightClick);
@@ -354,9 +490,14 @@ public class AutoFish {
 				
 				
 				Thread.sleep(3500);
-				if(!FishingTimer.isInWater && FishingTimer.isFishing) {
-					Alerts.DisplayCustomAlerts("Hook blocked", 500, 0, new int[] {50, 20}, 2f);
-					RotationUtils.rotateStraightTo(0, -2, 0.1f, false);
+				if (Thread.currentThread().isInterrupted()) return;
+				if(!FishingTimer.isInLiquid && FishingTimer.isFishing) {
+					Alerts.DisplayCustomAlert("Hook blocked", 500, new Float[] {50f, 20f}, 2f);
+					
+					attacker = detectAttackerSeaCreature();
+					if(attacker != null) killAttackingSeaCreature(attacker);
+					
+					RotationUtils.rotateStraight(0, -2, 0.1f, false);
 					KeyBinding.onTick(rightClick);
 					Thread.sleep(500);
 					if(!FishingTimer.isFishing) {
@@ -369,82 +510,115 @@ public class AutoFish {
 		}
 		
 	}
-	
-	
-	int fishedNothing = 0;
-	Entity fishedItem;
-	public Entity detectNewSeaCreature() {
-		List<Entity> entities = Minecraft.getMinecraft().theWorld.loadedEntityList;
-		entities.sort(Comparator.comparingInt(entity -> entity.ticksExisted));
-		
-		EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
-		
-		for (int i = 0; i < entities.size(); i++) {
-			Entity entity = entities.get(i);
-			
-			if(entity.ticksExisted < 10) {
-				if(entity instanceof EntityPlayer) continue;
-				if(entity instanceof EntityXPOrb) continue;
-				if(entity instanceof EntityFishHook) continue;
-				if(entity instanceof EntityItem) continue;
-				if(entity instanceof EntityArmorStand) continue;
-				
-				if(!(entity instanceof EntityLivingBase)) continue;
-				
-				EntityLivingBase entityLiving = (EntityLivingBase) entity;
-				if(entityLiving != null && entityLiving.getLastAttacker() != null) {
-					if(entityLiving.getLastAttacker() == Minecraft.getMinecraft().thePlayer) {
-						fishedNothing = 0;
-						return entity;
-					}
-				}
-				
-				
-				double posY = (entity.posY - player.posY < 3)?entity.posY:player.posY;
-				if(entity.getDistance(player.posX, posY, player.posZ) < 5) {
-					fishedNothing = 0;
-					return entity;
-				}
-				
-				if(hookPos != null) {
-					double hookPosY = (entity.posY - hookPos.getY() < 3)?entity.posY:hookPos.getY();
-					if(entity.getDistance(hookPos.getX(), hookPosY, hookPos.getZ()) < 5) {
-						fishedNothing = 0;
-						return entity;
-					}
-				}
-			
-			}
-		}
-		
-		if(fishedItem == null) {
-			if((!lastMessage.contains("GOOD CATCH!") && !lastMessage.contains("GREAT CATCH!") && !lastMessage.contains("TROPHY FISH!")) || lastMessage.contains(":")) {
-				fishedNothing++;
-			}else {
-				lastMessage = "";
-				fishedNothing = 0;
-			}
-		}else {
-			fishedItem = null;
-			fishedNothing = 0;
-		}
-		
-		if(fishedNothing >= 2) {
-			fishedNothing = 0;
-			antyAfk();
-		}
-		return null;
-	}
+//	
+//	public Entity detectNewSeaCreature() {
+//		List<Entity> entities = Minecraft.getMinecraft().theWorld.loadedEntityList;
+//		entities.sort(Comparator.comparingInt(entity -> entity.ticksExisted));
+//		
+//		EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
+//		
+//		for (int i = 0; i < entities.size(); i++) {
+//			Entity entity = entities.get(i);
+//			
+//			if(entity.ticksExisted < 10) {
+//				if(entity instanceof EntityPlayer) continue;
+//				if(entity instanceof EntityXPOrb) continue;
+//				if(entity instanceof EntityFishHook) continue;
+//				if(entity instanceof EntityItem) continue;
+//				if(entity instanceof EntityArmorStand) continue;
+//				if(entity instanceof IBossDisplayData) continue;
+//				if(!(entity instanceof EntityLivingBase)) continue;
+//				
+//				EntityLivingBase entityLiving = (EntityLivingBase) entity;
+//				if(entityLiving != null && entityLiving.getLastAttacker() != null) {
+//					if(entityLiving.getLastAttacker() == Minecraft.getMinecraft().thePlayer) {
+//						Utils.debug("lastAttacker is player");
+//						fishedNothing = 0;
+//						return entity;
+//					}
+//				}
+//				
+//				
+//				double posY = (entity.posY - player.posY < 3)?entity.posY:player.posY;
+//				if(entity.getDistance(player.posX, posY, player.posZ) < 5) {
+//					Utils.debug("distanceToPlayer = 0");
+//					fishedNothing = 0;
+//					return entity;
+//				}
+//				
+//				if(hookPos != null) {
+//					double hookPosY = (entity.posY - hookPos.getY() < 3)?entity.posY:hookPos.getY();
+//					if(entity.getDistance(hookPos.getX(), hookPosY, hookPos.getZ()) < 5) {
+//						Utils.debug("distanceToHook = 0");
+//						fishedNothing = 0;
+//						return entity;
+//					}
+//				}
+//			
+//			}
+//		}
+//		
+//		if(fishedItem == null) {
+//			if((!lastMessage.contains("GOOD CATCH!") && !lastMessage.contains("GREAT CATCH!") && !lastMessage.contains("TROPHY FISH!")) || lastMessage.contains(":")) {
+//				fishedNothing++;
+//				Utils.debug("fishedItem == null, ++");
+//			}else {
+//				Utils.debug("fishedItem == null, but got chat messsage");;
+//				lastMessage = "";
+//				fishedNothing = 0;
+//			}
+//		}else {
+//			Utils.debug("fishedItem != null: " + fishedItem.getName());
+//			fishedItem = null;
+//			fishedNothing = 0;
+//		}
+//		
+//		if(!SettingsConfig.AutoFishAntyAfk.isOn) {
+//			fishedNothing = 0;
+//		}
+//		
+//		if(fishedNothing >= 2) {
+//			fishedNothing = 0;
+//			antyAfk();
+//		}
+//		return null;
+//	}
 	
 	@SubscribeEvent
     public void onEntityJoinWorld(EntityJoinWorldEvent event) {
 		if(!SettingsConfig.AutoFish.isOn) return;
     	Entity entity = event.entity;
-    	if(entity instanceof EntityItem) {
+		if(entity instanceof EntityArmorStand) return;
+		
+    	if(entity instanceof EntityItem || entity instanceof EntityLivingBase) {
 	    	if(hookPos != null) {
 				double hookPosY = (entity.posY - hookPos.getY() < 3)?entity.posY:hookPos.getY();
-				if(entity.getDistance(hookPos.getX(), hookPosY, hookPos.getZ()) < 2) {
-					fishedItem = entity;
+				if(entity.getDistance(hookPos.getX(), hookPosY, hookPos.getZ()) < 5) {
+					if(detectSeaCreature) {
+						fishedItem = entity;
+						detectSeaCreature = false;
+						
+						Utils.debug("Detected new entity: " + entity.getName());
+						fishedNothing = 0;
+						
+						if(entity instanceof EntityLivingBase) {
+							Utils.debug(((EntityLivingBase)entity).getName() + " new entity");;
+							if(((EntityLivingBase)entity).getName().contains("Objective:")) return;
+							if(fishingCycle != null && fishingCycle.isAlive()) fishingCycle.interrupt(); 
+							
+							fishingCycle = new Thread(() -> {
+								killSeaCreature(entity);
+							});
+							
+							fishingCycle.start();
+						}else {
+							fishingCycle = new Thread(() -> {
+								throwNewHook();
+							});
+							
+							fishingCycle.start();
+						}
+					}
 				}
 			}
     	}
@@ -464,16 +638,28 @@ public class AutoFish {
 			if(entity instanceof EntityXPOrb) continue;
 			if(entity instanceof EntityFishHook) continue;
 			if(!(entity instanceof EntityLivingBase)) continue;
+			if(((EntityLivingBase)entity).getName().contains("Objective:")) continue;
+			
+			double posY = (entity.posY - player.posY < 5)?entity.posY:player.posY;
+			double distance = entity.getDistance(player.posX, posY, player.posZ);
 			
 			EntityLivingBase entityLiving = (EntityLivingBase) entity;
 			if(entityLiving != null && entityLiving.getLastAttacker() != null) {
 				if(entityLiving.getLastAttacker() == Minecraft.getMinecraft().thePlayer) {
+					if(distance < 15) {
+						return entity;
+					}
+					
 					return entity;
 				}
 			}
 			
-			double posY = (entity.posY - player.posY < 5)?entity.posY:player.posY;
-			if(entity.getDistance(player.posX, posY, player.posZ) < 5) {
+			
+			if(distance < 6) {
+				return entity;
+			}
+			
+			if(entity instanceof EntityWither && distance < 15) {
 				return entity;
 			}
 		}
@@ -491,18 +677,26 @@ public class AutoFish {
 		                if (item != null && item.getItem() == Items.iron_sword) {
 		                	List<String> itemLore = Utils.getItemLore(item);
 		                	
-		                	if(itemLore == null || itemLore.size() == 0) return; 
-		                	if(!Utils.containsWord(itemLore, "Wither Impact")) return;
+		                	if(itemLore == null || itemLore.size() == 0) continue; 
+		                	if(!Utils.containsWord(itemLore, "Wither Impact")) continue;
 		                	
 		                	Thread.sleep(500);
-		                	if(killingCreatures) return;
+		                	if(killingCreatures) {
+		                		attacker = null;
+		                		return;
+		                	}
+		                	
+		                	Utils.debug("attacker: " + entity.getClass() + " " + entity.getName());
+		                	
+		                	if(antyAfkCycle != null && antyAfkCycle.isAlive()) antyAfkCycle.interrupt(); // stop antyafk
 		                	
 		                	if(Minecraft.getMinecraft().thePlayer.rotationPitch < 88) {
 		                		RotationUtils.rotateCurveTo(0, RotationUtils.getNeededPitchFromMinecraftRotation(90), 0.1f, true);
 		                	}
 		                	
 		                	killingCreatures = true;
-		                	Alerts.DisplayCustomAlerts("Killing attacking " + entity.getName(), 1500, 0, new int[] {50, 20}, 2f);
+		                	if(entity.getName().contains("Objective:")) return;
+		                	Alerts.DisplayCustomAlert("Killing attacking " + entity.getName(), 1500, new Float[] {50f, 20f}, 2f);
 		                	Thread.sleep(Math.round((new Random().nextFloat()*100)));
 		                	
 		                	Minecraft.getMinecraft().thePlayer.inventory.currentItem = i;
@@ -516,20 +710,25 @@ public class AutoFish {
 		                			Thread.sleep(delay + Math.round((new Random().nextFloat()*10)));
 		                			antyWrongDetection++;
 		                			
-		                			if(Minecraft.getMinecraft().thePlayer.inventory.currentItem != i) { blokEverything = true; return; }
+		                			if(Minecraft.getMinecraft().thePlayer.inventory.currentItem != i) { killingCreatures = false; attacker = null; blokEverything = true; MovementUtils.stopMoving(); return; }
 		                			if(Minecraft.getMinecraft().thePlayer.rotationPitch < 88) { RotationUtils.clearAllRotations(); RotationUtils.rotateCurveTo(0, RotationUtils.getNeededPitchFromMinecraftRotation(90), 0.1f, true); continue; }
 		                			
 		                			if(entity.getDistance(player.posX, player.posY, player.posZ) < 7) {
 		                				KeyBinding.onTick(rightClick);
+		                			}else {
+		                				MovementUtils.quietlyMovePlayerToWithoutRotation(entity.getPosition());
 		                			}
 		        			}
-		                	attacker = null;
-		    				killingCreatures = false;
-		                	throwNewHook();
-		                    break;
+		                	break;
 		                }
 		            }
+		            
+		            MovementUtils.stopMoving();
+		            attacker = null;
+    				killingCreatures = false;
+                	throwNewHook();
 				}else {
+					attacker = null;
 					throwNewHook();
 				}
 	        } catch (InterruptedException e) {

@@ -39,7 +39,7 @@ public class RecordHeadMovement {
 	public void onKey(InputEvent.KeyInputEvent e) throws InterruptedException {
 		if (Minecraft.getMinecraft().thePlayer == null) return;
 		
-		if (HeadRecorder.isPressed() && !isRecording) {
+		if (HeadRecorder.isPressed() && !isRecording && Mesky.debug) {
 			recordedAngles.clear();
 			startedRotation = new float[] {Minecraft.getMinecraft().thePlayer.rotationYaw, Minecraft.getMinecraft().thePlayer.rotationPitch};
 			isRecording = true;

@@ -1,5 +1,6 @@
 package treemek.mesky.handlers.gui.elements;
 
+import java.awt.MouseInfo;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
@@ -23,9 +24,9 @@ import treemek.mesky.utils.Utils;
 import treemek.mesky.utils.Waypoints;
 
 public class ColorPicker extends GuiTextField{
-
-	private int color = 0xffffff;
-	private boolean isPickerOpened = false;
+	
+	protected int color = 0xffffff;
+	protected boolean isPickerOpened = false;
 	GuiTextField colorTextField;
 	ColorBrightnessSlider brightnessSlider;
 	
@@ -33,22 +34,28 @@ public class ColorPicker extends GuiTextField{
 	
 	private static final ExecutorService executorService = Executors.newFixedThreadPool(1); // no more than 1 new thread will be open at the time
 	
-	private int oldYposition = 0;
+	protected int oldYposition = 0;
 	
-	private static boolean turnOff = false;
+	protected static boolean turnOff = false;
+	
+	protected boolean hasAlpha = false;
 	
 	ResourceLocation colorPicker = new ResourceLocation(Reference.MODID, "gui/colorPicker.png");
 	ResourceLocation chooserCircle = new ResourceLocation(Reference.MODID, "gui/empty_circle.png");
 	
-	private int left;
-	private int top;
-	private int right;
-	private int bottom;
-	private static BufferedImage colorWheelImage;
-	private int pickerSize;
+	public boolean enabled = true;
 	
-	int[] colorCoords = new int[] {0,0};
+	protected int left;
+	protected int top;
+	protected int right;
+	protected int bottom;
+	protected static BufferedImage colorWheelImage;
+	protected int pickerSize;
+	
+	double[] colorCoords = new double[] {0,0};
 	float brightness = 0;
+	
+	final int r = 176; // radius of picker (with colors)
 	
 	public ColorPicker(int buttonId, int x, int y, int size) {
 		super(buttonId, Minecraft.getMinecraft().fontRendererObj, x, y, size, size);
@@ -64,13 +71,17 @@ public class ColorPicker extends GuiTextField{
 		updatePosition();
 		
 		brightnessSlider = new ColorBrightnessSlider(1, left + 4, top+1+pickerSize+6, pickerSize-8, 20, 0);
-		
+
 		colorTextField = new GuiTextField(1, Minecraft.getMinecraft().fontRendererObj, left+1, top+1+pickerSize+6 + 24, pickerSize - 2, 20);
         colorTextField.setMaxStringLength(12);
         colorTextField.setCanLoseFocus(true);
 	}
 	
-	private void updatePosition() {
+	public void setHasAlpha(boolean b) {
+		hasAlpha = b;
+	}
+	
+	protected void updatePosition() {
 		ScaledResolution resolution = new ScaledResolution(Minecraft.getMinecraft());
 		
 		pickerSize = Math.max(13, resolution.getScaledWidth()/6); // 13 colors in width
@@ -87,9 +98,11 @@ public class ColorPicker extends GuiTextField{
 		}
 	}
 	
-	private void updateElementsPositions() {
-		colorTextField.yPosition = top+1+pickerSize+6 + 24;
-		brightnessSlider.yPosition =  top+1+pickerSize+6;
+	protected void updateElementsPositions() {
+		colorTextField.yPosition = top + 1 + pickerSize + 6 + 24;
+		colorTextField.xPosition = left + 1;
+		brightnessSlider.yPosition = top + 1 + pickerSize + 6 ;
+		brightnessSlider.xPosition = left + 4;;
 	}
 	
 	@Override
@@ -101,18 +114,21 @@ public class ColorPicker extends GuiTextField{
 	public void setText(String c) {
 		if(!c.startsWith("#")) c = "#" + c;
 		
+		Utils.debug(c);
 		colorTextField.setText(c);
 		
 		try {
 			this.color = Integer.parseInt(c.replace("#", ""), 16);
+			Utils.debug(c + " correct");
 		} catch (Exception e) {
 			this.color = 0xFFFFFF;
+			Utils.debug(c + " invalid");
 		}
 		
 		executorService.submit(() -> {
 			colorCoords = ColorUtils.findClosestColor(color, colorWheelImage, true);
 		
-			brightness = ColorUtils.findBrightnessAdjustmentFactor(color, colorCoords[0], colorCoords[1], colorWheelImage);
+			brightness = ColorUtils.findBrightnessAdjustmentFactor(color, (int)colorCoords[0], (int)colorCoords[1], colorWheelImage);
 			brightnessSlider.setValue(1-brightness);
 		});
 	}
@@ -120,7 +136,7 @@ public class ColorPicker extends GuiTextField{
 	@Override
 	public void drawTextBox() {
 		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F); 
-		RenderHandler.drawCircle(xPosition, yPosition, width, color);
+		RenderHandler.drawCircleWithBorder(xPosition, yPosition, width, color);
 		ScaledResolution resolution = new ScaledResolution(Minecraft.getMinecraft());
 		
 		if(turnOff) {
@@ -135,7 +151,11 @@ public class ColorPicker extends GuiTextField{
 		}
 		
 		oldYposition = yPosition;
-		
+			
+		drawPickerOpened();
+	}
+	
+	public void drawPickerOpened() {
 		if(isPickerOpened) {
 			GL11.glPushMatrix();
 			GL11.glTranslatef(0, 0, 1);
@@ -150,10 +170,10 @@ public class ColorPicker extends GuiTextField{
 			GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 			
 			int circleSize = pickerSize/15;
-			int screenXc = left + 1 + (colorCoords[0] * pickerSize) / colorWheelImage.getWidth();
-	        int screenYc = top + 1 + (colorCoords[1] * pickerSize) / colorWheelImage.getHeight();
+			double screenXc = left + 1 + (colorCoords[0] * pickerSize) / colorWheelImage.getWidth();
+	        double screenYc = top + 1 + (colorCoords[1] * pickerSize) / colorWheelImage.getHeight();
 			Minecraft.getMinecraft().renderEngine.bindTexture(chooserCircle);
-			drawModalRectWithCustomSizedTexture(screenXc - circleSize/2, screenYc - circleSize/2, 0, 0, circleSize, circleSize, circleSize, circleSize);
+			RenderHandler.drawModalRectWithCustomSizedTexture(screenXc - circleSize/2, screenYc - circleSize/2, 0, 0, circleSize, circleSize, circleSize, circleSize);
 			
 			brightnessSlider.drawSlider();
 			
@@ -171,11 +191,15 @@ public class ColorPicker extends GuiTextField{
 	public boolean mouseClick(int mouseX, int mouseY, int buttonId) {
 		boolean isPressed = mouseX >= xPosition && mouseX < xPosition + width && mouseY >= yPosition && mouseY < yPosition + height;
 		
+		if(!enabled) return false;
+		
 		if(!isPickerOpened) {
 			if(isPressed) {
 				turnOff = false;
 				isPickerOpened = true;
 				colorTextField.setText("#" + getColorString());
+				
+				brightness = ColorUtils.findBrightnessAdjustmentFactor(color, (int)colorCoords[0], (int)colorCoords[1], colorWheelImage);
 			}
 			
 			return isPressed;
@@ -187,19 +211,15 @@ public class ColorPicker extends GuiTextField{
 					
 					if(newColor != color) { // its because coordinates could go outside colors and so do circle
 						color = newColor;
-					
-						int relativeX = mouseX - (left + 1);
-					    int relativeY = mouseY - (top + 1);
-					    int imageX = (relativeX * colorWheelImage.getWidth()) / pickerSize;
-					    int imageY = (relativeY * colorWheelImage.getHeight()) / pickerSize;
-						colorCoords = new int[] { imageX, imageY };
+						
+						// setting coords is inside getColorFromImageWithMouseClick(mouseX, mouseY)
 						
 						colorTextField.setText("#" + getColorString());
-					}
+					};
 				}
 				
 				if(brightnessSlider.mousePressed(Minecraft.getMinecraft(), mouseX, mouseY)) {
-					color = getColorFromImageWithImageCoords(colorCoords[0], colorCoords[1]);
+					color = getColorFromImageWithImageCoords((int)colorCoords[0], (int)colorCoords[1]);
 					colorTextField.setText("#" + getColorString());
 				}
 				
@@ -217,26 +237,20 @@ public class ColorPicker extends GuiTextField{
 		boolean isPressed = mouseX >= xPosition && mouseX < xPosition + width && mouseY >= yPosition && mouseY < yPosition + height;
 		
 		if(isPickerOpened) {
-			if(brightnessSlider.mouseClickMoved(mouseX, mouseY, clickedMouseButton, timeSinceLastClick)) {
-				color = getColorFromImageWithImageCoords(colorCoords[0], colorCoords[1]);
+			if(brightnessSlider.mouseClickMoved(mouseX, mouseY)) {
+				color = getColorFromImageWithImageCoords((int)colorCoords[0], (int)colorCoords[1]);
 				colorTextField.setText("#" + getColorString());
 			}
-			
-			if(mouseX >= left && mouseX < right && mouseY >= top && mouseY < bottom) {
-				if(colorWheelImage != null && isInsideImage(mouseX, mouseY) && colorImageClicked) {
-					int newColor = getColorFromImageWithMouseClick(mouseX, mouseY);
+
+			if(colorWheelImage != null && colorImageClicked) {
+				int newColor = getColorFromImageWithMouseClick(mouseX, mouseY);
+				
+				if(newColor != color) { // its because coordinates could go outside colors and so do circle
+					color = newColor;
 					
-					if(newColor != color) { // its because coordinates could go outside colors and so do circle
-						color = newColor;
-						
-						int relativeX = mouseX - (left + 1);
-					    int relativeY = mouseY - (top + 1);
-					    int imageX = (relativeX * colorWheelImage.getWidth()) / pickerSize;
-					    int imageY = (relativeY * colorWheelImage.getHeight()) / pickerSize;
-						colorCoords = new int[] { imageX, imageY };
-						
-						colorTextField.setText("#" + getColorString());
-					}
+					// setting coords is inside getColorFromImageWithMouseClick(mouseX, mouseY)
+					
+					colorTextField.setText("#" + getColorString());
 				}
 			}
 		}
@@ -258,7 +272,7 @@ public class ColorPicker extends GuiTextField{
 				color = Integer.parseInt(c, 16);
 				
 				colorCoords = ColorUtils.findClosestColor(color, colorWheelImage, true);
-				brightness = ColorUtils.findBrightnessAdjustmentFactor(color, colorCoords[0], colorCoords[1], colorWheelImage);
+				brightness = ColorUtils.findBrightnessAdjustmentFactor(color, (int)colorCoords[0], (int)colorCoords[1], colorWheelImage);
 			} catch (Exception e) {
 				color = oldColor;
 			}
@@ -286,26 +300,68 @@ public class ColorPicker extends GuiTextField{
 	}
 	
 	private int getColorFromImageWithMouseClick(int mouseX, int mouseY) {
-	    // Calculate relative coordinates within the image
 	    int relativeX = mouseX - (left + 1);
 	    int relativeY = mouseY - (top + 1);
 
-	    // Ensure the coordinates are within the image boundaries
-	    if (relativeX < 0 || relativeX >= pickerSize || relativeY < 0 || relativeY >= pickerSize) {
-	        return 0; // Return a default color or handle error
-	    }
-
-	    // Calculate the coordinates within the BufferedImage
-	    int imageX = (relativeX * colorWheelImage.getWidth()) / pickerSize;
-	    int imageY = (relativeY * colorWheelImage.getHeight()) / pickerSize;
+	    double imageX = (relativeX * colorWheelImage.getWidth()) / pickerSize;
+	    double imageY = (relativeY * colorWheelImage.getHeight()) / pickerSize;
 	    
-	    int rgb = colorWheelImage.getRGB(imageX, imageY);
+	    // outside of image
+	    if (relativeX < 0 || relativeX >= pickerSize || relativeY < 0 || relativeY >= pickerSize) {
+	    	int imageCenterX = colorWheelImage.getWidth() / 2;
+	        int imageCenterY = colorWheelImage.getHeight() / 2;
+	        
+	        double a = imageX - imageCenterX;
+	        double b = imageY - imageCenterY;
+	        
+            double angle = Math.atan2(b, a); // alpha angle (between a & c)
+
+            double newX = imageCenterX + (r * Math.cos(angle)); // center + a
+            double newY = imageCenterY + (r * Math.sin(angle)); // center + b
+            
+            imageX = newX;
+            imageY = newY;
+    		
+    		int rgb = colorWheelImage.getRGB((int)imageX, (int)imageY);
+    	    
+    	    // Mask out the alpha bits (ARGB to RGB)
+    	    int rgbWithoutAlpha = rgb & 0x00FFFFFF;
+    	    
+    	    colorCoords = new double[] { imageX, imageY };
+    	    
+    	    return ColorUtils.adjustBrightness(rgbWithoutAlpha, (float) brightnessSlider.getValue());
+	    }
+	    
+	    
+	    
+	    int rgb = colorWheelImage.getRGB((int)imageX, (int)imageY);
 	    
 	    // Mask out the alpha bits (ARGB to RGB)
 	    int rgbWithoutAlpha = rgb & 0x00FFFFFF;
 	    
-	    if(rgbWithoutAlpha == 0x000000) return color;
+	    if(rgbWithoutAlpha == 0x000000) {
+	    	int imageCenterX = colorWheelImage.getWidth() / 2;
+	        int imageCenterY = colorWheelImage.getHeight() / 2;
+	        
+	        double a = imageX - imageCenterX;
+	        double b = imageY - imageCenterY;
+	        
+	        // we could make it using cSqr = aSqr + bSqr, then calculate sin and cos and then apply it but its more optimized with atan2
+            double angle = Math.atan2(b, a); // alpha angle (between a & c)
 
+            double newX = imageCenterX + (r * Math.cos(angle)); // center + a
+            double newY = imageCenterY + (r * Math.sin(angle)); // center + b
+
+            imageX = (int) newX;
+            imageY = (int) newY;
+            
+            rgb = colorWheelImage.getRGB((int)imageX, (int)imageY);
+
+    	    rgbWithoutAlpha = rgb & 0x00FFFFFF;
+	    }
+	   
+	    colorCoords = new double[] { imageX, imageY };
+		
 	    return ColorUtils.adjustBrightness(rgbWithoutAlpha, (float) brightnessSlider.getValue());
 	}
 

@@ -19,18 +19,16 @@ import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.config.SettingsConfig.Setting;
 import treemek.mesky.handlers.RenderHandler;
 
-public class SettingTextField extends GuiTextField{
+public class SettingTextField extends TextField{
 
-	private FontRenderer fontRendererObj;
 	private String buttonText;
 	Setting setting;
 	boolean onlyNumbers;
 	private boolean shouldSaveBlank;
 
 	public SettingTextField(int id, String buttonText, int width, int height, Setting setting, int maxStringLength, boolean onlyNumbers, boolean shouldSaveBlank) {
-		super(id, Minecraft.getMinecraft().fontRendererObj, 0, 0, width, height - 4);
+		super(id, 0, 0, width, height);
 		this.buttonText = buttonText;
-		this.fontRendererObj = Minecraft.getMinecraft().fontRendererObj;
 		this.setting = setting;
 		this.onlyNumbers = onlyNumbers;
 		this.shouldSaveBlank = shouldSaveBlank;
@@ -39,18 +37,15 @@ public class SettingTextField extends GuiTextField{
 	}
 	
 	public void drawTextField(int x, int y) {
-		this.xPosition = x;
+		this.xPosition = x + 2;
 		this.yPosition = y + 2; // because height has -4 and thats because of wrong drawing of textbox having border outside of its height
 		
 		this.drawTextBox();
+
+		double scaleFactor = RenderHandler.getTextScale(height/2);
 		
-		int correctSize = height+4;
-		
-		float defaultFontHeight = fontRendererObj.FONT_HEIGHT;
-		float scaleFactor = (float) (correctSize / defaultFontHeight) / 2f;
-		
-		float textY = y + ((correctSize / 2) - ((defaultFontHeight * scaleFactor) / 2));
-		RenderHandler.drawText(buttonText, x + (width*1.25), textY, scaleFactor, true, 0x3e91b5);
+		float textY = (float) (y + ((height / 2) - (RenderHandler.getTextHeight(scaleFactor) / 2)));
+		RenderHandler.drawText(buttonText, xPosition + (width*1.25), textY, scaleFactor, true, 0x3e91b5);
 	}
 
 	public void setTextAsSetting() {

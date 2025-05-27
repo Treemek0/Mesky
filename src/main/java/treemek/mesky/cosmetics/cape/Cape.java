@@ -148,6 +148,7 @@ public class Cape extends ModelBase{
 					}else {
 						filePath = folderPath + "/cape" + currentAnimation;
 					}
+					
 					BufferedImage buff = ImageCache.bufferedTextureCache.get(filePath);
 					if(buff != null) {
 						ResourceLocation location = ImageCache.resourceLocationCache.get(buff);

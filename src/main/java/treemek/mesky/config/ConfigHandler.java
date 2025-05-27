@@ -25,39 +25,29 @@ import treemek.mesky.Mesky;
 import treemek.mesky.config.SettingsConfig.Setting;
 import treemek.mesky.cosmetics.CosmeticHandler;
 import treemek.mesky.handlers.gui.cosmetics.CustomCapeGui;
+import treemek.mesky.handlers.soundHandler.SoundsHandler;
 import treemek.mesky.utils.Alerts;
 import treemek.mesky.utils.Waypoints;
 import treemek.mesky.utils.Alerts.Alert;
 import treemek.mesky.utils.Locations.Location;
 import treemek.mesky.utils.MacroWaypoints;
+import treemek.mesky.utils.Utils;
+import treemek.mesky.utils.MacroWaypoints.MacroWaypoint;
+import treemek.mesky.utils.MiningUtils;
+import treemek.mesky.utils.MiningUtils.MiningPath;
 import treemek.mesky.utils.ChatFunctions;
+import treemek.mesky.utils.ChatFunctions.ChatFunction;
 import treemek.mesky.utils.FriendsLocations;
 import treemek.mesky.utils.Waypoints.Waypoint;
 
 public class ConfigHandler {
 	
-    public static void createNewJsonObject(String file) throws IOException {
-        FileWriter fileWriter = new FileWriter(file);
-        fileWriter.write(new JsonObject().toString());
-        fileWriter.close();
-    }
+	static File directory = new File(Mesky.configDirectory);
 
     public static void createNewJsonArray(String file) throws IOException {
         FileWriter fileWriter = new FileWriter(file);
         fileWriter.write(new JsonArray().toString());
         fileWriter.close();
-    }
-
-    public static JsonObject initJsonObject(String file) throws IOException {
-        if (!(new File(file).exists())) createNewJsonObject(file);
-        try {
-            return new JsonParser().parse(new FileReader(file)).getAsJsonObject();
-        } catch (IllegalStateException | JsonSyntaxException corrupted) {
-            corrupted.printStackTrace();
-            System.out.println("Recreating " + file);
-            createNewJsonObject(file);
-            return new JsonParser().parse(new FileReader(file)).getAsJsonObject();
-        }
     }
 
     public static <T> Object[] initJsonArray(String file, Class<T> clazz) throws IOException {
@@ -74,46 +64,112 @@ public class ConfigHandler {
     }
 
     public static void reloadConfig() {
-        try {
-            File directory = new File(Mesky.configDirectory);
-            if (!directory.exists()) directory.mkdir();
+        if (!directory.exists()) directory.mkdir();
 
-            loadSettings();
-
-            // Alerts
-            if(new File(directory + "/mesky/utils/meskyAlerts.json").exists()) {
-	            Object[] alerts = initJsonArray(directory + "/mesky/utils/meskyAlerts.json", Alerts.Alert[].class);
-	            if (alerts != null) Alerts.alertsList = new ArrayList<>(Arrays.asList((Alerts.Alert[]) alerts));
-	        
-	        	Alerts.putAllImagesToCache();
-            }
-            // Chat Functions
-            if(new File(directory + "/mesky/utils/meskyChatFunctions.json").exists()) {
-	            Object[] chatFunctions = initJsonArray(directory + "/mesky/utils/meskyChatFunctions.json", ChatFunctions.ChatFunction[].class);
-	            if (chatFunctions != null) ChatFunctions.chatFunctionsList = new ArrayList<>(Arrays.asList((ChatFunctions.ChatFunction[]) chatFunctions));
-            }
-            
-            // Waypoints
-            if(new File(directory + "/mesky/utils/meskyWaypoints.json").exists()) {
-	            Object[] waypoints = initJsonArray(directory + "/mesky/utils/meskyWaypoints.json", Waypoints.Waypoint[].class);
-	            if (waypoints != null) Waypoints.waypointsList = new ArrayList<>(Arrays.asList((Waypoints.Waypoint[]) waypoints));
-            }
-            
-            // Macro Waypoints
-            if(new File(directory + "/mesky/utils/meskyMacroWaypoints.json").exists()) {
-	            Object[] waypoints = initJsonArray(directory + "/mesky/utils/meskyMacroWaypoints.json", MacroWaypoints.MacroWaypoint[].class);
-	            if (waypoints != null) MacroWaypoints.waypointsList = new ArrayList<>(Arrays.asList((MacroWaypoints.MacroWaypoint[]) waypoints));
-            }
-
-            
-            
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
+		reloadSettings();
+		reloadAlerts();
+		reloadChatFunctions();
+		reloadWaypoints();
+		reloadMacroWaypoints();
+		reloadMiningPaths();
+		SoundsHandler.reloadSounds();
     }
 
+    public static void reloadAlerts() {
+        try {
+	    	if(new File(directory + "/mesky/utils/meskyAlerts.json").exists()) {
+	            Object[] alerts = initJsonArray(directory + "/mesky/utils/meskyAlerts.json", Alerts.Alert[].class);
+	            if (alerts != null) {
+	            	 ArrayList<Alert> list = new ArrayList<>(Arrays.asList((Alerts.Alert[]) alerts));
+	            	 
+	            	 for (Alert alert : list) {
+						alert.fixNulls(); // fixing nulls (when adding new features or if someone do something with file)
+					}
+	            	 
+	            	 Alerts.alertsList = list;
+	            	 Alerts.putAllImagesToCache();
+	            }
+	        }
+        } catch (Exception e) {
+			Utils.writeError(e);
+		}
+    }
+    
+    public static void reloadChatFunctions() {
+    	try {
+	        if(new File(directory + "/mesky/utils/meskyChatFunctions.json").exists()) {
+	            Object[] chatFunctions = initJsonArray(directory + "/mesky/utils/meskyChatFunctions.json", ChatFunctions.ChatFunction[].class);
+	            if (chatFunctions != null) {
+	            	 ArrayList<ChatFunction> list = new ArrayList<>(Arrays.asList((ChatFunctions.ChatFunction[]) chatFunctions));
+	            	 
+	            	 for (ChatFunction chatFunction : list) {
+						chatFunction.fixNulls();
+	            	 }
+	            	 
+	            	 ChatFunctions.chatFunctionsList = list;
+	            }
+	        }
+    	} catch (Exception e) {
+			Utils.writeError(e);
+		}
+    }
+    
+
+    
+    public static void reloadWaypoints() {
+    	try {
+    	    if(new File(directory + "/mesky/utils/meskyWaypoints.json").exists()) {
+    	        Object[] waypoints = initJsonArray(directory + "/mesky/utils/meskyWaypoints.json", Waypoints.Waypoint[].class);
+    	        if (waypoints != null) {
+    	        	ArrayList<Waypoint> list = new ArrayList<>(Arrays.asList((Waypoints.Waypoint[]) waypoints));
+    	        	
+    	        	for (Waypoint waypoint : list) {
+    					waypoint.fixNulls();
+    				}
+    	        	
+    	        	Waypoints.waypointsList = list;
+    	        }
+    	    }
+    	} catch (Exception e) {
+			Utils.writeError(e);
+		}
+    }
+    
+    public static void reloadMacroWaypoints() {
+    	try {
+    		if(new File(directory + "/mesky/utils/meskyMacroWaypoints.json").exists()) {
+	            Object[] waypoints = initJsonArray(directory + "/mesky/utils/meskyMacroWaypoints.json", MacroWaypoints.MacroWaypoint[].class);
+	            if (waypoints != null) {
+	            	ArrayList<MacroWaypoint> list = new ArrayList<>(Arrays.asList((MacroWaypoints.MacroWaypoint[]) waypoints));
+	            	
+	            	for (MacroWaypoint macroWaypoint : list) {
+						macroWaypoint.fixNulls();
+					}
+	            	
+	            	MacroWaypoints.waypointsList = list;
+	            }
+            }
+    	} catch (Exception e) {
+			Utils.writeError(e);
+		}
+    }
+    
+    public static void reloadMiningPaths() {
+    	try {
+    		if(new File(directory + "/mesky/utils/meskyMiningPaths.json").exists()) {
+	            Object[] paths = initJsonArray(directory + "/mesky/utils/meskyMiningPaths.json", MiningUtils.MiningPath[].class);
+	            if (paths != null) {
+	            	ArrayList<MiningPath> list = new ArrayList<>(Arrays.asList((MiningUtils.MiningPath[]) paths));
+	            	
+	            	MiningUtils.miningPaths = list;
+	            }
+            }
+    	} catch (Exception e) {
+			Utils.writeError(e);
+		}
+    }
+    
 	public static void SaveAlert(List<Alerts.Alert> alerts) {
-    	// saves correctly
 		new File(Mesky.configDirectory + "/mesky/utils/").mkdirs();
     	try (FileWriter writer = new FileWriter(Mesky.configDirectory + "/mesky/utils/meskyAlerts.json")) {
             new GsonBuilder().setPrettyPrinting().create().toJson(alerts, writer);
@@ -124,7 +180,6 @@ public class ConfigHandler {
     }
     
 	public static void SaveChatFunction(List<ChatFunctions.ChatFunction> chatFunctions) {
-    	// saves correctly
 		new File(Mesky.configDirectory + "/mesky/utils/").mkdirs();
     	try (FileWriter writer = new FileWriter(Mesky.configDirectory + "/mesky/utils/meskyChatFunctions.json")) {
             new GsonBuilder().setPrettyPrinting().create().toJson(chatFunctions, writer);
@@ -135,7 +190,6 @@ public class ConfigHandler {
     }
 	
     public static void SaveWaypoint(List<Waypoints.Waypoint> waypoints) {
-    	// saves correctly
     	new File(Mesky.configDirectory + "/mesky/utils/").mkdirs();
     	try (FileWriter writer = new FileWriter(Mesky.configDirectory + "/mesky/utils/meskyWaypoints.json")) {
             new GsonBuilder().setPrettyPrinting().create().toJson(waypoints, writer);
@@ -145,8 +199,17 @@ public class ConfigHandler {
         }
     }
     
+    public static void SaveMiningPaths(List<MiningUtils.MiningPath> paths) {
+    	new File(Mesky.configDirectory + "/mesky/utils/").mkdirs();
+    	try (FileWriter writer = new FileWriter(Mesky.configDirectory + "/mesky/utils/meskyMiningPaths.json")) {
+            new GsonBuilder().setPrettyPrinting().create().toJson(paths, writer);
+            writer.flush();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+    
     public static void SaveMacroWaypoint(List<MacroWaypoints.MacroWaypoint> waypoints) {
-    	// saves correctly
     	new File(Mesky.configDirectory + "/mesky/utils/").mkdirs();
     	try (FileWriter writer = new FileWriter(Mesky.configDirectory + "/mesky/utils/meskyMacroWaypoints.json")) {
             new GsonBuilder().setPrettyPrinting().create().toJson(waypoints, writer);
@@ -160,8 +223,7 @@ public class ConfigHandler {
     // Saving friends locations is in FriendsLocations file
     // !!!
 
-
-    private static void loadSettings(){
+    public static void reloadSettings(){
     	File file = new File(Mesky.configDirectory + "/mesky/meskySettings.json");
         if (file.exists()) {
             try (FileReader reader = new FileReader(file)) {
@@ -170,8 +232,8 @@ public class ConfigHandler {
                 Map<String, Setting> settings = gson.fromJson(reader, type);
 
                 if(settings != null) {
-                	setAllVariablesFromSave(SettingsConfig.class, settings);
-                	setAllVariablesFromSave(CosmeticHandler.class, settings);
+                	loadSettingsFromFileToClass(SettingsConfig.class, settings);
+                	loadSettingsFromFileToClass(CosmeticHandler.class, settings);
 	                
 	                if(CosmeticHandler.CapeType.number == 5) CustomCapeGui.iterateImagesInFolder(CosmeticHandler.CustomCapeTexture.text, "CustomCape");
                 }
@@ -184,8 +246,8 @@ public class ConfigHandler {
     public static void saveSettings(){
     	Map<String, Setting> settings = new LinkedHashMap<>(); // linked so it would be in order
     	
-    	settings.putAll(saveAllVariablesFromClass(SettingsConfig.class));
-    	settings.putAll(saveAllVariablesFromClass(CosmeticHandler.class));
+    	settings.putAll(saveAllSettingsFromClass(SettingsConfig.class));
+    	settings.putAll(saveAllSettingsFromClass(CosmeticHandler.class));
 
     	new File(Mesky.configDirectory + "/mesky/").mkdirs();
     	try (FileWriter writer = new FileWriter(Mesky.configDirectory + "/mesky/meskySettings.json")) {
@@ -196,9 +258,9 @@ public class ConfigHandler {
         }
     }
     
-    private static void setAllVariablesFromSave(Class c, Map<String, Setting> settings) {
+    private static void loadSettingsFromFileToClass(Class c, Map<String, Setting> settings) {
     	try {	
-    		Field[] fields = c.getDeclaredFields();;
+    		Field[] fields = c.getDeclaredFields();
 	        for (Field field : fields) {
 	        	if(field.getType() == Setting.class) {
 	        		field.setAccessible(true);
@@ -215,7 +277,7 @@ public class ConfigHandler {
 		}
     }
     
-    private static Map<String, Setting> saveAllVariablesFromClass(Class c) {
+    private static Map<String, Setting> saveAllSettingsFromClass(Class c) {
     	Map<String, Setting> settings = new LinkedHashMap<>();
     	
     	try {	

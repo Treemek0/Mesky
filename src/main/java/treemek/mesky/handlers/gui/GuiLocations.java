@@ -49,7 +49,7 @@ public class GuiLocations extends GuiScreen {
 		
 		public GuiLocation(Setting setting, int width, int height) {
 			this.setting = setting;
-			this.scale = setting.scale;
+			this.scale = (float) (setting.scale * RenderHandler.getResolutionScale());
 			this.position = setting.position;
 			this.orgWidth = width;
 			this.orgHeight = height;
@@ -67,10 +67,10 @@ public class GuiLocations extends GuiScreen {
 		
 		public void setScale(Float newScale) {
 			if(newScale != null) {
-				scale = newScale;
+				scale = (float) (newScale * RenderHandler.getResolutionScale());
 				setting.scale = newScale;
-				width = orgWidth * newScale;
-				height = orgHeight * newScale;
+				width = orgWidth * this.scale;
+				height = orgHeight * this.scale;
 			}
 		}
 			
@@ -163,8 +163,8 @@ public class GuiLocations extends GuiScreen {
 	        
 	        if (scroll != 0 && currentlyDragged != null) {
 	            float SCROLL_SPEED = (currentlyDragged.scale < 3)?0.05f:0.1f;
-	        	Float newScale = Math.max(0.5f, currentlyDragged.scale - (scroll > 0 ? -SCROLL_SPEED : SCROLL_SPEED));
-	        	currentlyDragged.setScale(((float)Math.round(newScale * 100)) / 100);
+	        	Float newScale = Math.max(0.5f, currentlyDragged.setting.scale - (scroll > 0 ? -SCROLL_SPEED : SCROLL_SPEED));
+	        	currentlyDragged.setScale(((float)Math.floor(newScale * 100)) / 100);
 	        }
 		}
 }

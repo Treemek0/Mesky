@@ -8,33 +8,38 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
 import treemek.mesky.handlers.gui.elements.ColorPicker;
+import treemek.mesky.handlers.gui.elements.buttons.CheckButton;
 import treemek.mesky.handlers.gui.elements.buttons.DeleteButton;
 import treemek.mesky.handlers.gui.elements.buttons.MacroButton;
+import treemek.mesky.handlers.gui.elements.textFields.TextField;
+import treemek.mesky.utils.Utils;
 
 public class MacroWaypointElement {
-	GuiTextField name;
+	TextField name;
 	ColorPicker color;
-	GuiTextField x;
-	GuiTextField y;
-	GuiTextField z;
-	GuiTextField yaw;
-	GuiTextField pitch;
+	TextField x;
+	TextField y;
+	TextField z;
+	TextField yaw;
+	TextField pitch;
 	MacroButton left;
 	MacroButton right; 
 	MacroButton back; 
 	MacroButton forward; 
 	MacroButton leftClick; 
 	MacroButton rightClick;
+	MacroButton sneak;
 	DeleteButton deleteButton;
-	GuiTextField noiseLevel;
-	GuiTextField function;
+	TextField noiseLevel;
+	TextField function;
 	public int yPosition;
 	public int xPosition;
-	public Integer elementHeight = null;
-	public Integer elementWidth = null;
+	private double margin;
+	public CheckButton enabled;
 	
-	public MacroWaypointElement(GuiTextField name, ColorPicker color, GuiTextField x, GuiTextField y, GuiTextField z, GuiTextField yaw, GuiTextField pitch, MacroButton left, MacroButton right, MacroButton back, MacroButton forward, MacroButton leftClick, MacroButton rightClick, GuiTextField noiseLevel, GuiTextField function, DeleteButton deleteButton) {
+	public MacroWaypointElement(TextField name, ColorPicker color, TextField x, TextField y, TextField z, TextField yaw, TextField pitch, MacroButton left, MacroButton right, MacroButton back, MacroButton forward, MacroButton leftClick, MacroButton rightClick, MacroButton sneak, TextField noiseLevel, TextField function, DeleteButton deleteButton, CheckButton enabled, double inputMargin) {
 		this.name = name;
+		this.yPosition = name.yPosition;
 		this.color = color;
 		this.x = x;
 		this.y = y;
@@ -47,9 +52,14 @@ public class MacroWaypointElement {
 		this.forward = forward;
 		this.leftClick = leftClick;
 		this.rightClick = rightClick;
+		this.sneak = sneak;
 		this.noiseLevel = noiseLevel;
 		this.function = function;
 		this.deleteButton = deleteButton;
+		this.enabled = enabled;
+		this.margin = inputMargin;
+		
+		this.xPosition = color.xPosition;
 	}
 	
 	public void updateYposition(int y, int inputHeight) {
@@ -61,19 +71,21 @@ public class MacroWaypointElement {
 		this.z.yPosition = y;
 		this.yaw.yPosition = y;
 		this.pitch.yPosition = y;
+		this.enabled.yPosition = y;
 		this.right.yPosition = y + inputHeight +5;
 		this.left.yPosition = y + inputHeight+5;
 		this.back.yPosition = y + inputHeight+5;
 		this.forward.yPosition = y + inputHeight+5;
 		this.leftClick.yPosition = y + inputHeight+5;
 		this.rightClick.yPosition = y + inputHeight+5;
+		this.sneak.yPosition = y + inputHeight+5;
 		this.function.yPosition = y + inputHeight +5;
 		this.noiseLevel.yPosition = y;
 		this.deleteButton.yPosition = y;
 	}
 	
-	public List<GuiTextField> getListOfTextFields() {
-		List<GuiTextField> inputs = new ArrayList<>();
+	public List<TextField> getListOfTextFields() {
+		List<TextField> inputs = new ArrayList<>();
 		inputs.add(name);
 		inputs.add(x);
 		inputs.add(y);
@@ -94,91 +106,28 @@ public class MacroWaypointElement {
 		buttons.add(forward);
 		buttons.add(leftClick);
 		buttons.add(rightClick);
+		buttons.add(sneak);
+		buttons.add(enabled);
 		return buttons;
 	}
 	
 	public int getWidth() {
-		if(elementWidth == null) {
-			int lowestX = 10000000;
-			int highestX = 0;
-			int highestX_width = 0;
-			
-			if(color.xPosition < lowestX) lowestX = color.xPosition;
-			if(color.xPosition > highestX) {
-				highestX = color.xPosition;
-				highestX_width = color.width;
-			}
-			
-			List<GuiButton> buttons = getListOfButtons();
-			for (int i = 0; i < buttons.size(); i++) {
-				if(buttons.get(i).xPosition < lowestX) lowestX = buttons.get(i).xPosition;
-				if(buttons.get(i).xPosition > highestX) {
-					highestX = buttons.get(i).xPosition;
-					highestX_width = buttons.get(i).width;
-				}
-			}
-			
-			List<GuiTextField> inputs = getListOfTextFields();
-			for (int i = 0; i < inputs.size(); i++) {
-				if(inputs.get(i).xPosition < lowestX) lowestX = inputs.get(i).xPosition;
-				if(inputs.get(i).xPosition > highestX) {
-					highestX = inputs.get(i).xPosition;
-					highestX_width = inputs.get(i).width;
-				}
-			}
-			
-			int width = (highestX - lowestX) + highestX_width;
-			
-			xPosition = lowestX;
-			elementWidth = width;
-			return width;
-		}else {
-			return elementWidth;
-		}
+		return (enabled.xPosition + enabled.width) - xPosition;
 	}
 	
 	public int getHeight() {
-		if(elementHeight == null) {
-			int lowestY = 10000000;
-			int highestY = 0;
-			int highestY_height = 0;
-			
-//			if(color.yPosition < lowestY) lowestY = color.yPosition;
-//			if(color.yPosition > highestY) {
-//				highestY = color.yPosition;
-//				highestY_height = color.height;
-//			}
-			
-			List<GuiButton> buttons = getListOfButtons();
-			for (int i = 0; i < buttons.size(); i++) {
-				if(buttons.get(i).yPosition < lowestY) lowestY = buttons.get(i).yPosition;
-				if(buttons.get(i).yPosition > highestY) {
-					highestY = buttons.get(i).yPosition;
-					highestY_height = buttons.get(i).height;
-				}
-			}
-			
-			List<GuiTextField> inputs = getListOfTextFields();
-			for (int i = 0; i < inputs.size(); i++) {
-				if(inputs.get(i).yPosition < lowestY) lowestY = inputs.get(i).yPosition;
-				if(inputs.get(i).yPosition > highestY) {
-					highestY = inputs.get(i).yPosition;
-					highestY_height = inputs.get(i).height;
-				}
-			}
-			
-			int height = (highestY - lowestY) + highestY_height;
-
-			elementHeight = height;
-			return height;
-		}else {
-			return elementHeight;
-		}
+		return (name.height * 2) + 5;
 	}
 	
 	public boolean isHovered(int mouseX, int mouseY) {
-		getWidth();
-		getHeight();
-		return (mouseX >= xPosition && mouseX <= xPosition + elementWidth && mouseY >= yPosition && mouseY <= yPosition + elementHeight);
+		return (mouseX >= xPosition && mouseX <= xPosition + getWidth() && mouseY >= yPosition - margin/2 && mouseY <= yPosition + getHeight() + margin/2);
+	}
+	
+	public boolean isHigherHalfHovered(int mouseX, int mouseY) {
+		return (mouseX >= xPosition && mouseX <= xPosition + getWidth() && mouseY >= yPosition - margin/2 && mouseY <= yPosition + getHeight()/2);
+	}
+	
+	public boolean isLowerHalfHovered(int mouseX, int mouseY) {
+		return (mouseX >= xPosition && mouseX <= xPosition + getWidth() && mouseY >= yPosition + getHeight()/2 && mouseY <= yPosition + getHeight() + margin/2);
 	}
 }

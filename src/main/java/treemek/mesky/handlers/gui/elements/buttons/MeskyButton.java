@@ -31,7 +31,6 @@ public class MeskyButton extends GuiButton{
 	public void drawButton(Minecraft mc, int mouseX, int mouseY) {
 		if (this.visible)
         {
-            FontRenderer fontrenderer = mc.fontRendererObj;
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
             this.hovered = mouseX >= this.xPosition && mouseY >= this.yPosition && mouseX < this.xPosition + this.width && mouseY < this.yPosition + this.height;
             this.mouseDragged(mc, mouseX, mouseY);
@@ -40,7 +39,7 @@ public class MeskyButton extends GuiButton{
             {
                 j = packedFGColour;
             }
-            else
+
             if (!this.enabled)
             {
                 j = 10526880;
@@ -50,7 +49,9 @@ public class MeskyButton extends GuiButton{
                 j = 0x3e91b5;
             }
 
-            this.drawCenteredString(fontrenderer, this.displayString, this.xPosition + this.width / 2, this.yPosition + (this.height - 8) / 2, j);
+            double scale = Math.min(RenderHandler.getTextScale(buttonText, width*0.75f), RenderHandler.getTextScale(height/2.22f));
+            
+            RenderHandler.drawText(buttonText, xPosition + width/2 - RenderHandler.getTextWidth(buttonText, scale)/2, yPosition + height/2 - RenderHandler.getTextHeight(scale)/2, scale, true, j);
         }
 	}
 	

@@ -58,7 +58,7 @@ public class MaskTimer extends GuiScreen {
 						}
 				    	
 				    	BonzoMaskActivated = true;
-				    	Alerts.DisplayCustomAlerts("Bonzo Mask", 1000, 3, new int[] {50,50}, 4);
+				    	Alerts.DisplayCustomAlert("Bonzo Mask", 1000, 3, new Float[] {50f,50f}, 4, new ResourceLocation("minecraft", "random.anvil_land"), 1);
 				    	return;
 				    }
 				}
@@ -70,9 +70,9 @@ public class MaskTimer extends GuiScreen {
 			if (mask != null) {
 				SpiritCooldownSeconds = 30;
 				SpiritMaskActivated = true;
-				Alerts.DisplayCustomAlerts("Spirit Mask", 1000, 3, new int[] {50,50}, 4);
+				Alerts.DisplayCustomAlert("Spirit Mask", 1000, 3, new Float[] {50f,50f}, 4, new ResourceLocation("minecraft", "random.anvil_land"), 1);
 			}else {
-				System.out.println("Somehow you had activated Spirit Mask ability without having it on");
+				Utils.writeError("Somehow you had activated Spirit Mask ability without having it on");
 			}
 		}
 	}
@@ -111,7 +111,7 @@ public class MaskTimer extends GuiScreen {
 		String cooldownTimer = Math.round(text) + "s";
 		
 		// Calculate the position to render the timer
-		Float scale = SettingsConfig.BonzoTimer.scale;
+		Float scale = (float) (SettingsConfig.BonzoTimer.scale * RenderHandler.getResolutionScale());
 		float x = resolution.getScaledWidth() * (SettingsConfig.BonzoTimer.position[0]/100);
         float y = resolution.getScaledHeight() * (SettingsConfig.BonzoTimer.position[1]/100);
         
@@ -127,7 +127,7 @@ public class MaskTimer extends GuiScreen {
 		String cooldownTimer = Math.round(text) + "s";
 		
 		// Calculate the position to render the timer
-		Float scale = SettingsConfig.SpiritTimer.scale;
+		Float scale = (float) (SettingsConfig.SpiritTimer.scale * RenderHandler.getResolutionScale());
 		float x = resolution.getScaledWidth() * (SettingsConfig.SpiritTimer.position[0]/100);
         float y = resolution.getScaledHeight() * (SettingsConfig.SpiritTimer.position[1]/100);
 		

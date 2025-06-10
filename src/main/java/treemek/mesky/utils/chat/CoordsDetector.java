@@ -112,14 +112,14 @@ public class CoordsDetector {
         ChatComponentText detectionMessage = new ChatComponentText(EnumChatFormatting.YELLOW + "@#");
         
         if(sender == null) sender = "" + ColorUtils.getRandomMinecraftColor() + x + EnumChatFormatting.WHITE + "/" + ColorUtils.getRandomMinecraftColor() + y + EnumChatFormatting.WHITE + "/" + ColorUtils.getRandomMinecraftColor() + z;
-        
+        sender = ColorUtils.convertMinecraftColorsToMeskyCodes(sender);
         
         String color = ColorUtils.getColorString(ColorUtils.getColorIntFromEnumChatFormatting(ColorUtils.getMostUsedColor(sender)));
         if(SettingsConfig.AutoMarkCoords.isOn) {
 			Float radius = SettingsConfig.MarkWaypointRadius.number.floatValue();
 			Long lifeTime = SettingsConfig.MarkWaypointTime.number.longValue();
 			Waypoints.addTouchWaypoint(sender, color, x, y, z, 2, radius, lifeTime * 1000L);
-			Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Added mark (" + radius + "m, " + lifeTime + "s): " + EnumChatFormatting.DARK_PURPLE + sender + " " + EnumChatFormatting.GOLD + x + " " + y + " " + z));
+			Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Added mark (" + radius + "m, " + lifeTime + "s): " + EnumChatFormatting.DARK_PURPLE + ColorUtils.getColoredText(sender) + " " + EnumChatFormatting.GOLD + x + " " + y + " " + z));
         }
         
         ChatStyle mark = new ChatStyle();

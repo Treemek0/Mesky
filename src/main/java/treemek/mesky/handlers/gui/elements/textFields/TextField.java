@@ -94,6 +94,16 @@ public class TextField
         defaultFontHeight = fontRendererInstance.FONT_HEIGHT;
 		scaleFactor = (float) RenderHandler.getTextScale(height/2.2);
     }
+    
+    public void update(int x, int y, int width, int height) {
+        this.xPosition = x;
+        this.yPosition = y;
+        this.width = width;
+        this.height = height;
+        
+        defaultFontHeight = fontRendererInstance.FONT_HEIGHT;
+		scaleFactor = (float) RenderHandler.getTextScale(height/2.2);
+    }
 
     public void func_175207_a(GuiPageButtonList.GuiResponder p_175207_1_)
     {
@@ -553,7 +563,7 @@ public class TextField
     public void mouseClicked(int mouseX_, int mouseY_, int buttonId_)
     {
         boolean flag = mouseX_ >= this.xPosition && mouseX_ < this.xPosition + this.width && mouseY_ >= this.yPosition && mouseY_ < this.yPosition + this.height;
-
+        
         if (this.canLoseFocus)
         {
             this.setFocused(flag);
@@ -928,6 +938,7 @@ public class TextField
     public void setVisible(boolean p_146189_1_)
     {
         this.visible = p_146189_1_;
+        if(!visible) setFocused(false);
     }
     
     public void setSelection(int start, int end) {

@@ -1,8 +1,11 @@
 package treemek.mesky.utils.manager;
 
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.Entity;
+import net.minecraft.init.Blocks;
+import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
@@ -133,6 +136,12 @@ public class CameraManager {
 
             if (movingobjectposition != null)
             {
+            	if(SettingsConfig.FreeLookIgnoreWalkableBlocksCollision.isOn) {
+	                BlockPos pos = movingobjectposition.getBlockPos();
+	                Block block = Minecraft.getMinecraft().theWorld.getBlockState(pos).getBlock();
+	
+	                if(isCollidable(block)) continue;
+            	}
                 double d7 = movingobjectposition.hitVec.distanceTo(new Vec3(d0, d1, d2));
 
                 if (d7 < d3)
@@ -180,13 +189,19 @@ public class CameraManager {
             f5 = f5 * 0.1F;
             MovingObjectPosition movingobjectposition = Minecraft.getMinecraft().theWorld.rayTraceBlocks(new Vec3(d0 + (double)f3, d1 + (double)f4, d2 + (double)f5), new Vec3(d0 - d4 + (double)f3 + (double)f5, d1 - d6 + (double)f4, d2 - d5 + (double)f5));
 
-            if (movingobjectposition != null)
-            {
+            if (movingobjectposition != null) {
+            	if(SettingsConfig.FreeLookIgnoreWalkableBlocksCollision.isOn) {
+	                BlockPos pos = movingobjectposition.getBlockPos();
+	                Block block = Minecraft.getMinecraft().theWorld.getBlockState(pos).getBlock();
+	
+	                if(isCollidable(block)) continue;
+            	}
                 double d7 = movingobjectposition.hitVec.distanceTo(new Vec3(d0, d1, d2));
 
                 if (d7 < d3)
                 {
-                    d3 = d7;
+                	
+                	d3 = d7;
                 }
             }
         }
@@ -194,16 +209,25 @@ public class CameraManager {
         return d3;
     }
     
+    
+    // fix this better for crops
+    public static boolean isCollidable(Block b) {
+    	if(b == Blocks.farmland) return true;
+    	if(b.getMaterial().blocksMovement()) return true;
+    	return false;
+    }
+    
     public void changeCameraCollisionsToCameraRotation() {
     	double d3 = getCameraDistance();
-    	
     	// coming back to 0 translation
     	if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 2) d3 *= -1;
         GlStateManager.translate(0.0F, 0.0F, d3);
+    	Utils.debug(d3 + " player rot");
         
         // translating to camera colission
         double d4 = getCameraDistanceUsingCameraRotation();
         if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 2) d4 *= -1;
         GlStateManager.translate(0.0F, 0.0F, -d4);
+        Utils.debug(-d4 + " camera rot");
     }
 }

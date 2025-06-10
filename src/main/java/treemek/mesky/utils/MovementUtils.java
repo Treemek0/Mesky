@@ -123,7 +123,7 @@ public class MovementUtils {
 	int back = Minecraft.getMinecraft().gameSettings.keyBindBack.getKeyCode();
 	int forward = Minecraft.getMinecraft().gameSettings.keyBindForward.getKeyCode();
 	int jump = Minecraft.getMinecraft().gameSettings.keyBindJump.getKeyCode();
-			
+	
 	public static void addMovement(Movement movement) {
 		movementQueue.add(movement);
 	}
@@ -410,7 +410,7 @@ public class MovementUtils {
 	    }
 	    
 	    // jumping
-	    if (isAirGapBetween(oldPos, targetPos) && player.onGround) {
+	    if (isGap && player.onGround) {
     		if((Utils.getYawDifference(rotationYaw, player.rotationYaw) < 2.5 || !useRotation) && !player.isSneaking()) {
     			Utils.debug(isOnEdge(targetPos) + " " + !player.isSneaking() + " " + player.onGround);
 		    	if(isOnEdge(targetPos) && !player.isSneaking() && player.onGround) {
@@ -623,18 +623,23 @@ public class MovementUtils {
 			KeyBinding.unPressAllKeys();
 		}
 		
+		MacroWaypoints.MacroActive = null;
+		
+		KeyBinding.unPressAllKeys();
+		Minecraft.getMinecraft().thePlayer.moveForward = 0;
+		Minecraft.getMinecraft().thePlayer.moveStrafing = 0;
 		miniMovementQueue.clear();
 		movementQueue.clear();
 		rotationIndex = 0;
 		currentPosIndex = -1;
 	}
-	
+
 	public static boolean isCurrentlyMoving() {
 		return !movingPath.isEmpty();
 	}
 	
 	public static boolean isPlayerAuto() {
-		return !movementQueue.isEmpty();
+		return !movementQueue.isEmpty() || !miniMovementQueue.isEmpty();
 	}
 	
 	public static boolean needShifting = false;
@@ -692,7 +697,8 @@ public class MovementUtils {
 	
 	@SubscribeEvent
     public void onKeyInput(InputEvent.KeyInputEvent event) {
-		if(!isPlayerAuto() || !isCurrentlyMoving()) return;
+		if(!isPlayerAuto() && !isCurrentlyMoving() && MacroWaypoints.MacroActive == null) return;
+		if(MacroWaypoints.MacroActive != null && MacroWaypoints.MacroActive.boundingBox.intersectsWith(Minecraft.getMinecraft().thePlayer.getEntityBoundingBox())) return;
         if (Keyboard.getEventKeyState()) { // Check if key is pressed (true when pressed, false when released)
             int key = Keyboard.getEventKey();
 
@@ -723,4 +729,6 @@ public class MovementUtils {
     	currentPosIndex = -1;
     }
 	
+    
+    
 }

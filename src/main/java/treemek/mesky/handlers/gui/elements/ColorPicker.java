@@ -113,16 +113,13 @@ public class ColorPicker extends GuiTextField{
 	@Override
 	public void setText(String c) {
 		if(!c.startsWith("#")) c = "#" + c;
-		
-		Utils.debug(c);
+
 		colorTextField.setText(c);
 		
 		try {
 			this.color = Integer.parseInt(c.replace("#", ""), 16);
-			Utils.debug(c + " correct");
 		} catch (Exception e) {
 			this.color = 0xFFFFFF;
-			Utils.debug(c + " invalid");
 		}
 		
 		executorService.submit(() -> {

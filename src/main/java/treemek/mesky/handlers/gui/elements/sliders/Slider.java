@@ -83,8 +83,9 @@ public class Slider extends GuiButton{
 			double adjustedValue = Math.round(rawValue  / sliderPrecision) * sliderPrecision;
 			
 			setValue(adjustedValue);
+			return true;
 		}
-		return super.mousePressed(mc, mouseX, mouseY);
+		return false;
 	}
 	
 	@Override

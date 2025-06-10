@@ -132,6 +132,7 @@ public class SettingsGUI extends GuiScreen {
 	    if(Mesky.debug) generalSub.add(new SettingButton(6, checkSize, "Nick detection", SettingsConfig.NickMentionDetection));
 	    
 	    List<Object> freelookFoldable = new ArrayList<>();
+	    freelookFoldable.add(new SettingButton(2, checkSize, "Ignore walkable blocks collision (some mods destroys view)", SettingsConfig.FreeLookIgnoreWalkableBlocksCollision));
 	    freelookFoldable.add(new SettingButton(2, checkSize, "Lock camera, unlock rotation", SettingsConfig.FreeRotate));
 	    freelookFoldable.add(new SettingButton(2, checkSize, "Block inverted angles", SettingsConfig.FreeLookClampAngles));
 	    freelookFoldable.add(new SettingButton(2, checkSize, "Toogle", SettingsConfig.FreeLookToogle));
@@ -154,11 +155,12 @@ public class SettingsGUI extends GuiScreen {
 	    // >>>>
 	    
 	    List<Object> advancedToolsSub = new ArrayList<>();
-	    advancedToolsSub.add(new SettingButton(0, checkSize, "Ghost Blocks", SettingsConfig.GhostBlocks, true));
+	    advancedToolsSub.add(new SettingButton(0, checkSize, "Anty Ghost Blocks", SettingsConfig.AntyGhostBlocks));
+	    advancedToolsSub.add(new SettingButton(0, checkSize, "Ghost Block keybind", SettingsConfig.GhostBlocks, true));
 
 	    List<Object> ghostpickaxeFoldable = new ArrayList<>();
 	    ghostpickaxeFoldable.add(new SettingSlider(41849, 2 * checkSize, checkSize, "Ghost Pickaxe slot", SettingsConfig.GhostPickaxeSlot, 1, 1, 9));
-	    advancedToolsSub.add(new FoldableSettingButton(1, checkSize, "Ghost Pickaxe", SettingsConfig.GhostPickaxe, ghostpickaxeFoldable, true));
+	    advancedToolsSub.add(new FoldableSettingButton(1, checkSize, "Ghost Pickaxe keybind", SettingsConfig.GhostPickaxe, ghostpickaxeFoldable, true));
 
 	    List<SubCategory> utility = new ArrayList<>();
 

@@ -15,6 +15,31 @@ import treemek.mesky.Reference;
 
 public class ColorUtils {
 	
+	public enum MeskyColor {
+	    BLACK("<&0>"),
+	    DARK_BLUE("<&1>"),
+	    DARK_GREEN("<&2>"),
+	    DARK_AQUA("<&3>"),
+	    DARK_RED("<&4>"),
+	    DARK_PURPLE("<&5>"),
+	    GOLD("<&6>"),
+	    GRAY("<&7>"),
+	    DARK_GRAY("<&8>"),
+	    BLUE("<&9>"),
+	    GREEN("<&a>"),
+	    AQUA("<&b>"),
+	    RED("<&c>"),
+	    LIGHT_PURPLE("<&d>"),
+	    YELLOW("<&e>"),
+	    WHITE("<&f>");
+		
+		
+	    private final String code;
+		MeskyColor(String code) {
+	        this.code = code;
+	    }
+	}
+	
 	public static int getFullBrightnessColor(int color) {
         // Extract RGB components
         int r = (color >> 16) & 0xFF;
@@ -398,6 +423,51 @@ public class ColorUtils {
         Random random = new Random();
         return colors[random.nextInt(colors.length)];
     }
+    
+    public static String getRandomColor() {
+        String[] colors = {
+            "<&0>", // Black
+            "<&1>", // Dark Blue
+            "<&2>", // Dark Green
+            "<&3>", // Dark Aqua
+            "<&4>", // Dark Red
+            "<&5>", // Dark Purple
+            "<&6>", // Gold
+            "<&7>", // Gray
+            "<&8>", // Dark Gray
+            "<&9>", // Blue
+            "<&a>", // Green
+            "<&b>", // Aqua
+            "<&c>", // Red
+            "<&d>", // Light Purple
+            "<&e>", // Yellow
+            "<&f>"  // White
+        };
+        return colors[new java.util.Random().nextInt(colors.length)];
+    }
+
+    public static String convertMinecraftColorsToMeskyCodes(String input) {
+        // Replace '§' with '&' if needed
+        input = input.replace("§", "&");
+
+        StringBuilder output = new StringBuilder();
+        boolean inColor = false;
+
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+            if (inColor) {
+                output.append("<&").append(c).append(">");
+                inColor = false;
+            } else if (c == '&') {
+                inColor = true;
+            } else {
+                output.append(c);
+            }
+        }
+
+        return output.toString();
+    }
+
     
     public static EnumChatFormatting getClosestMinecraftColor(String hex) {
     	return getClosestMinecraftColor(getColorInt(hex));

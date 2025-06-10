@@ -6,6 +6,7 @@ import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
+import net.minecraft.client.gui.ScaledResolution;
 import treemek.mesky.handlers.gui.elements.ColorPicker;
 import treemek.mesky.handlers.gui.elements.buttons.CheckButton;
 import treemek.mesky.handlers.gui.elements.buttons.DeleteButton;
@@ -71,34 +72,16 @@ public class WaypointElement {
 	
 	public int getWidth() {
 		if(elementWidth == null) {
-			int lowestX = 10000000;
-			int highestX = 0;
-			
-			if(color.xPosition < lowestX) lowestX = color.xPosition;
-			if(color.xPosition + color.width > highestX) {
-				highestX = color.xPosition + color.width;
-			}
-			
-			List<GuiButton> buttons = getListOfButtons();
-			for (int i = 0; i < buttons.size(); i++) {
-				if(buttons.get(i).xPosition < lowestX) lowestX = buttons.get(i).xPosition;
-				if(buttons.get(i).xPosition + buttons.get(i).width > highestX) {
-					highestX = buttons.get(i).xPosition + buttons.get(i).width;
-				}
-			}
-			
-			List<TextField> inputs = getListOfTextFields();
-			for (int i = 0; i < inputs.size(); i++) {
-				if(inputs.get(i).xPosition < lowestX) lowestX = inputs.get(i).xPosition;
-				if(inputs.get(i).xPosition + inputs.get(i).width > highestX) {
-					highestX = inputs.get(i).xPosition + inputs.get(i).width;
-				}
-			}
-			
-			int width = highestX - lowestX;
+			ScaledResolution wind = new ScaledResolution(Minecraft.getMinecraft());
+	    	int height = wind.getScaledHeight();
+	    	int width = wind.getScaledWidth();
+	    	int inputHeight = ((height / 25) < 12)?12:(height / 25);
+	    	
+			int lowestX = width / 20 - inputHeight;
+			int highestX = (int) (width*0.9 + inputHeight*2);
 			
 			xPosition = lowestX;
-			elementWidth = width;
+			elementWidth = highestX - lowestX;
 			return width;
 		}else {
 			return elementWidth;

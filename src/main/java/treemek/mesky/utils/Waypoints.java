@@ -39,10 +39,21 @@ import treemek.mesky.utils.Waypoints.Waypoint;
 public class Waypoints {
 
 	// <String> name, <World> world, <int[]> coords
-	public static List<Waypoint> waypointsList = new ArrayList<Waypoint>();
+	public static Map<String, List<Waypoint>> waypointsList = new HashMap<>();
 	public static List<TemporaryWaypoint> temporaryWaypointsList = new ArrayList<TemporaryWaypoint>();
 	public static List<TouchWaypoint> touchWaypointsList = new ArrayList<TouchWaypoint>();
 
+	// make waypointsList hashmap with WaypointGroup instead list because enabled
+	public static class WaypointGroup {
+		public List<Waypoint> list;
+		public boolean enabled;
+		
+		public WaypointGroup(List<Waypoint> list, boolean enabled) {
+			this.list = list;
+			this.enabled = enabled;
+		}
+	}
+	
     // Waypoint class definition
     public static class Waypoint {
         public String name;
@@ -119,7 +130,18 @@ public class Waypoints {
     	
     	Waypoint waypoint;
 		waypoint = new Waypoint(name, color, x, y, z, Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld), scale, true);
-		waypointsList.add(0, waypoint);
+		waypointsList.computeIfAbsent(null, k -> new ArrayList<>()).add(0, waypoint);
+		ConfigHandler.SaveWaypoint(waypointsList);
+		return waypoint;
+    }
+    
+    public static Waypoint addWaypoint(String name, String color, float x, float y, float z, float scale, String group) {
+    	EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
+    	color = color.replace("#", "");
+    	
+    	Waypoint waypoint;
+		waypoint = new Waypoint(name, color, x, y, z, Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld), scale, true);
+		waypointsList.computeIfAbsent(group, k -> new ArrayList<>()).add(0, waypoint);
 		ConfigHandler.SaveWaypoint(waypointsList);
 		return waypoint;
     }
@@ -136,34 +158,39 @@ public class Waypoints {
 		return waypoint;
     }
     
-    public static void deleteWaypoint(int number) {
-    	Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Deleted waypoint: " + EnumChatFormatting.GOLD + waypointsList.get(number).name));
-		waypointsList.remove(number);
-		ConfigHandler.SaveWaypoint(waypointsList);
+    public static void deleteWaypoint(String group, int number) {
+        List<Waypoint> list = waypointsList.get(group);
+        
+        if (list != null && number >= 0 && number < list.size()) {
+            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Deleted waypoint: " + EnumChatFormatting.GOLD + list.get(number).name));
+            list.remove(number);
+            ConfigHandler.SaveWaypoint(waypointsList);
+        }
     }
    
     @SubscribeEvent
     public void onWorldRender(RenderWorldLastEvent event) {
         if (!waypointsList.isEmpty()) {
-            for (Waypoint waypoint : waypointsList) {
-            	if(!waypoint.enabled) continue;
-            	if(waypoint.world.equals(Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld))) {
-                    waypoint.color = ColorUtils.fixColor(waypoint.color);
-                    RenderHandler.draw3DWaypointString(ColorUtils.getColoredText(waypoint.name), waypoint.color, waypoint.coords, event.partialTicks, waypoint.scale);  
-                    
-                    try {
-                    	BlockPos waypointPos = new BlockPos(waypoint.coords[0], waypoint.coords[1], waypoint.coords[2]);
-                    	float x = (float) Math.floor(waypointPos.getX());
-                        float y = (float) Math.floor(waypointPos.getY());
-                        float z = (float) Math.floor(waypointPos.getZ());
-                    	AxisAlignedBB aabb = new AxisAlignedBB(x + 1.001, y + 1.001, z + 1.001, x - 0.001, y - 0.001, z - 0.001);
-                    	RenderHandler.draw3DBox(aabb, waypoint.color, event.partialTicks);
-                    	RenderHandler.draw3DImage(x + 0.5f, y + 0.5f, z + 0.5f, 0, 0, 0.5f, 0.5f, new ResourceLocation(Reference.MODID, "gui/marker.png"), ColorUtils.getColorInt(waypoint.color), false, event.partialTicks);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-                    
-                }
+        	for (List<Waypoint> group : waypointsList.values()) {
+        	    for (Waypoint waypoint : group) {
+	            	if(!waypoint.enabled) continue;
+	            	if(waypoint.world.equals(Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld))) {
+	                    waypoint.color = ColorUtils.fixColor(waypoint.color);
+	                    RenderHandler.draw3DWaypointString(ColorUtils.getColoredText(waypoint.name), waypoint.color, waypoint.coords, event.partialTicks, waypoint.scale);  
+	                    
+	                    try {
+	                    	BlockPos waypointPos = new BlockPos(waypoint.coords[0], waypoint.coords[1], waypoint.coords[2]);
+	                    	float x = (float) Math.floor(waypointPos.getX());
+	                        float y = (float) Math.floor(waypointPos.getY());
+	                        float z = (float) Math.floor(waypointPos.getZ());
+	                    	AxisAlignedBB aabb = new AxisAlignedBB(x + 1.001, y + 1.001, z + 1.001, x - 0.001, y - 0.001, z - 0.001);
+	                    	RenderHandler.draw3DBox(aabb, waypoint.color, event.partialTicks);
+	                    	RenderHandler.draw3DImage(x + 0.5f, y + 0.5f, z + 0.5f, 0, 0, 0.5f, 0.5f, new ResourceLocation(Reference.MODID, "gui/marker.png"), ColorUtils.getColorInt(waypoint.color), false, event.partialTicks);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+	                }
+        	    }
             }
         }
         if (!temporaryWaypointsList.isEmpty()) {
@@ -223,46 +250,43 @@ public class Waypoints {
         }
     }
     
-    public static List<Waypoint> GetLocationWaypoints() {
-    	List<Waypoint> LocationWaypointsList = new ArrayList<Waypoint>();
-		Location.checkTabLocation();
-		
-		for (Waypoint waypoint : Waypoints.waypointsList) {
-    		if(waypoint.world.equals(Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld))){
-    			LocationWaypointsList.add(new Waypoint(waypoint.name, waypoint.color, waypoint.coords[0], waypoint.coords[1], waypoint.coords[2], waypoint.world, waypoint.scale, waypoint.enabled));
-    		}
-		}
-		return LocationWaypointsList;
+    public static Map<String, List<Waypoint>> GetLocationWaypoints() {
+        Map<String, List<Waypoint>> groupedWaypoints = new HashMap<>();
+        Location.checkTabLocation();
+        String currentWorld = Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld);
+
+        for (Map.Entry<String, List<Waypoint>> entry : waypointsList.entrySet()) {
+            List<Waypoint> filtered = new ArrayList<>();
+            for (Waypoint waypoint : entry.getValue()) {
+                if (waypoint.world.equals(currentWorld)) {
+                    filtered.add(new Waypoint(waypoint.name, waypoint.color, waypoint.coords[0], waypoint.coords[1], waypoint.coords[2], waypoint.world, waypoint.scale, waypoint.enabled));
+                }
+            }
+            if (!filtered.isEmpty()) {
+                groupedWaypoints.put(entry.getKey(), filtered);
+            }
+        }
+
+        return groupedWaypoints;
     }
-    
-    public static List<Waypoint> GetWaypointsWithoutLocation() {
-    	List<Waypoint> LocationWaypointsList = new ArrayList<Waypoint>();
-		
-		for (Waypoint waypoint : Waypoints.waypointsList) {
-			if(!waypoint.world.equals(Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld))){
-    			LocationWaypointsList.add(new Waypoint(waypoint.name, waypoint.color, waypoint.coords[0], waypoint.coords[1], waypoint.coords[2], waypoint.world, waypoint.scale, waypoint.enabled));
-    		}
-		}
-		return LocationWaypointsList;
-    }
-    
-    public static void deleteWaypointFromLocation(int number) {
-    	int numberInLocation = 0;
-    	
-    	for (int i = 0; i < waypointsList.size(); i++) {
-    		Waypoint waypoint = waypointsList.get(i);
-			if(waypoint.world.equals(Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld))){
-				if(numberInLocation == number) {
-					Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Deleted waypoint: " + waypointsList.get(i).name));
-    				waypointsList.remove(i);
-    				ConfigHandler.SaveWaypoint(waypointsList);
-    				break;
-    			}else {
-    				numberInLocation++;
-    			}
-    		}
-	    	
-    	}
+
+    public static Map<String, List<Waypoint>> GetWaypointsWithoutLocation() {
+        Map<String, List<Waypoint>> groupedWaypoints = new HashMap<>();
+        String currentWorld = Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld);
+
+        for (Map.Entry<String, List<Waypoint>> entry : waypointsList.entrySet()) {
+            List<Waypoint> filtered = new ArrayList<>();
+            for (Waypoint waypoint : entry.getValue()) {
+                if (!waypoint.world.equals(currentWorld)) {
+                    filtered.add(new Waypoint(waypoint.name, waypoint.color, waypoint.coords[0], waypoint.coords[1], waypoint.coords[2], waypoint.world, waypoint.scale, waypoint.enabled));
+                }
+            }
+            if (!filtered.isEmpty()) {
+                groupedWaypoints.put(entry.getKey(), filtered);
+            }
+        }
+
+        return groupedWaypoints;
     }
 	
     @SubscribeEvent

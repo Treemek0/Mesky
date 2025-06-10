@@ -41,6 +41,7 @@ import treemek.mesky.Reference;
 import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.features.FishingTimer;
 import treemek.mesky.utils.Alerts;
+import treemek.mesky.utils.ColorUtils;
 import treemek.mesky.utils.Locations;
 import treemek.mesky.utils.Locations.Location;
 import treemek.mesky.utils.MovementUtils;
@@ -107,16 +108,18 @@ public class AutoFish {
     float previousHealth = 20;
     
     private boolean isFishingRod(ItemStack item) {
-    	 if (item.getItem() != null && item.getItem() == Items.fishing_rod) {
-	        	 String itemId = Utils.getSkyblockId(item);
+    	if(item == null) return false;
+    	if(item.getItem() == null) return false;
+    	if(item.getItem() == Items.fishing_rod) {
+	        	String itemId = Utils.getSkyblockId(item);
 	        	 
-	        	 if(itemId != null) { 
-	        		 if(!itemId.equals("SOUL_WHIP") && !itemId.equals("FLAMING_FLAY")) {
-	        			 return true;
-	        		 }
-	        	 }
+	        	if(itemId != null) { 
+	        		if(!itemId.equals("SOUL_WHIP") && !itemId.equals("FLAMING_FLAY") && !itemId.equals("GRAPPLING_HOOK")) {
+	        			return true;
+	        		}
+	        	}
 
-    	 }
+    	}
     	
     	return false;
     }
@@ -197,6 +200,10 @@ public class AutoFish {
 	public void onChat(ClientChatReceivedEvent event) {
 		if(event.type == 0 || event.type == 1) {
 			lastMessage = event.message.getUnformattedText();
+			
+			if(ColorUtils.removeMinecraftTextColor(lastMessage).equals("The Golden Fish escapes your hook but looks weakened.")) {
+				throwNewHook();
+			}
 		}
 	}
 	
@@ -258,13 +265,24 @@ public class AutoFish {
 				}
 				
 				long delay = 200;
-				int randomInt = 15 + new Random().nextInt(11); // 15 - 25
+				int randomInt = 25 + new Random().nextInt(6); // 25 - 30
 				
-				float pitch = -35 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10));
+				float pitch = RotationUtils.getNeededPitchFromMinecraftRotation(70) + Utils.getRandomizedMinusOrPlus(new Random().nextInt(5));
 				float rotationTime = (((delay+50) * randomInt) + 10);
-				Alerts.DisplayCustomAlert("AntyAFK (" + rotationTime/1000 + "s)", (int) rotationTime, new Float[] {50f, 40f}, 2f);
-				RotationUtils.rotateBezierCurveTo(originalRotation[0]+180, -pitch, originalRotation[0]+90, -(pitch+5), rotationTime/3000, true);
-				RotationUtils.rotateBezierCurveTo(originalRotation[0], originalRotation[1], originalRotation[0]-90, originalRotation[1]+5, rotationTime/3000, true);
+				Alerts.DisplayCustomAlert("AntyAFK", (int) rotationTime, new Float[] {50f, 40f}, 2f);
+				
+				float addYaw = Utils.getRandomizedMinusOrPlus(new Random().nextInt(20));
+				
+				RotationUtils.rotateBezierCurve(80, pitch, 40 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), pitch + Utils.getRandomizedMinusOrPlus(new Random().nextInt(2)), 1f, true);
+				RotationUtils.rotateBezierCurve(-160 + addYaw, 0, -70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
+				RotationUtils.rotateBezierCurve(160 - addYaw/2, 0, 70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
+				RotationUtils.rotateBezierCurve(-160 + addYaw/2, 0, -70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
+				RotationUtils.rotateBezierCurve(160 - addYaw, 0, 70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
+				RotationUtils.rotateBezierCurve(-160 + addYaw, 0, -70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
+				RotationUtils.rotateBezierCurve(160 - addYaw/2, 0, 70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
+				RotationUtils.rotateBezierCurve(-160 + addYaw/2, 0, -70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
+				RotationUtils.rotateBezierCurve(160 - addYaw, 0, 70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
+				RotationUtils.rotateBezierCurve(-80, -pitch, -40 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), -pitch + Utils.getRandomizedMinusOrPlus(new Random().nextInt(2)), 1f, true);
 				
 				RotationUtils.addTask(() -> {
 					Utils.debug("blokEverything is" + blokEverything);
@@ -392,7 +410,7 @@ public class AutoFish {
 	                	if (Thread.currentThread().isInterrupted()) return;
 	                	
 	                	if(Minecraft.getMinecraft().thePlayer.rotationPitch < 88) {
-	                		RotationUtils.rotateCurveTo(0, RotationUtils.getNeededPitchFromMinecraftRotation(90), 0.1f, true);
+	                		RotationUtils.rotateCurve(0, RotationUtils.getNeededPitchFromMinecraftRotation(90), 0.1f, true);
 	                	}
 	                	
 	                	killingCreatures = true;
@@ -423,7 +441,7 @@ public class AutoFish {
 	                			}
                 			}else {
                 				RotationUtils.clearAllRotations();
-                				RotationUtils.rotateCurveTo(0, RotationUtils.getNeededPitchFromMinecraftRotation(90), 0.1f, true);
+                				RotationUtils.rotateCurve(0, RotationUtils.getNeededPitchFromMinecraftRotation(90), 0.1f, true);
                 			}
                 			
                 			Thread.sleep(delay + Math.round((new Random().nextFloat()*10)));
@@ -462,7 +480,7 @@ public class AutoFish {
 				
 				if(Math.abs(Minecraft.getMinecraft().thePlayer.rotationYaw - originalRotation[0]) > 5 || Math.abs(Minecraft.getMinecraft().thePlayer.rotationPitch - originalRotation[1]) > 2) {
 					float noise = Utils.getRandomizedMinusOrPlus(new Random().nextFloat());
-					RotationUtils.rotateCurveTo(RotationUtils.getNeededYawFromMinecraftRotation(originalRotation[0] + noise), RotationUtils.getNeededPitchFromMinecraftRotation(originalRotation[1] + noise/2), 0.2f, true);
+					RotationUtils.rotateCurve(RotationUtils.getNeededYawFromMinecraftRotation(originalRotation[0] + noise), RotationUtils.getNeededPitchFromMinecraftRotation(originalRotation[1] + noise/2), 0.2f, true);
 				}
 
 				
@@ -691,7 +709,7 @@ public class AutoFish {
 		                	if(antyAfkCycle != null && antyAfkCycle.isAlive()) antyAfkCycle.interrupt(); // stop antyafk
 		                	
 		                	if(Minecraft.getMinecraft().thePlayer.rotationPitch < 88) {
-		                		RotationUtils.rotateCurveTo(0, RotationUtils.getNeededPitchFromMinecraftRotation(90), 0.1f, true);
+		                		RotationUtils.rotateCurve(0, RotationUtils.getNeededPitchFromMinecraftRotation(90), 0.1f, true);
 		                	}
 		                	
 		                	killingCreatures = true;
@@ -711,7 +729,7 @@ public class AutoFish {
 		                			antyWrongDetection++;
 		                			
 		                			if(Minecraft.getMinecraft().thePlayer.inventory.currentItem != i) { killingCreatures = false; attacker = null; blokEverything = true; MovementUtils.stopMoving(); return; }
-		                			if(Minecraft.getMinecraft().thePlayer.rotationPitch < 88) { RotationUtils.clearAllRotations(); RotationUtils.rotateCurveTo(0, RotationUtils.getNeededPitchFromMinecraftRotation(90), 0.1f, true); continue; }
+		                			if(Minecraft.getMinecraft().thePlayer.rotationPitch < 88) { RotationUtils.clearAllRotations(); RotationUtils.rotateCurve(0, RotationUtils.getNeededPitchFromMinecraftRotation(90), 0.1f, true); continue; }
 		                			
 		                			if(entity.getDistance(player.posX, player.posY, player.posZ) < 7) {
 		                				KeyBinding.onTick(rightClick);

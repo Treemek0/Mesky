@@ -33,6 +33,8 @@ public class MacroWaypoints {
 	int forward = Minecraft.getMinecraft().gameSettings.keyBindForward.getKeyCode();
 	int sneak = Minecraft.getMinecraft().gameSettings.keyBindSneak.getKeyCode();
 	
+	public static MacroWaypoint MacroActive = null;
+	
 	public static class MacroWaypointGroup {
 		private List<MacroWaypoint> group = new ArrayList<>();
 
@@ -64,6 +66,7 @@ public class MacroWaypoints {
 		public AxisAlignedBB boundingBox;
 		public String function;
 		public Boolean enabled;
+		private AxisAlignedBB collisionBox;
 
 		
 		public MacroWaypoint(Waypoint waypoint, Float yaw, Float pitch, boolean left, boolean right, boolean back, boolean forward, boolean leftClick, boolean rightClick, boolean sneak, Float noiseLevel, String function, boolean enabled) {
@@ -86,6 +89,7 @@ public class MacroWaypoints {
             float y = (float) Math.floor(waypointPos.getY());
             float z = (float) Math.floor(waypointPos.getZ());
         	this.boundingBox = new AxisAlignedBB(x + 1.001, y + 1.001, z + 1.001, x - 0.001, y - 0.001, z - 0.001);
+        	this.collisionBox = new AxisAlignedBB(x + 0.4, y + 1, z + 0.4, x + 0.6, y, z + 0.6);
 		}
 		
 		public void fixNulls() {
@@ -97,6 +101,7 @@ public class MacroWaypoints {
                 float z = (float) Math.floor(waypointPos.getZ());
             	this.boundingBox = new AxisAlignedBB(x + 1.001, y + 1.001, z + 1.001, x - 0.001, y - 0.001, z - 0.001);
         	}
+        	
         	// yaw & pitch can be null
         	if(left == null) left = false;
         	if(right == null) right = false;
@@ -108,6 +113,7 @@ public class MacroWaypoints {
         	if(enabled == null) enabled = true;
         	if(noiseLevel == null) noiseLevel = 1f;
         	if(function == null) function = "/";
+        	if(collisionBox == null) this.collisionBox = new AxisAlignedBB(Math.floor(waypoint.coords[0]) + 0.4, Math.floor(waypoint.coords[1]) + 1, Math.floor(waypoint.coords[2]) + 0.4, Math.floor(waypoint.coords[0]) + 0.6, Math.floor(waypoint.coords[1]), Math.floor(waypoint.coords[2]) + 0.6);
         }
 	}
 	
@@ -167,18 +173,13 @@ public class MacroWaypoints {
 	            	AxisAlignedBB playerBoundingBox = player.getEntityBoundingBox();
 	            	
 	            	
-					if(playerBoundingBox.minX > macroWaypoint.boundingBox.minX && playerBoundingBox.maxX < macroWaypoint.boundingBox.maxX && playerBoundingBox.minZ > macroWaypoint.boundingBox.minZ && playerBoundingBox.maxZ < macroWaypoint.boundingBox.maxZ && y > macroWaypoint.boundingBox.minY - 0.999 && y < macroWaypoint.boundingBox.maxY - 0.001) {
+					if(playerBoundingBox.intersectsWith(macroWaypoint.collisionBox)) {
 						if(doneMacro.contains(macroWaypoint)) continue;
 						doneMacro.add(macroWaypoint);
 						new Thread(() -> {
 							try {
-								KeyBinding.setKeyBindState(left, false);
-								KeyBinding.setKeyBindState(right, false);
-								KeyBinding.setKeyBindState(back, false);
-								KeyBinding.setKeyBindState(forward, false);
-								KeyBinding.setKeyBindState(leftClick, false);
-								KeyBinding.setKeyBindState(rightClick, false);
-								KeyBinding.setKeyBindState(sneak, false);
+								MacroActive = null;
+								KeyBinding.unPressAllKeys();
 								Thread.sleep(100);
 								
 								if(!macroWaypoint.function.equals("/")) {
@@ -188,6 +189,7 @@ public class MacroWaypoints {
 								if(macroWaypoint.yaw != null && macroWaypoint.pitch != null) {
 									RotationUtils.clearAllRotations();
 									RotationUtils.rotateCurveToWithControlableNoise(RotationUtils.getNeededYawFromMinecraftRotation(macroWaypoint.yaw), RotationUtils.getNeededPitchFromMinecraftRotation(macroWaypoint.pitch), 0.5f, macroWaypoint.noiseLevel);
+									if(isAnyKeybindPressed(macroWaypoint)) MacroActive = macroWaypoint;
 									RotationUtils.addTask(() -> {
 										KeyBinding.setKeyBindState(left, macroWaypoint.left);
 										KeyBinding.setKeyBindState(right, macroWaypoint.right);
@@ -205,6 +207,7 @@ public class MacroWaypoints {
 									KeyBinding.setKeyBindState(leftClick, macroWaypoint.leftClick);
 									KeyBinding.setKeyBindState(rightClick, macroWaypoint.rightClick);
 									KeyBinding.setKeyBindState(sneak, macroWaypoint.sneak);
+									if(isAnyKeybindPressed(macroWaypoint)) MacroActive = macroWaypoint;
 								}
 							} catch (InterruptedException e) {
 								e.printStackTrace();
@@ -263,4 +266,11 @@ public class MacroWaypoints {
     		}
     	}
     }
+    
+	
+	private static boolean isAnyKeybindPressed(MacroWaypoint macroWaypoint) {
+		if(macroWaypoint.forward || macroWaypoint.back || macroWaypoint.left || macroWaypoint.right || macroWaypoint.leftClick || macroWaypoint.sneak) return true;
+		
+		return false;
+	}
 }

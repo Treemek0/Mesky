@@ -194,7 +194,7 @@ public class RotationUtils {
 		addToRotationQueue(angles);
 	}
 	
-	public static void rotateCurveTo(float yaw, float pitch, float seconds, boolean addNoise) {
+	public static void rotateCurve(float yaw, float pitch, float seconds, boolean addNoise) {
 		float[] goalRotation = new float[] {Utils.normalizeAngle(yaw), Utils.clampPitch(pitch)};
 		
 		int ticksInSeconds = Minecraft.getMinecraft().getDebugFPS();
@@ -230,7 +230,7 @@ public class RotationUtils {
 		addToRotationQueue(angles);
 	}
 	
-	public static void rotateBezierCurveTo(float yaw, float pitch, float controlPointYaw, float controlPointPitch, float seconds, boolean addNoise) {
+	public static void rotateBezierCurve(float yaw, float pitch, float controlPointYaw, float controlPointPitch, float seconds, boolean addNoise) {
 		float[] goalRotation = new float[] {Utils.normalizeAngle(yaw), Utils.clampPitch(pitch)};
 		
 		int ticksInSeconds = Minecraft.getMinecraft().getDebugFPS();
@@ -266,7 +266,7 @@ public class RotationUtils {
 		addToRotationQueue(angles);
 	}
 	
-	public static void rotateDoubleBezierCurveTo(float yaw, float pitch, float controlPointYaw1, float controlPointPitch1, float controlPointYaw2, float controlPointPitch2, float seconds, boolean addNoise) {
+	public static void rotateDoubleBezierCurve(float yaw, float pitch, float controlPointYaw1, float controlPointPitch1, float controlPointYaw2, float controlPointPitch2, float seconds, boolean addNoise) {
 		float[] goalRotation = new float[] {Utils.normalizeAngle(yaw), Utils.clampPitch(pitch)};
 
 	    int ticksInSeconds = Minecraft.getMinecraft().getDebugFPS();
@@ -460,7 +460,9 @@ public class RotationUtils {
     public void onMouseMoved(MouseEvent event) {
 		if(currentFrame != -1 && !CameraManager.lockCamera) {
 			if (event.dx != 0 || event.dy != 0) {
+				if(MacroWaypoints.MacroActive != null && MacroWaypoints.MacroActive.boundingBox.intersectsWith(Minecraft.getMinecraft().thePlayer.getEntityBoundingBox())) return;
 				clearAllRotations();
+				Utils.debug("cleared rotation " + MacroWaypoints.MacroActive);
 			}
 		}
 		

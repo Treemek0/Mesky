@@ -172,7 +172,7 @@ public class MiningUtils {
 		            	
 		            	if(m == 0) { // first time seeing
 			            	float[] rotation = RotationUtils.getPlayerRotationToLookAtEntity(visiblePlayer);
-			            	RotationUtils.rotateCurveTo(RotationUtils.getNeededYawFromMinecraftRotation(rotation[0]), RotationUtils.getNeededPitchFromMinecraftRotation(rotation[1]), 0.5f, false);
+			            	RotationUtils.rotateCurve(RotationUtils.getNeededYawFromMinecraftRotation(rotation[0]), RotationUtils.getNeededPitchFromMinecraftRotation(rotation[1]), 0.5f, false);
 			            	KeyBinding.setKeyBindState(MovementUtils.leftClick.getKeyCode(), false);
 			            	
 			            	RotationUtils.addTask(() -> {
@@ -313,7 +313,7 @@ public class MiningUtils {
 		if(hasItem) {
 			RotationUtils.clearAllRotations();
 			float[] rotation = RotationUtils.getPlayerRotationToLookAtVector(pos[0], pos[1], pos[2]);
-			RotationUtils.rotateCurveTo(RotationUtils.getNeededYawFromMinecraftRotation(rotation[0]), RotationUtils.getNeededPitchFromMinecraftRotation(rotation[1]), 0.2f, true);
+			RotationUtils.rotateCurve(RotationUtils.getNeededYawFromMinecraftRotation(rotation[0]), RotationUtils.getNeededPitchFromMinecraftRotation(rotation[1]), 0.2f, true);
 			KeyBinding.setKeyBindState(MovementUtils.leftClick.getKeyCode(), true); 
 			
 			RotationUtils.addTask(() -> {

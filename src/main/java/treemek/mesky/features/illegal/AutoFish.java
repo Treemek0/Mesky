@@ -45,6 +45,7 @@ import treemek.mesky.utils.ColorUtils;
 import treemek.mesky.utils.Locations;
 import treemek.mesky.utils.Locations.Location;
 import treemek.mesky.utils.MovementUtils;
+import treemek.mesky.utils.MovementUtils.Movement;
 import treemek.mesky.utils.RotationUtils;
 import treemek.mesky.utils.Utils;
 
@@ -265,7 +266,7 @@ public class AutoFish {
 				}
 				
 				long delay = 200;
-				int randomInt = 25 + new Random().nextInt(6); // 25 - 30
+				int randomInt = 35 + new Random().nextInt(6); // 25 - 30
 				
 				float pitch = RotationUtils.getNeededPitchFromMinecraftRotation(70) + Utils.getRandomizedMinusOrPlus(new Random().nextInt(5));
 				float rotationTime = (((delay+50) * randomInt) + 10);
@@ -273,16 +274,20 @@ public class AutoFish {
 				
 				float addYaw = Utils.getRandomizedMinusOrPlus(new Random().nextInt(20));
 				
-				RotationUtils.rotateBezierCurve(80, pitch, 40 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), pitch + Utils.getRandomizedMinusOrPlus(new Random().nextInt(2)), 1f, true);
-				RotationUtils.rotateBezierCurve(-160 + addYaw, 0, -70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
-				RotationUtils.rotateBezierCurve(160 - addYaw/2, 0, 70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
+				float pitchRandom = new Random().nextInt(30);
+				
+				RotationUtils.rotateBezierCurve(80, pitch, 40 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), pitch + Utils.getRandomizedMinusOrPlus(new Random().nextInt(2)), 0.6f, true);
+				RotationUtils.rotateBezierCurve(-160 + addYaw, 0, -70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.4f, true);
+				RotationUtils.rotateBezierCurve(160 - addYaw/2, -pitchRandom, 70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.5f, true);
 				RotationUtils.rotateBezierCurve(-160 + addYaw/2, 0, -70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
-				RotationUtils.rotateBezierCurve(160 - addYaw, 0, 70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
-				RotationUtils.rotateBezierCurve(-160 + addYaw, 0, -70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
-				RotationUtils.rotateBezierCurve(160 - addYaw/2, 0, 70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
-				RotationUtils.rotateBezierCurve(-160 + addYaw/2, 0, -70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
-				RotationUtils.rotateBezierCurve(160 - addYaw, 0, 70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
-				RotationUtils.rotateBezierCurve(-80, -pitch, -40 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), -pitch + Utils.getRandomizedMinusOrPlus(new Random().nextInt(2)), 1f, true);
+				RotationUtils.rotateBezierCurve(160 - addYaw, pitchRandom, 70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.3f, true);
+				RotationUtils.rotateBezierCurve(-160 + addYaw, 0, -70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.5f, true);
+				RotationUtils.rotateBezierCurve(160 - addYaw/2, -pitchRandom/2, 70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.4f, true);
+				RotationUtils.rotateBezierCurve(-160 + addYaw/2, 0, -70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.4f, true);
+				RotationUtils.rotateBezierCurve(addYaw*1.5f, pitchRandom/2, 70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.4f, true);
+				RotationUtils.addTask(() -> {
+					RotationUtils.rotateCurve(RotationUtils.getNeededYawFromMinecraftRotation(originalRotation[0]), RotationUtils.getNeededPitchFromMinecraftRotation(originalRotation[1]), 0.3f, true);
+				});
 				
 				RotationUtils.addTask(() -> {
 					Utils.debug("blokEverything is" + blokEverything);
@@ -471,60 +476,65 @@ public class AutoFish {
 	
 	// idk if it works
 	private void throwNewHook() {
-		try {
-			if(SettingsConfig.AutoThrowHook.isOn) {
-				if (Thread.currentThread().isInterrupted()) return;
-				if(Utils.playerPosition().distanceSq(fishingPlace) != 0) {
-					MovementUtils.quietlyMovePlayerToWithoutRotation(fishingPlace);
-				}
-				
-				if(Math.abs(Minecraft.getMinecraft().thePlayer.rotationYaw - originalRotation[0]) > 5 || Math.abs(Minecraft.getMinecraft().thePlayer.rotationPitch - originalRotation[1]) > 2) {
-					float noise = Utils.getRandomizedMinusOrPlus(new Random().nextFloat());
-					RotationUtils.rotateCurve(RotationUtils.getNeededYawFromMinecraftRotation(originalRotation[0] + noise), RotationUtils.getNeededPitchFromMinecraftRotation(originalRotation[1] + noise/2), 0.2f, true);
-				}
-
-				
+		if(SettingsConfig.AutoThrowHook.isOn) {
+			RotationUtils.clearAllRotations();
+			MovementUtils.resetMiniMovementsList();
+			
+			if (Thread.currentThread().isInterrupted()) return;
+			if(Utils.playerPosition().distanceSq(fishingPlace) != 0) {
+				MovementUtils.quietlyMovePlayerToWithoutRotation(fishingPlace);
+			}
+			
+			RotationUtils.rotateCurve(Utils.getRandomizedMinusOrPlus(new Random().nextFloat() * 10), Utils.getRandomizedMinusOrPlus(new Random().nextFloat() * 5), 0.2f, true);
+			
+			RotationUtils.addTask(() -> {
+				float noise = Utils.getRandomizedMinusOrPlus(new Random().nextFloat());
+				RotationUtils.rotateCurve(RotationUtils.getNeededYawFromMinecraftRotation(originalRotation[0] + noise), RotationUtils.getNeededPitchFromMinecraftRotation(originalRotation[1] + noise/2), 0.2f, true);
+			
+			
 				Minecraft.getMinecraft().thePlayer.inventory.currentItem = fishingRodSlot;
 				
+				KeyBinding.onTick(leftClick);
 				
-				Thread.sleep(750 + Math.round((new Random().nextFloat()*1000)/2));
-				
-				if(Minecraft.getMinecraft().thePlayer.inventory.currentItem != fishingRodSlot) {
-					blokEverything = true;
-					MovementUtils.stopMoving();
-					return;
-				}
-				
-				if (Thread.currentThread().isInterrupted()) return;
-				if(!FishingTimer.isFishing) {
-					Alerts.DisplayCustomAlert("Auto hook", 1000, new Float[] {50f, 20f}, 2f);
-					KeyBinding.onTick(rightClick);
-				}else {
-					Alerts.DisplayCustomAlert("Bugged Auto hook", 1000, new Float[] {50f, 20f}, 2f);
-					KeyBinding.onTick(rightClick);
-					Thread.sleep(500);
-					KeyBinding.onTick(rightClick);
-				}
-				
-				
-				Thread.sleep(3500);
-				if (Thread.currentThread().isInterrupted()) return;
-				if(!FishingTimer.isInLiquid && FishingTimer.isFishing) {
-					Alerts.DisplayCustomAlert("Hook blocked", 500, new Float[] {50f, 20f}, 2f);
-					
-					attacker = detectAttackerSeaCreature();
-					if(attacker != null) killAttackingSeaCreature(attacker);
-					
-					RotationUtils.rotateStraight(0, -2, 0.1f, false);
-					KeyBinding.onTick(rightClick);
-					Thread.sleep(500);
-					if(!FishingTimer.isFishing) {
-						KeyBinding.onTick(rightClick);
+				RotationUtils.addTask(() -> {
+					if(Minecraft.getMinecraft().thePlayer.inventory.currentItem != fishingRodSlot) {
+						blokEverything = true;
+						MovementUtils.stopMoving();
+						return;
 					}
-				}
-	    	}
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+					
+					if (Thread.currentThread().isInterrupted()) return;
+					if(!FishingTimer.isFishing) {
+						Alerts.DisplayCustomAlert("Auto hook", 1000, new Float[] {50f, 20f}, 2f);
+						KeyBinding.onTick(rightClick);
+					}else {
+						Alerts.DisplayCustomAlert("Bugged Auto hook", 1000, new Float[] {50f, 20f}, 2f);
+						KeyBinding.onTick(rightClick);
+						MovementUtils.addMiniMovement(new Movement(() -> {
+							KeyBinding.onTick(rightClick);
+			        	}, 500));
+					}
+					
+					
+					MovementUtils.addMiniMovement(new Movement(() -> {
+						if (Thread.currentThread().isInterrupted()) return;
+						if(!FishingTimer.isInLiquid && FishingTimer.isFishing) {
+							Alerts.DisplayCustomAlert("Hook blocked", 500, new Float[] {50f, 20f}, 2f);
+							
+							attacker = detectAttackerSeaCreature();
+							if(attacker != null) killAttackingSeaCreature(attacker);
+							
+							RotationUtils.rotateStraight(0, -2, 0.1f, false);
+							KeyBinding.onTick(rightClick);
+							MovementUtils.addMiniMovement(new Movement(() -> {
+								if(!FishingTimer.isFishing) {
+									KeyBinding.onTick(rightClick);
+								}
+				        	}, 500));
+						}
+			    	}, 3500));
+				});
+			});
 		}
 		
 	}

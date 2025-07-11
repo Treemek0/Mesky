@@ -31,6 +31,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import treemek.mesky.config.SettingsConfig.Setting;
 import treemek.mesky.features.illegal.Freelook;
 import treemek.mesky.utils.MovementUtils.Task;
+import treemek.mesky.utils.MovementUtils.TrackableTask;
 import treemek.mesky.utils.manager.CameraManager;
 
 public class RotationUtils {
@@ -45,16 +46,17 @@ public class RotationUtils {
 	private static boolean lockRotation = false;
 	
 	private static class Rotation {
-		public List<float[]> list;
-		public Task task;
-		
-		private Rotation(List<float[]> list) {
-			this.list = list;
-		}
-		
-		private Rotation(Task task) {
-			this.task = task;
-		}
+	    public List<float[]> list;
+	    public TrackableTask task;
+	    public boolean hasStartedExecuting = false;
+
+	    private Rotation(List<float[]> list) {
+	        this.list = list;
+	    }
+
+	    private Rotation(Task task) {
+	        this.task = new TrackableTask(task);
+	    }
 	}
 	
 	public static boolean isListEmpty() {
@@ -106,6 +108,8 @@ public class RotationUtils {
 			event.entity.prevRotationPitch = lockedRotationPitch;
 		}
 	}
+	
+	static Rotation currentTask = null;
 
 	@SideOnly(Side.CLIENT)
     @SubscribeEvent
@@ -115,23 +119,27 @@ public class RotationUtils {
 			
 			if (event.phase == TickEvent.Phase.START) {	
 				if(Minecraft.getMinecraft().theWorld.isRemote) {
-					if (currentFrame >= 0 && !recordedAngles.isEmpty()) {
-						float[] current = recordedAngles.get(currentFrame);
-						
-						lockedRotationYaw = currentStartedRotation[0] + current[0];
-						lockedRotationPitch = currentStartedRotation[1] + current[1];
-						player.setPositionAndRotation(player.posX, player.posY, player.posZ, currentStartedRotation[0] + current[0], currentStartedRotation[1] + current[1]);
-						
-						tickCounter++;
-						
-						if (tickCounter >= 2) {
-							currentFrame++;
-							tickCounter = 0;
-						}
-						
-						if (currentFrame >= recordedAngles.size()) {
-							currentFrame = -1; // Stop replaying
-							tickCounter = 0;
+					if (currentFrame >= 0) {
+						if(!recordedAngles.isEmpty()) {
+							float[] current = recordedAngles.get(currentFrame);
+							
+							lockedRotationYaw = currentStartedRotation[0] + current[0];
+							lockedRotationPitch = currentStartedRotation[1] + current[1];
+							player.setPositionAndRotation(player.posX, player.posY, player.posZ, currentStartedRotation[0] + current[0], currentStartedRotation[1] + current[1]);
+							
+							tickCounter++;
+							
+							if (tickCounter >= 2) {
+								currentFrame++;
+								tickCounter = 0;
+							}
+							
+							if (currentFrame >= recordedAngles.size()) {
+								currentFrame = -1; // Stop replaying
+								tickCounter = 0;
+							}
+						}else {
+							currentFrame--;
 						}
 					}
 				}
@@ -139,14 +147,25 @@ public class RotationUtils {
 		
 			if(!rotationQueue.isEmpty()) {
 				if(currentFrame == -1) {
-					Rotation rotation = rotationQueue.poll();
-					if(rotation.list != null) {
-						replayMovement(rotation.list);
+					if(currentTask == null) {
+						Rotation rotation = rotationQueue.peek();
+						if(rotation.list != null) {
+							replayMovement(rotation.list);
+							rotationQueue.poll();
+						}
+						
+						if(rotation.task != null) {
+							rotation.task.execute();
+							currentTask = rotation;
+						}
+					}else {
+						if(currentTask.task.hasEnded()) {
+							rotationQueue.poll();
+							currentTask = null;
+						}
 					}
-					
-					if(rotation.task != null) {
-						rotation.task.execute();
-					}
+				}else {
+					currentTask = null;
 				}
 			}
 		}
@@ -489,6 +508,7 @@ public class RotationUtils {
 	
 	public static void clearAllRotations() {
 		currentFrame = -1;
+		currentTask = null;
 		rotationQueue.clear();
 	}
 }

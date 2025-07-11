@@ -4,6 +4,7 @@ import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ResourceLocation;
 import treemek.mesky.Reference;
 import treemek.mesky.handlers.RenderHandler;
@@ -37,6 +38,11 @@ public class EditButton extends GuiButton{
      		drawModalRectWithCustomSizedTexture(xPosition, yPosition, 0, 0, width, height, width, height);
      		GL11.glPopMatrix();
 		 }
+		 
+		GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
+	    GlStateManager.enableBlend();
+	    GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
+		    
 	}
 	
 	

@@ -81,6 +81,10 @@ public class ColorPicker extends GuiTextField{
 		hasAlpha = b;
 	}
 	
+	public boolean isOpened() {
+		return isPickerOpened;
+	}
+	
 	protected void updatePosition() {
 		ScaledResolution resolution = new ScaledResolution(Minecraft.getMinecraft());
 		

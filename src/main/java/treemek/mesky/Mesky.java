@@ -59,6 +59,7 @@ import treemek.mesky.utils.RotationUtils;
 import treemek.mesky.utils.Waypoints;
 import treemek.mesky.utils.chat.CoordsDetector;
 import treemek.mesky.utils.chat.NickMentionDetector;
+import treemek.mesky.utils.manager.AntyGhostBlock;
 import treemek.mesky.utils.manager.CameraManager;
 import treemek.mesky.utils.manager.PartyManager;
 import treemek.mesky.utils.manager.RecordHeadMovement;
@@ -119,6 +120,7 @@ public class Mesky {
 		MinecraftForge.EVENT_BUS.register(new PathfinderUtils());
 		MinecraftForge.EVENT_BUS.register(new MovementUtils());
 		MinecraftForge.EVENT_BUS.register(new MiningUtils());
+		MinecraftForge.EVENT_BUS.register(new AntyGhostBlock());
 		
 		ClientRegistry.registerKeyBinding(GhostBlock.GKEY);
 		ClientRegistry.registerKeyBinding(Freelook.KEY);

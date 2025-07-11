@@ -106,7 +106,10 @@ public class AlertsGui extends GuiScreen {
 				drawRect(alert.xPosition, alert.yPosition-2, alert.xPosition + alert.getWidth(), alert.yPosition + alert.getHeight()+2, new Color(33, 33, 33, 180).getRGB());
 			}
 			
-			GlStateManager.color(1,1,1,1);
+			GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
+		    GlStateManager.enableBlend();
+		    GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
+		    
 		}
 		
 	    if(holdingElement != null) {
@@ -203,7 +206,7 @@ public class AlertsGui extends GuiScreen {
         int trigger_X = width / 6;
     	int display_X = trigger_X + (width / 4) + spaceBetween;
     	int time_X = display_X + (width / 4);
-    	int editX = (int) (time_X + width/12 + spaceBetween*1.5f);
+    	int editX = (int) (time_X + width/12 + spaceBetween + 10);
     	
         // Save button
     	saveButton = new MeskyButton(-1, (int)(width * 0.8f), (height/15), (int)(width * 0.2f), 20, "Save");
@@ -215,7 +218,7 @@ public class AlertsGui extends GuiScreen {
     	// This is so you cant scroll limitless, it takes every waypoint height with their margin and removes visible inputs height so you can scroll max to how much of inputs isnt visible
         scrollbar.updateVisibleHeight(height - (height/3));
         scrollbar.updateContentHeight((Alerts.alertsList.size() * (inputHeight + inputMargin)));
- 	//	scrollbar.updateMaxBottomScroll(((Alerts.alertsList.size() * (inputHeight + inputMargin))) - (height - (height/3)));
+        //	scrollbar.updateMaxBottomScroll(((Alerts.alertsList.size() * (inputHeight + inputMargin))) - (height - (height/3)));
  		int ScrollOffset = scrollbar.getOffset();
  		
  		if(alerts.isEmpty()) {	
@@ -345,7 +348,7 @@ public class AlertsGui extends GuiScreen {
 			snapToAlertsY();
 			int spaceBetween = width/60;
 			
-	        int positionY = height / 3;
+			int positionY = height / 3;
 	        int trigger_X = width / 6;
 	    	int display_X = trigger_X + (width / 4) + spaceBetween;
 	    	int time_X = display_X + (width / 4);
@@ -353,11 +356,12 @@ public class AlertsGui extends GuiScreen {
 	    	
 	    	int topOfWaypoints = height/3 - inputHeight*2 - inputMargin;
 			
-			DeleteButton deleteButton = new DeleteButton(0, editX + (spaceBetween/2 + inputHeight), 0, inputHeight, inputHeight, "");
+	    	
+			DeleteButton deleteButton = new DeleteButton(0, editX + spaceBetween/2 + inputHeight, 0, inputHeight, inputHeight, "");
 			
 			EditButton editButton = new EditButton(1, editX, 0, inputHeight, inputHeight, "");
         	
-			CheckButton enabled = new CheckButton(0, editX + (spaceBetween + inputHeight)*2, 0, inputHeight, inputHeight, "", true);
+			CheckButton enabled = new CheckButton(0, editX + (spaceBetween/2 + inputHeight)*2, 0, inputHeight, inputHeight, "", true);
 			
 			CheckButton onlyParty = new CheckButton(2, (int) (trigger_X * 0.1), 0, inputHeight, inputHeight, "", false);
         	
@@ -677,9 +681,14 @@ public class AlertsGui extends GuiScreen {
 			if(element == holdingElement) continue;
 			int inputFullPosition = positionY + ((inputHeight*2 + 5 + inputMargin) * i);
 
-			int l = (int) Math.signum((inputFullPosition - element.yPosition));
-			if(Math.abs(inputFullPosition - element.yPosition) > element.getHeight()*3) l *= 5;
-			alerts.get(i).updateYposition(element.yPosition + l, inputHeight);
+			double l = Math.signum((inputFullPosition - element.yPositionD)) * (240f/Minecraft.getDebugFPS());
+			if (Math.abs(inputFullPosition - element.yPositionD) > element.getHeight() * 2) l *= 4;
+			
+			if(Math.abs(l) > Math.abs(element.yPositionD - inputFullPosition)) {
+				element.updateYposition(inputFullPosition, inputHeight);
+			}else {
+				element.updateYposition(element.yPositionD + l, inputHeight);
+			}
 		}
 	}
 	

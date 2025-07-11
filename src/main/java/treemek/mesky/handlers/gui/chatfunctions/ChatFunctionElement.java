@@ -19,15 +19,18 @@ public class ChatFunctionElement {
 	CheckButton isEqual;
 	CheckButton enabled;
 	public int yPosition;
+	public double yPositionD;
 	public int xPosition;
 	public Integer elementHeight = null;
 	public Integer elementWidth = null;
 	private double margin;
+	
 
 	
 	public ChatFunctionElement(TextField trigger, TextField function, DeleteButton deleteButton, CheckButton onlyParty, CheckButton ignorePlayers, CheckButton isEqual, CheckButton enabled, double inputMargin) {
 		this.trigger = trigger;
 		this.yPosition = trigger.yPosition;
+		this.yPositionD = yPosition;
 		this.function = function;
 		this.deleteButton = deleteButton;
 		this.onlyParty = onlyParty;
@@ -37,15 +40,16 @@ public class ChatFunctionElement {
 		this.margin = inputMargin;
 	}
 	
-	public void updateYposition(int y) {
-		this.yPosition = y;
-		this.trigger.yPosition = y;
-		this.function.yPosition = y;
-		this.deleteButton.yPosition = y;
-		this.onlyParty.yPosition = y;
-		this.ignorePlayers.yPosition = y;
-		this.isEqual.yPosition = y;
-		this.enabled.yPosition = y;
+	public void updateYposition(double yD) {
+		this.yPositionD = yD;
+		this.yPosition = (int) yD;
+		this.trigger.yPosition = (int) yD;
+		this.function.yPosition = (int) yD;
+		this.deleteButton.yPosition = (int) yD;
+		this.onlyParty.yPosition = (int) yD;
+		this.ignorePlayers.yPosition = (int) yD;
+		this.isEqual.yPosition = (int) yD;
+		this.enabled.yPosition = (int) yD;
 	}
 	
 	public List<TextField> getListOfTextFields() {

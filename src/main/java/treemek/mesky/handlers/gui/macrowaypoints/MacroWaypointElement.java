@@ -7,6 +7,7 @@ import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
+import net.minecraft.client.gui.ScaledResolution;
 import treemek.mesky.handlers.gui.elements.ColorPicker;
 import treemek.mesky.handlers.gui.elements.buttons.CheckButton;
 import treemek.mesky.handlers.gui.elements.buttons.DeleteButton;
@@ -36,10 +37,13 @@ public class MacroWaypointElement {
 	public int xPosition;
 	private double margin;
 	public CheckButton enabled;
+	public double yPositionD;
+	private Integer elementWidth;
 	
 	public MacroWaypointElement(TextField name, ColorPicker color, TextField x, TextField y, TextField z, TextField yaw, TextField pitch, MacroButton left, MacroButton right, MacroButton back, MacroButton forward, MacroButton leftClick, MacroButton rightClick, MacroButton sneak, TextField noiseLevel, TextField function, DeleteButton deleteButton, CheckButton enabled, double inputMargin) {
 		this.name = name;
 		this.yPosition = name.yPosition;
+		this.yPositionD = yPosition;
 		this.color = color;
 		this.x = x;
 		this.y = y;
@@ -62,26 +66,27 @@ public class MacroWaypointElement {
 		this.xPosition = color.xPosition;
 	}
 	
-	public void updateYposition(int y, int inputHeight) {
-		this.yPosition = y;
-		this.name.yPosition = y;
-		this.color.yPosition = y;
-		this.x.yPosition = y;
-		this.y.yPosition = y;
-		this.z.yPosition = y;
-		this.yaw.yPosition = y;
-		this.pitch.yPosition = y;
-		this.enabled.yPosition = y;
-		this.right.yPosition = y + inputHeight +5;
-		this.left.yPosition = y + inputHeight+5;
-		this.back.yPosition = y + inputHeight+5;
-		this.forward.yPosition = y + inputHeight+5;
-		this.leftClick.yPosition = y + inputHeight+5;
-		this.rightClick.yPosition = y + inputHeight+5;
-		this.sneak.yPosition = y + inputHeight+5;
-		this.function.yPosition = y + inputHeight +5;
-		this.noiseLevel.yPosition = y;
-		this.deleteButton.yPosition = y;
+	public void updateYposition(double yD, int inputHeight) {
+		this.yPositionD = yD;
+		this.yPosition = (int) yD;
+		this.name.yPosition = (int) yD;
+		this.color.yPosition = (int) yD;
+		this.x.yPosition = (int) yD;
+		this.y.yPosition = (int) yD;
+		this.z.yPosition = (int) yD;
+		this.yaw.yPosition = (int) yD;
+		this.pitch.yPosition = (int) yD;
+		this.enabled.yPosition = (int) yD;
+		this.right.yPosition = (int) yD + inputHeight +5;
+		this.left.yPosition = (int) yD + inputHeight+5;
+		this.back.yPosition = (int) yD + inputHeight+5;
+		this.forward.yPosition = (int) yD + inputHeight+5;
+		this.leftClick.yPosition = (int) yD + inputHeight+5;
+		this.rightClick.yPosition = (int) yD + inputHeight+5;
+		this.sneak.yPosition = (int) yD + inputHeight+5;
+		this.function.yPosition = (int) yD + inputHeight +5;
+		this.noiseLevel.yPosition = (int) yD;
+		this.deleteButton.yPosition = (int) yD;
 	}
 	
 	public List<TextField> getListOfTextFields() {
@@ -112,7 +117,21 @@ public class MacroWaypointElement {
 	}
 	
 	public int getWidth() {
-		return (enabled.xPosition + enabled.width) - xPosition;
+		if(elementWidth == null) {
+			ScaledResolution wind = new ScaledResolution(Minecraft.getMinecraft());
+	    	int height = wind.getScaledHeight();
+	    	int width = wind.getScaledWidth();
+	    	int inputHeight = ((height / 25) < 12)?12:(height / 25);
+	    	
+			int lowestX = width / 20 - inputHeight;
+			int highestX = (int) (width*0.9 + inputHeight*2);
+			
+			xPosition = lowestX;
+			elementWidth = highestX - lowestX;
+			return width;
+		}else {
+			return elementWidth;
+		}
 	}
 	
 	public int getHeight() {

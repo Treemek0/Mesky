@@ -23,6 +23,7 @@ public class WaypointElement {
 	DeleteButton deleteButton;
 	CheckButton enabled;
 	public int yPosition;
+	public double yPositionD;
 	public int xPosition;
 	public Integer elementHeight = null;
 	public Integer elementWidth = null;
@@ -31,6 +32,7 @@ public class WaypointElement {
 	public WaypointElement(TextField name, ColorPicker color, Slider scale, TextField x, TextField y, TextField z, DeleteButton deleteButton, CheckButton enabled, double inputMargin) {
 		this.name = name;
 		this.yPosition = name.yPosition;
+		this.yPositionD = yPosition;
 		this.color = color;
 		this.scale = scale;
 		this.x = x;
@@ -41,16 +43,17 @@ public class WaypointElement {
 		this.enabled = enabled;
 	}
 	
-	public void updateYposition(int y) {
-		this.yPosition = y;
-		this.name.yPosition = y;
-		this.color.yPosition = y;
-		this.scale.yPosition = y;
-		this.enabled.yPosition = y;
-		this.x.yPosition = y;
-		this.y.yPosition = y;
-		this.z.yPosition = y;
-		this.deleteButton.yPosition = y;
+	public void updateYposition(double yD) {
+		this.yPositionD = yD;
+		this.yPosition = (int)yD;
+		this.name.yPosition = (int)yD;
+		this.color.yPosition = (int)yD;
+		this.scale.yPosition = (int)yD;
+		this.enabled.yPosition = (int)yD;
+		this.x.yPosition = (int)yD;
+		this.y.yPosition = (int)yD;
+		this.z.yPosition = (int)yD;
+		this.deleteButton.yPosition = (int)yD;
 	}
 	
 	public List<TextField> getListOfTextFields() {
@@ -65,7 +68,6 @@ public class WaypointElement {
 	public List<GuiButton> getListOfButtons() {
 		List<GuiButton> buttons = new ArrayList<>();
 		buttons.add(deleteButton);
-		buttons.add(enabled);
 		return buttons;
 	}
 	

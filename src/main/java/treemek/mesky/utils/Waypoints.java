@@ -4,8 +4,10 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
@@ -39,7 +41,7 @@ import treemek.mesky.utils.Waypoints.Waypoint;
 public class Waypoints {
 
 	// <String> name, <World> world, <int[]> coords
-	public static Map<String, List<Waypoint>> waypointsList = new HashMap<>();
+	public static Map<String, WaypointGroup> waypointsList = new LinkedHashMap<>();
 	public static List<TemporaryWaypoint> temporaryWaypointsList = new ArrayList<TemporaryWaypoint>();
 	public static List<TouchWaypoint> touchWaypointsList = new ArrayList<TouchWaypoint>();
 
@@ -47,10 +49,14 @@ public class Waypoints {
 	public static class WaypointGroup {
 		public List<Waypoint> list;
 		public boolean enabled;
+		public boolean opened; // only for gui
+		public String world;
 		
-		public WaypointGroup(List<Waypoint> list, boolean enabled) {
+		public WaypointGroup(List<Waypoint> list, String world, boolean enabled, boolean opened) {
 			this.list = list;
+			this.world = world;
 			this.enabled = enabled;
+			this.opened = opened;
 		}
 	}
 	
@@ -128,9 +134,10 @@ public class Waypoints {
     	EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
     	color = color.replace("#", "");
     	
+    	String world = Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld);
     	Waypoint waypoint;
-		waypoint = new Waypoint(name, color, x, y, z, Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld), scale, true);
-		waypointsList.computeIfAbsent(null, k -> new ArrayList<>()).add(0, waypoint);
+		waypoint = new Waypoint(name, color, x, y, z, world, scale, true);
+		waypointsList.computeIfAbsent(null, k -> new WaypointGroup(new ArrayList<>(), world, true, true)).list.add(0, waypoint);
 		ConfigHandler.SaveWaypoint(waypointsList);
 		return waypoint;
     }
@@ -139,9 +146,10 @@ public class Waypoints {
     	EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
     	color = color.replace("#", "");
     	
+    	String world = Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld);
     	Waypoint waypoint;
-		waypoint = new Waypoint(name, color, x, y, z, Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld), scale, true);
-		waypointsList.computeIfAbsent(group, k -> new ArrayList<>()).add(0, waypoint);
+		waypoint = new Waypoint(name, color, x, y, z, world, scale, true);
+		waypointsList.computeIfAbsent(group, k -> new WaypointGroup(new ArrayList<>(), world, true, true)).list.add(0, waypoint);
 		ConfigHandler.SaveWaypoint(waypointsList);
 		return waypoint;
     }
@@ -159,7 +167,7 @@ public class Waypoints {
     }
     
     public static void deleteWaypoint(String group, int number) {
-        List<Waypoint> list = waypointsList.get(group);
+        List<Waypoint> list = waypointsList.get(group).list;
         
         if (list != null && number >= 0 && number < list.size()) {
             Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Deleted waypoint: " + EnumChatFormatting.GOLD + list.get(number).name));
@@ -171,8 +179,8 @@ public class Waypoints {
     @SubscribeEvent
     public void onWorldRender(RenderWorldLastEvent event) {
         if (!waypointsList.isEmpty()) {
-        	for (List<Waypoint> group : waypointsList.values()) {
-        	    for (Waypoint waypoint : group) {
+        	for (WaypointGroup group : waypointsList.values()) {
+        	    for (Waypoint waypoint : group.list) {
 	            	if(!waypoint.enabled) continue;
 	            	if(waypoint.world.equals(Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld))) {
 	                    waypoint.color = ColorUtils.fixColor(waypoint.color);
@@ -250,39 +258,47 @@ public class Waypoints {
         }
     }
     
-    public static Map<String, List<Waypoint>> GetLocationWaypoints() {
-        Map<String, List<Waypoint>> groupedWaypoints = new HashMap<>();
+    public static Map<String, WaypointGroup> GetLocationWaypoints() {
+        Map<String, WaypointGroup> groupedWaypoints = new LinkedHashMap<>();
         Location.checkTabLocation();
-        String currentWorld = Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld);
+        String currentWorld = Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld); // Ensure Utils and getWorldIdentifierWithRegionTextField exist
 
-        for (Map.Entry<String, List<Waypoint>> entry : waypointsList.entrySet()) {
-            List<Waypoint> filtered = new ArrayList<>();
-            for (Waypoint waypoint : entry.getValue()) {
+        for (Entry<String, WaypointGroup> entry : waypointsList.entrySet()) {
+        	if(!entry.getValue().world.equals(currentWorld)) continue;
+        	
+            List<Waypoint> filteredWaypoints = new ArrayList<>();
+            for (Waypoint waypoint : entry.getValue().list) {
                 if (waypoint.world.equals(currentWorld)) {
-                    filtered.add(new Waypoint(waypoint.name, waypoint.color, waypoint.coords[0], waypoint.coords[1], waypoint.coords[2], waypoint.world, waypoint.scale, waypoint.enabled));
+                    filteredWaypoints.add(new Waypoint(waypoint.name, waypoint.color, waypoint.coords[0], waypoint.coords[1], waypoint.coords[2], waypoint.world, waypoint.scale, waypoint.enabled));
                 }
             }
-            if (!filtered.isEmpty()) {
-                groupedWaypoints.put(entry.getKey(), filtered);
+
+            if (!filteredWaypoints.isEmpty() || entry.getValue().list.isEmpty()) {
+                WaypointGroup newGroup = new WaypointGroup(filteredWaypoints, entry.getValue().world, entry.getValue().enabled, entry.getValue().opened);
+                groupedWaypoints.put(entry.getKey(), newGroup);
             }
         }
 
         return groupedWaypoints;
     }
 
-    public static Map<String, List<Waypoint>> GetWaypointsWithoutLocation() {
-        Map<String, List<Waypoint>> groupedWaypoints = new HashMap<>();
+    public static Map<String, WaypointGroup> GetWaypointsWithoutLocation() {
+        Map<String, WaypointGroup> groupedWaypoints = new LinkedHashMap<>();
         String currentWorld = Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld);
 
-        for (Map.Entry<String, List<Waypoint>> entry : waypointsList.entrySet()) {
-            List<Waypoint> filtered = new ArrayList<>();
-            for (Waypoint waypoint : entry.getValue()) {
+        for (Entry<String, WaypointGroup> entry : waypointsList.entrySet()) {
+        	if(entry.getValue().world.equals(currentWorld)) continue;
+        	
+            List<Waypoint> filteredWaypoints = new ArrayList<>();
+            for (Waypoint waypoint : entry.getValue().list) {
                 if (!waypoint.world.equals(currentWorld)) {
-                    filtered.add(new Waypoint(waypoint.name, waypoint.color, waypoint.coords[0], waypoint.coords[1], waypoint.coords[2], waypoint.world, waypoint.scale, waypoint.enabled));
+                    filteredWaypoints.add(new Waypoint(waypoint.name, waypoint.color, waypoint.coords[0], waypoint.coords[1], waypoint.coords[2], waypoint.world, waypoint.scale, waypoint.enabled));
                 }
             }
-            if (!filtered.isEmpty()) {
-                groupedWaypoints.put(entry.getKey(), filtered);
+
+            if (!filteredWaypoints.isEmpty()) {
+                WaypointGroup newGroup = new WaypointGroup(filteredWaypoints, entry.getValue().world, entry.getValue().enabled, entry.getValue().opened);
+                groupedWaypoints.put(entry.getKey(), newGroup);
             }
         }
 

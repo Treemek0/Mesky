@@ -1,7 +1,10 @@
 package treemek.mesky.utils;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -33,21 +36,21 @@ public class MacroWaypoints {
 	int forward = Minecraft.getMinecraft().gameSettings.keyBindForward.getKeyCode();
 	int sneak = Minecraft.getMinecraft().gameSettings.keyBindSneak.getKeyCode();
 	
+	public static Map<String, MacroWaypointGroup> waypointsList = new LinkedHashMap<>();
+	
 	public static MacroWaypoint MacroActive = null;
 	
 	public static class MacroWaypointGroup {
-		private List<MacroWaypoint> group = new ArrayList<>();
-
-		public MacroWaypointGroup() {
-			
-		}
+		public List<MacroWaypoint> list = new ArrayList<>();
+		public boolean enabled;
+		public boolean opened;
+		public String world;
 		
-		public void addElement(MacroWaypoint elem) {
-			group.add(elem);
-		}
-		
-		public MacroWaypoint getElement(int i) {
-			return group.get(i);
+		public MacroWaypointGroup(List<MacroWaypoint> list, String world, boolean enabled, boolean opened) {
+			this.list = list;
+			this.world = world;
+			this.enabled = enabled;
+			this.opened = opened;
 		}
 	}
 	
@@ -117,18 +120,31 @@ public class MacroWaypoints {
         }
 	}
 	
-	public static List<MacroWaypoint> waypointsList = new ArrayList<MacroWaypoint>();
-	
 	
 	public static MacroWaypoint addMacroWaypoint(String name, String color, float x, float y, float z, Float yaw, Float pitch, boolean left, boolean right, boolean back, boolean forward, boolean leftClick, boolean rightClick, boolean sneak, Float noiseLevel) {
 		EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
     	color = color.replace("#", "");
+    	String world = Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld);
     	Waypoint waypoint;
-		waypoint = new Waypoint(name, color, x, y, z,  Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld), 1, true);
+		waypoint = new Waypoint(name, color, x, y, z, world, 1, true);
 
 		
 		MacroWaypoint macroWaypoint = new MacroWaypoint(waypoint, yaw, pitch, left, right, back, forward, leftClick, rightClick, sneak, noiseLevel, "", true);
-    	waypointsList.add(macroWaypoint);
+		waypointsList.computeIfAbsent(null, k -> new MacroWaypointGroup(new ArrayList<>(), world, true, true)).list.add(0, macroWaypoint);
+    	doneMacro.add(macroWaypoint);
+		return macroWaypoint;
+    }
+	
+	public static MacroWaypoint addMacroWaypoint(String name, String color, float x, float y, float z, Float yaw, Float pitch, boolean left, boolean right, boolean back, boolean forward, boolean leftClick, boolean rightClick, boolean sneak, Float noiseLevel, String group) {
+		EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
+    	color = color.replace("#", "");
+    	String world = Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld);
+    	Waypoint waypoint;
+		waypoint = new Waypoint(name, color, x, y, z,  world, 1, true);
+
+		
+		MacroWaypoint macroWaypoint = new MacroWaypoint(waypoint, yaw, pitch, left, right, back, forward, leftClick, rightClick, sneak, noiseLevel, "", true);
+		waypointsList.computeIfAbsent(group, k -> new MacroWaypointGroup(new ArrayList<>(), world, true, true)).list.add(0, macroWaypoint);
     	doneMacro.add(macroWaypoint);
 		return macroWaypoint;
     }
@@ -136,23 +152,25 @@ public class MacroWaypoints {
 	@SubscribeEvent
     public void onWorldRender(RenderWorldLastEvent event) {
         if (!waypointsList.isEmpty()) {
-            for (MacroWaypoint macroWaypoint : waypointsList) {
-            	if(!macroWaypoint.enabled) continue;
-            	Waypoint waypoint = macroWaypoint.waypoint;
-
-            	if(waypoint.world.equals(Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld))) {
-                	// when im gonna be unbanned then check for world types
-                    RenderHandler.draw3DString(ColorUtils.getColoredText(waypoint.name), waypoint.coords, waypoint.color, event.partialTicks);
-                    
-                    try {
-                    	RenderHandler.draw3DImage(macroWaypoint.boundingBox.minX + 0.5f, macroWaypoint.boundingBox.minY + 0.5f, macroWaypoint.boundingBox.minZ + 0.5f, 0, 0, 0.5f, 0.5f, new ResourceLocation(Reference.MODID, "gui/tools.png"), ColorUtils.getColorInt(waypoint.color), false, event.partialTicks);
-                    	RenderHandler.draw3DBox(macroWaypoint.boundingBox, waypoint.color, event.partialTicks);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-                    
-                }
-            }
+        	for (MacroWaypointGroup macroWaypointGroup : waypointsList.values()) {
+	            for (MacroWaypoint macroWaypoint : macroWaypointGroup.list) {
+	            	if(!macroWaypoint.enabled) continue;
+	            	Waypoint waypoint = macroWaypoint.waypoint;
+	
+	            	if(waypoint.world.equals(Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld))) {
+	                	// when im gonna be unbanned then check for world types
+	                    RenderHandler.draw3DString(ColorUtils.getColoredText(waypoint.name), waypoint.coords, waypoint.color, event.partialTicks);
+	                    
+	                    try {
+	                    	RenderHandler.draw3DImage(macroWaypoint.boundingBox.minX + 0.5f, macroWaypoint.boundingBox.minY + 0.5f, macroWaypoint.boundingBox.minZ + 0.5f, 0, 0, 0.5f, 0.5f, new ResourceLocation(Reference.MODID, "gui/tools.png"), ColorUtils.getColorInt(waypoint.color), false, event.partialTicks);
+	                    	RenderHandler.draw3DBox(macroWaypoint.boundingBox, waypoint.color, event.partialTicks);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+	                    
+	                }
+	            }
+        	}
         }
 	}
 	
@@ -163,34 +181,43 @@ public class MacroWaypoints {
         if (event.entity == Minecraft.getMinecraft().thePlayer) {
         	EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
         	
-        	for (int i = 0; i < waypointsList.size(); i++) {
-        		MacroWaypoint macroWaypoint = waypointsList.get(i);
-        		if(!macroWaypoint.enabled) continue;
-
-        		if(macroWaypoint.waypoint.world.equals(Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld))) {
-	            	int y = player.getPosition().getY();
-	            	
-	            	AxisAlignedBB playerBoundingBox = player.getEntityBoundingBox();
-	            	
-	            	
-					if(playerBoundingBox.intersectsWith(macroWaypoint.collisionBox)) {
-						if(doneMacro.contains(macroWaypoint)) continue;
-						doneMacro.add(macroWaypoint);
-						new Thread(() -> {
-							try {
-								MacroActive = null;
-								KeyBinding.unPressAllKeys();
-								Thread.sleep(100);
-								
-								if(!macroWaypoint.function.equals("/")) {
-									Utils.executeCommand(macroWaypoint.function);
-								}
-								
-								if(macroWaypoint.yaw != null && macroWaypoint.pitch != null) {
-									RotationUtils.clearAllRotations();
-									RotationUtils.rotateCurveToWithControlableNoise(RotationUtils.getNeededYawFromMinecraftRotation(macroWaypoint.yaw), RotationUtils.getNeededPitchFromMinecraftRotation(macroWaypoint.pitch), 0.5f, macroWaypoint.noiseLevel);
-									if(isAnyKeybindPressed(macroWaypoint)) MacroActive = macroWaypoint;
-									RotationUtils.addTask(() -> {
+        	for (MacroWaypointGroup macroWaypointGroup : waypointsList.values()) {
+	            for (MacroWaypoint macroWaypoint : macroWaypointGroup.list) {
+	        		if(!macroWaypoint.enabled) continue;
+	
+	        		if(macroWaypoint.waypoint.world.equals(Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld))) {
+		            	int y = player.getPosition().getY();
+		            	
+		            	AxisAlignedBB playerBoundingBox = player.getEntityBoundingBox();
+		            	
+		            	
+						if(playerBoundingBox.intersectsWith(macroWaypoint.collisionBox)) {
+							if(doneMacro.contains(macroWaypoint)) continue;
+							doneMacro.add(macroWaypoint);
+							new Thread(() -> {
+								try {
+									MacroActive = null;
+									KeyBinding.unPressAllKeys();
+									Thread.sleep(100);
+									
+									if(!macroWaypoint.function.equals("/")) {
+										Utils.executeCommand(macroWaypoint.function);
+									}
+									
+									if(macroWaypoint.yaw != null && macroWaypoint.pitch != null) {
+										RotationUtils.clearAllRotations();
+										RotationUtils.rotateCurveToWithControlableNoise(RotationUtils.getNeededYawFromMinecraftRotation(macroWaypoint.yaw), RotationUtils.getNeededPitchFromMinecraftRotation(macroWaypoint.pitch), 0.5f, macroWaypoint.noiseLevel);
+										if(isAnyKeybindPressed(macroWaypoint)) MacroActive = macroWaypoint;
+										RotationUtils.addTask(() -> {
+											KeyBinding.setKeyBindState(left, macroWaypoint.left);
+											KeyBinding.setKeyBindState(right, macroWaypoint.right);
+											KeyBinding.setKeyBindState(back, macroWaypoint.back);
+											KeyBinding.setKeyBindState(forward, macroWaypoint.forward);
+											KeyBinding.setKeyBindState(leftClick, macroWaypoint.leftClick);
+											KeyBinding.setKeyBindState(rightClick, macroWaypoint.rightClick);
+											KeyBinding.setKeyBindState(sneak, macroWaypoint.sneak);
+										});
+									}else {
 										KeyBinding.setKeyBindState(left, macroWaypoint.left);
 										KeyBinding.setKeyBindState(right, macroWaypoint.right);
 										KeyBinding.setKeyBindState(back, macroWaypoint.back);
@@ -198,74 +225,88 @@ public class MacroWaypoints {
 										KeyBinding.setKeyBindState(leftClick, macroWaypoint.leftClick);
 										KeyBinding.setKeyBindState(rightClick, macroWaypoint.rightClick);
 										KeyBinding.setKeyBindState(sneak, macroWaypoint.sneak);
-									});
-								}else {
-									KeyBinding.setKeyBindState(left, macroWaypoint.left);
-									KeyBinding.setKeyBindState(right, macroWaypoint.right);
-									KeyBinding.setKeyBindState(back, macroWaypoint.back);
-									KeyBinding.setKeyBindState(forward, macroWaypoint.forward);
-									KeyBinding.setKeyBindState(leftClick, macroWaypoint.leftClick);
-									KeyBinding.setKeyBindState(rightClick, macroWaypoint.rightClick);
-									KeyBinding.setKeyBindState(sneak, macroWaypoint.sneak);
-									if(isAnyKeybindPressed(macroWaypoint)) MacroActive = macroWaypoint;
+										if(isAnyKeybindPressed(macroWaypoint)) MacroActive = macroWaypoint;
+									}
+								} catch (InterruptedException e) {
+									e.printStackTrace();
 								}
-							} catch (InterruptedException e) {
-								e.printStackTrace();
+							}).start();
+						}else {
+							if(doneMacro.contains(macroWaypoint)) {
+								doneMacro.remove(macroWaypoint);
 							}
-						}).start();
-					}else {
-						if(doneMacro.contains(macroWaypoint)) {
-							doneMacro.remove(macroWaypoint);
 						}
-					}
-        		}
+	        		}
+	            }
 			}
         }
 	}
 	
-	public static List<MacroWaypoint> GetLocationWaypoints() {
-    	List<MacroWaypoint> LocationWaypointsList = new ArrayList<>();
-		Location.checkTabLocation();
-		
-		for (MacroWaypoint macroWaypoint : waypointsList) {
-        	Waypoint waypoint = macroWaypoint.waypoint;
-        	if(waypoint.world.equals(Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld))){
-	        	LocationWaypointsList.add(new MacroWaypoint(new Waypoint(waypoint.name, waypoint.color, waypoint.coords[0], waypoint.coords[1], waypoint.coords[2], waypoint.world, 1, true), macroWaypoint.yaw, macroWaypoint.pitch, macroWaypoint.left, macroWaypoint.right, macroWaypoint.back, macroWaypoint.forward, macroWaypoint.leftClick, macroWaypoint.rightClick, macroWaypoint.sneak, macroWaypoint.noiseLevel, macroWaypoint.function, macroWaypoint.enabled)); 
-        	}
-		}
-		return LocationWaypointsList;
-    }
+	public static Map<String, MacroWaypointGroup> GetLocationWaypoints() {
+	    Map<String, MacroWaypointGroup> groupedWaypoints = new LinkedHashMap<>();
+	    Location.checkTabLocation();
+	    String currentWorld = Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld);
+
+	    for (Entry<String, MacroWaypointGroup> entry : waypointsList.entrySet()) {
+	    	if(!entry.getValue().world.equals(Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld))) continue;
+	    	
+	        List<MacroWaypoint> filteredWaypoints = new ArrayList<>();
+	        for (MacroWaypoint macroWaypoint : entry.getValue().list) {
+	            Waypoint waypoint = macroWaypoint.waypoint;
+	            if (waypoint.world.equals(currentWorld)) {
+	                Waypoint newWaypoint = new Waypoint(waypoint.name, waypoint.color,waypoint.coords[0], waypoint.coords[1], waypoint.coords[2],waypoint.world, 1, true);
+
+	                filteredWaypoints.add(new MacroWaypoint(
+	                    newWaypoint,
+	                    macroWaypoint.yaw, macroWaypoint.pitch,
+	                    macroWaypoint.left, macroWaypoint.right,
+	                    macroWaypoint.back, macroWaypoint.forward,
+	                    macroWaypoint.leftClick, macroWaypoint.rightClick,
+	                    macroWaypoint.sneak, macroWaypoint.noiseLevel,
+	                    macroWaypoint.function, macroWaypoint.enabled
+	                ));
+	            }
+	        }
+
+            MacroWaypointGroup newGroup = new MacroWaypointGroup(filteredWaypoints, entry.getValue().world, entry.getValue().enabled, entry.getValue().opened);
+            groupedWaypoints.put(entry.getKey(), newGroup);
+	    }
+
+	    return groupedWaypoints;
+	}
+
     
-    public static List<MacroWaypoint> GetWaypointsWithoutLocation() {
-    	List<MacroWaypoint> LocationWaypointsList = new ArrayList<>();
-		Location.checkTabLocation();
-		
-		for (MacroWaypoint macroWaypoint : waypointsList) {
-        	Waypoint waypoint = macroWaypoint.waypoint;
-        	if(!waypoint.world.equals(Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld))){
-	        	LocationWaypointsList.add(new MacroWaypoint(new Waypoint(waypoint.name, waypoint.color, waypoint.coords[0], waypoint.coords[1], waypoint.coords[2], waypoint.world, 1, true), macroWaypoint.yaw, macroWaypoint.pitch, macroWaypoint.left, macroWaypoint.right, macroWaypoint.back, macroWaypoint.forward, macroWaypoint.leftClick, macroWaypoint.rightClick, macroWaypoint.sneak, macroWaypoint.noiseLevel, macroWaypoint.function, macroWaypoint.enabled)); 
-        	}
-		}
-		return LocationWaypointsList;
-    }
-    
-    public static void deleteWaypointFromLocation(int number) {
-    	int numberInLocation = 0;
-    	
-    	for (int i = 0; i < waypointsList.size(); i++) {
-    		Waypoint waypoint = waypointsList.get(i).waypoint;
-    		if(waypoint.world.equals(Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld))){
-				if(numberInLocation == number) {
-					Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Deleted macro waypoint: " + waypointsList.get(i).waypoint.name));
-    				waypointsList.remove(i);
-    				ConfigHandler.SaveMacroWaypoint(waypointsList);
-    				break;
-    			}else {
-    				numberInLocation++;
-    			}
-    		}
-    	}
-    }
+	public static Map<String, MacroWaypointGroup> GetWaypointsWithoutLocation() {
+	    Map<String, MacroWaypointGroup> groupedWaypoints = new LinkedHashMap<>();
+	    String currentWorld = Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld);
+
+	    for (Entry<String, MacroWaypointGroup> entry : waypointsList.entrySet()) {
+	    	if(entry.getValue().world.equals(Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld))) continue;
+	    	
+	        List<MacroWaypoint> filteredWaypoints = new ArrayList<>();
+	        for (MacroWaypoint macroWaypoint : entry.getValue().list) {
+	            Waypoint waypoint = macroWaypoint.waypoint;
+	            if (!waypoint.world.equals(currentWorld)) {
+	                Waypoint newWaypoint = new Waypoint(waypoint.name, waypoint.color,waypoint.coords[0], waypoint.coords[1], waypoint.coords[2],waypoint.world, 1, true);
+
+	                filteredWaypoints.add(new MacroWaypoint(
+	                    newWaypoint,
+	                    macroWaypoint.yaw, macroWaypoint.pitch,
+	                    macroWaypoint.left, macroWaypoint.right,
+	                    macroWaypoint.back, macroWaypoint.forward,
+	                    macroWaypoint.leftClick, macroWaypoint.rightClick,
+	                    macroWaypoint.sneak, macroWaypoint.noiseLevel,
+	                    macroWaypoint.function, macroWaypoint.enabled
+	                ));
+	            }
+	        }
+
+            MacroWaypointGroup newGroup = new MacroWaypointGroup(filteredWaypoints, entry.getValue().world, entry.getValue().enabled, entry.getValue().opened);
+            groupedWaypoints.put(entry.getKey(), newGroup);
+	    }
+
+	    return groupedWaypoints;
+	}
     
 	
 	private static boolean isAnyKeybindPressed(MacroWaypoint macroWaypoint) {

@@ -26,6 +26,7 @@ public class AlertElement {
 	CheckButton isEqual;
 	CheckButton enabled;
 	public int yPosition;
+	public double yPositionD;
 	public int xPosition;
 	public Float[] position;
 	public Float scale;
@@ -35,6 +36,7 @@ public class AlertElement {
 	public AlertElement(TextField trigger, TextField display, TextField time, ListBox sound, Slider volume, Slider pitch, DeleteButton deleteButton, EditButton editButton, CheckButton onlyParty, CheckButton ignorePlayers, CheckButton isEqual, Float[] position, Float scale, CheckButton enabled, double inputMargin) {
 		this.trigger = trigger;
 		this.yPosition = trigger.yPosition;
+		this.yPositionD = yPosition;
 		this.display = display;
 		this.time = time;
 		this.sound = sound;
@@ -53,20 +55,21 @@ public class AlertElement {
 		this.xPosition = onlyParty.xPosition - 1;
 	}
 	
-	public void updateYposition(int y, int inputHeight) {
-		this.yPosition = y;
-		this.trigger.yPosition = y;
-		this.display.yPosition = y;
-		this.time.yPosition = y;
-		this.sound.yPosition = (int) (y + inputHeight + 5);
-		this.volume.yPosition = (int) (y + inputHeight + 5);
-		this.pitch.yPosition = (int) (y + inputHeight + 5);
-		this.deleteButton.yPosition = y;
-		this.editButton.yPosition = y;
-		this.onlyParty.yPosition = y;
-		this.ignorePlayers.yPosition = y;
-		this.isEqual.yPosition = y;
-		this.enabled.yPosition = y;
+	public void updateYposition(double yD, int inputHeight) {
+		this.yPositionD = yD;
+		this.yPosition = (int) yD;
+		this.trigger.yPosition = (int) yD;
+		this.display.yPosition = (int) yD;
+		this.time.yPosition = (int) yD;
+		this.sound.yPosition = (int) ((int) yD + inputHeight + 5);
+		this.volume.yPosition = (int) ((int) yD + inputHeight + 5);
+		this.pitch.yPosition = (int) ((int) yD + inputHeight + 5);
+		this.deleteButton.yPosition = (int) yD;
+		this.editButton.yPosition = (int) yD;
+		this.onlyParty.yPosition = (int) yD;
+		this.ignorePlayers.yPosition = (int) yD;
+		this.isEqual.yPosition = (int) yD;
+		this.enabled.yPosition = (int) yD;
 	}
 	
 	public List<TextField> getListOfTextFields() {
@@ -80,13 +83,13 @@ public class AlertElement {
 	public List<GuiButton> getListOfButtons() {
 		List<GuiButton> buttons = new ArrayList<>();
 		buttons.add(deleteButton);
-		buttons.add(editButton);
 		buttons.add(onlyParty);
 		buttons.add(ignorePlayers);
 		buttons.add(isEqual);
 		buttons.add(enabled);
 		buttons.add(volume);
 		buttons.add(pitch);
+		buttons.add(editButton);
 		return buttons;
 	}
 	

@@ -129,6 +129,7 @@ public class SettingsGUI extends GuiScreen {
 	private void utilityCategory(int checkSize) {
 	    List<Object> generalSub = new ArrayList<>();
 	    generalSub.add(new SettingButton(6, checkSize, "Hide Players", SettingsConfig.HidePlayers));
+	    generalSub.add(new SettingSlider(41849, 2 * checkSize, checkSize, "Holding items size", SettingsConfig.HoldingItemSize, 0.1, 0.5, 3));
 	    if(Mesky.debug) generalSub.add(new SettingButton(6, checkSize, "Nick detection", SettingsConfig.NickMentionDetection));
 	    
 	    List<Object> freelookFoldable = new ArrayList<>();

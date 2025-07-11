@@ -1,36 +1,38 @@
 package treemek.mesky.handlers.gui.elements.buttons;
 
-import org.lwjgl.opengl.GL11;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ResourceLocation;
 import treemek.mesky.Reference;
 import treemek.mesky.handlers.RenderHandler;
+import treemek.mesky.utils.Utils;
 
-public class CheckButton extends GuiButton{
+public class ArrowButton extends GuiButton{
 
 	String buttonText;
-	private boolean isFull;
+	private boolean isOpened;
 	
 	
-	public CheckButton(int buttonId, int x, int y, int width, int height, String buttonText, boolean isFull) {
+	public ArrowButton(int buttonId, int x, int y, int width, int height, String buttonText, boolean isFull) {
 		super(buttonId, x, y, width, height, buttonText);
 		this.buttonText = buttonText;
-		this.isFull = isFull;
+		this.isOpened = isFull;
 	}
 	
 	
-	ResourceLocation empty = new ResourceLocation(Reference.MODID, "gui/check-empty.png");
-	ResourceLocation check = new ResourceLocation(Reference.MODID, "gui/check.png");
+	ResourceLocation arrowRight = new ResourceLocation(Reference.MODID, "gui/arrow_right.png");
+	ResourceLocation arrowDown = new ResourceLocation(Reference.MODID, "gui/arrow_down.png");
 	
-	public boolean isFull() {
-		return isFull;
+	public boolean isOpened() {
+		return isOpened;
 	}
 	
-	public void setFull(boolean a) {
-		isFull = a;
+	public void setOpened(boolean a) {
+		isOpened = a;
+	}
+	
+	public void switchOpened() {
+		isOpened = !isOpened;
 	}
 	
 	public void update(int x, int y, int size) {
@@ -41,14 +43,10 @@ public class CheckButton extends GuiButton{
 	
 	@Override
 	public void drawButton(Minecraft mc, int mouseX, int mouseY) {
-		GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
-	    GlStateManager.enableBlend();
-	    GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
-		
-		if(isFull) {
-			mc.renderEngine.bindTexture(check);
+		if(isOpened()) {
+			mc.renderEngine.bindTexture(arrowDown);
 		}else {
-			mc.renderEngine.bindTexture(empty);
+			mc.renderEngine.bindTexture(arrowRight);
 		}
 		drawModalRectWithCustomSizedTexture(xPosition, yPosition, 0, 0, width, height, width, height);
 		
@@ -62,7 +60,7 @@ public class CheckButton extends GuiButton{
 	@Override
 	public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
 		if (mouseX >= xPosition && mouseX <= xPosition + width && mouseY >= yPosition && mouseY <= yPosition + height) {
-			isFull = !isFull;
+			return true;
 		}
 		return super.mousePressed(mc, mouseX, mouseY);
 	}

@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
@@ -125,16 +126,37 @@ public class Commands extends CommandBase{
     						try {
 								processCommand(sender, Arrays.copyOfRange(args, 2, args.length));
 							} catch (CommandException e) {
-								// TODO Auto-generated catch block
 								e.printStackTrace();
 							}
     					}, milis));
 					} catch (Exception e) {
-						// TODO: handle exception
+						
 					}
     			}
     			
     			return;
+    		}
+    		if(command.equals("test")){
+				long delay = 200;
+				int randomInt = 25 + new Random().nextInt(6); // 25 - 30
+				
+				float pitch = RotationUtils.getNeededPitchFromMinecraftRotation(70) + Utils.getRandomizedMinusOrPlus(new Random().nextInt(5));
+				float rotationTime = (((delay+50) * randomInt) + 10);
+				Alerts.DisplayCustomAlert("AntyAFK", (int) rotationTime, new Float[] {50f, 40f}, 2f);
+				
+				float addYaw = Utils.getRandomizedMinusOrPlus(new Random().nextInt(20));
+				
+				RotationUtils.rotateBezierCurve(80, pitch, 40 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), pitch + Utils.getRandomizedMinusOrPlus(new Random().nextInt(2)), 1f, true);
+				RotationUtils.rotateBezierCurve(-160 + addYaw, 0, -70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
+				RotationUtils.rotateBezierCurve(160 - addYaw/2, 0, 70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
+				RotationUtils.rotateBezierCurve(-160 + addYaw/2, 0, -70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
+				RotationUtils.rotateBezierCurve(160 - addYaw, 0, 70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
+				RotationUtils.rotateBezierCurve(-160 + addYaw, 0, -70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
+				RotationUtils.rotateBezierCurve(160 - addYaw/2, 0, 70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
+				RotationUtils.rotateBezierCurve(-160 + addYaw/2, 0, -70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
+				RotationUtils.rotateBezierCurve(160 - addYaw, 0, 70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
+				RotationUtils.rotateBezierCurve(-80, -pitch, -40 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), -pitch + Utils.getRandomizedMinusOrPlus(new Random().nextInt(2)), 1f, true);
+						return;
     		}
     		if(command.equals("rotate")) {
     			if(args.length > 2) {
@@ -348,7 +370,7 @@ public class Commands extends CommandBase{
 						Float z = Float.parseFloat(argsAfterName[3]);
 						Float scale = Float.parseFloat(argsAfterName[4]);
 						Waypoints.addWaypoint(name, color, x, y, z, scale);
-						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Added waypoint: " + EnumChatFormatting.DARK_PURPLE + name + " " + EnumChatFormatting.GOLD + x + " " + y + " " + z));
+						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Added waypoint: " + EnumChatFormatting.DARK_PURPLE + ColorUtils.getColoredText(name) + " " + EnumChatFormatting.GOLD + x + " " + y + " " + z));
 					} catch (Exception e) {
 						Utils.writeError(e);
 						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Correct way of using this command: /mesky waypoint \"<name>\" <hex_color> <x> <y> <z> <scale>"));
@@ -389,7 +411,7 @@ public class Commands extends CommandBase{
 						Boolean forward = Boolean.parseBoolean(argsAfterName[7]);
 						Boolean sneak = Boolean.parseBoolean(argsAfterName[8]);
 						MacroWaypoints.addMacroWaypoint(name, color, x, y, z, yaw, pitch, left, right, back, forward, leftClick, rightClick, sneak, noiseLevel);
-						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Added macro waypoint: " + EnumChatFormatting.DARK_PURPLE + name + " " + EnumChatFormatting.GOLD + x + " " + y + " " + z));
+						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Added macro waypoint: " + EnumChatFormatting.DARK_PURPLE + ColorUtils.getColoredText(name) + " " + EnumChatFormatting.GOLD + x + " " + y + " " + z));
 					} catch (Exception e) {
 						Utils.writeError(e);
 						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Correct way of using this command: /mesky waypoint \"<name>\" <hex_color> <noiseLevel> <leftClick true/false> <rightClick true/false> <leftMove true/false> <rightMove true/false> <backMove true/false> <forwardMove true/false> <sneak true/false>"));
@@ -419,7 +441,7 @@ public class Commands extends CommandBase{
 						Float z = Float.parseFloat(argsAfterName[3]);
 						Long time = Long.parseLong(argsAfterName[4]) * 1000;
 						Waypoints.addTemporaryWaypoint(name, color, x, y, z, 2, time);
-						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Added temporary waypoint (" + time/1000 + "s): " + EnumChatFormatting.DARK_PURPLE + name + " " + EnumChatFormatting.GOLD + x + " " + y + " " + z));
+						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Added temporary waypoint (" + time/1000 + "s): " + EnumChatFormatting.DARK_PURPLE + ColorUtils.getColoredText(name) + " " + EnumChatFormatting.GOLD + x + " " + y + " " + z));
 					} catch (Exception e) {
 						Utils.writeError(e);
 						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Correct way of using this command: /mesky tempwaypoint \"<name>\" <hex_color> <x> <y> <z> <time [s]>"));
@@ -453,7 +475,7 @@ public class Commands extends CommandBase{
 							lifeTime = Long.parseLong(argsAfterName[5]) * 1000L;
 						}
 						Waypoints.addTouchWaypoint(name, color, x, y, z, 2, radius, lifeTime);
-						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Added touch waypoint (" + radius + "m): " + EnumChatFormatting.DARK_PURPLE + name + " " + EnumChatFormatting.GOLD + x + " " + y + " " + z));
+						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Added touch waypoint (" + radius + "m): " + EnumChatFormatting.DARK_PURPLE + ColorUtils.getColoredText(name) + " " + EnumChatFormatting.GOLD + x + " " + y + " " + z));
 					} catch (Exception e) {
 						Utils.writeError(e);
 						Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Correct way of using this command: /mesky touchwaypoint \"<name>\" <hex_color> <x> <y> <z> <touch radius>"));
@@ -824,8 +846,8 @@ public class Commands extends CommandBase{
 				if(args.length > 1) {
 					String name = connectArgs(args, 1, args.length).toString();
 					String currentWorldIdentifier = Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld);
-					Optional<Waypoint> foundWaypoint = Waypoints.waypointsList.stream().filter(waypoint -> waypoint.name.equals(name) && waypoint.world.equals(currentWorldIdentifier)).findFirst();
-
+					Optional<Waypoint> foundWaypoint = Waypoints.waypointsList.values().stream().map(waypointGroup -> waypointGroup.list).flatMap(List::stream).filter(waypoint -> waypoint.name.equals(name) && waypoint.world.equals(currentWorldIdentifier)).findFirst();
+					
 					if (foundWaypoint.isPresent()) {
 					    Waypoint waypoint = foundWaypoint.get();
 					    BlockPos pos = new BlockPos(waypoint.coords[0], waypoint.coords[1], waypoint.coords[2]);
@@ -881,8 +903,8 @@ public class Commands extends CommandBase{
 				if(args.length > 1) {
 					String name = connectArgs(args, 1, args.length).toString();
 					String currentWorldIdentifier = Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld);
-					Optional<Waypoint> foundWaypoint = Waypoints.waypointsList.stream().filter(waypoint -> waypoint.name.equals(name) && waypoint.world.equals(currentWorldIdentifier)).findFirst();
-
+					Optional<Waypoint> foundWaypoint = Waypoints.waypointsList.values().stream().map(waypointGroup -> waypointGroup.list).flatMap(List::stream).filter(waypoint -> waypoint.name.equals(name) && waypoint.world.equals(currentWorldIdentifier)).findFirst();
+					
 					if (foundWaypoint.isPresent()) {
 					    Waypoint waypoint = foundWaypoint.get();
 					    BlockPos pos = new BlockPos(waypoint.coords[0], waypoint.coords[1], waypoint.coords[2]);
@@ -900,7 +922,7 @@ public class Commands extends CommandBase{
 				if(args.length > 1) {
 					String name = connectArgs(args, 1, args.length).toString();
 					String currentWorldIdentifier = Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld);
-					Optional<MacroWaypoint> foundWaypoint = MacroWaypoints.waypointsList.stream().filter(waypoint -> waypoint.waypoint.name.equals(name) && waypoint.waypoint.world.equals(currentWorldIdentifier)).findFirst();
+					Optional<MacroWaypoint> foundWaypoint = MacroWaypoints.waypointsList.values().stream().flatMap(group -> group.list.stream()).filter(waypoint -> waypoint.waypoint.name.equals(name) && waypoint.waypoint.world.equals(currentWorldIdentifier)).findFirst();
 
 					if (foundWaypoint.isPresent()) {
 					    MacroWaypoint waypoint = foundWaypoint.get();
@@ -919,8 +941,8 @@ public class Commands extends CommandBase{
 				if(args.length > 1) {
 					String name = connectArgs(args, 1, args.length).toString();
 					String currentWorldIdentifier = Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld);
-					Optional<Waypoint> foundWaypoint = Waypoints.waypointsList.stream().filter(waypoint -> waypoint.name.equals(name) && waypoint.world.equals(currentWorldIdentifier)).findFirst();
-
+					Optional<Waypoint> foundWaypoint = Waypoints.waypointsList.values().stream().map(waypointGroup -> waypointGroup.list).flatMap(List::stream).filter(waypoint -> waypoint.name.equals(name) && waypoint.world.equals(currentWorldIdentifier)).findFirst();
+				
 					if (foundWaypoint.isPresent()) {
 					    Waypoint waypoint = foundWaypoint.get();
 					    BlockPos pos = new BlockPos(waypoint.coords[0], waypoint.coords[1], waypoint.coords[2]);

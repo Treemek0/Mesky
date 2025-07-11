@@ -546,9 +546,14 @@ public class ChatFunctionsGui extends GuiScreen {
 			if(element == holdingElement) continue;
 			int inputFullPosition = positionY + ((inputHeight + inputMargin) * i);
 			
-			int l = (int) Math.signum((inputFullPosition - element.yPosition));
-			if(Math.abs(inputFullPosition - element.yPosition) > element.getHeight()*2) l *= 4;
-		    element.updateYposition(element.yPosition + l);
+			double l = Math.signum((inputFullPosition - element.yPositionD)) * (240f/Minecraft.getDebugFPS());
+			if (Math.abs(inputFullPosition - element.yPositionD) > element.getHeight() * 2) l *= 4;
+			
+			if(Math.abs(l) > Math.abs(element.yPositionD - inputFullPosition)) {
+				element.updateYposition(inputFullPosition);
+			}else {
+				element.updateYposition(element.yPositionD + l);
+			}
 		}
 	}
 	

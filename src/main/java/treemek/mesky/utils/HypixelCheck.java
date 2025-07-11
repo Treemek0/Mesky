@@ -6,11 +6,11 @@ import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 public class HypixelCheck {
 	
 	public static boolean isOnHypixel() {
-		if(Minecraft.getMinecraft().isSingleplayer() || Minecraft.getMinecraft().thePlayer.getClientBrand() == null || !Minecraft.getMinecraft().thePlayer.getClientBrand().toLowerCase().contains("hypixel")) {
-			return false;
-		}else {
-			return true;
-		}
+		if(Minecraft.getMinecraft().thePlayer == null) return false;
+		if(Minecraft.getMinecraft().isSingleplayer()) return false;
+		if(Minecraft.getMinecraft().thePlayer.getClientBrand() == null) return false;
+		if(!Minecraft.getMinecraft().thePlayer.getClientBrand().toLowerCase().contains("hypixel"))	return false;
+		
+		return true;
 	}
-	
 }

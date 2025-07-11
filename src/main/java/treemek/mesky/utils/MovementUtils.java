@@ -42,6 +42,25 @@ public class MovementUtils {
 	    void execute();
 	}
 	
+	public static class TrackableTask implements Task {
+	    private boolean hasEnded = false;
+	    private final Task task;
+
+	    public TrackableTask(Task task) {
+	        this.task = task;
+	    }
+
+	    @Override
+	    public void execute() {
+	        task.execute();
+	        hasEnded = true;
+	    }
+
+	    public boolean hasEnded() {
+	        return hasEnded;
+	    }
+	}
+	
 	public static class Movement {
 		private BlockPos finalPos;
 		private double[] finalRotation;
@@ -134,6 +153,10 @@ public class MovementUtils {
 	
 	public static void resetMovementsList() {
 		movementQueue.clear();
+	}
+	
+	public static void resetMiniMovementsList() {
+		miniMovementQueue.clear();
 	}
 	
 	// its getting stuck when block that it wants to jump to also has no blocks under it (y-1), it goes under it and dupa

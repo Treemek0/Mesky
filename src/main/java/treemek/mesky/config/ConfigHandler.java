@@ -19,6 +19,7 @@ import java.util.Map;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.*;
 
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.common.config.Configuration;
 import scala.util.parsing.input.Reader;
 import treemek.mesky.Mesky;
@@ -68,17 +69,56 @@ public class ConfigHandler {
     public static void reloadConfig() {
         if (!directory.exists()) directory.mkdir();
 
-		reloadSettings();
-		reloadAlerts();
-		reloadChatFunctions();
-		reloadWaypoints();
-		reloadMacroWaypoints();
-		reloadMiningPaths();
+        try {
+            reloadSettings();
+            Utils.addMinecraftMessageWithPrefix(EnumChatFormatting.DARK_GREEN + "Reloaded settings " + EnumChatFormatting.GREEN + '\u2713');
+        } catch (FileNotFoundException e) {
+            Utils.writeError("There was a problem with reloading settings: " + e.getMessage());
+        }
+
+        try {
+            reloadAlerts();
+            Utils.addMinecraftMessageWithPrefix(EnumChatFormatting.DARK_GREEN + "Reloaded alerts " + EnumChatFormatting.GREEN + '\u2713');
+        } catch (IOException e) {
+            Utils.writeError("There was a problem with reloading alerts: " + e.getMessage());
+        }
+
+        try {
+            reloadChatFunctions();
+            Utils.addMinecraftMessageWithPrefix(EnumChatFormatting.DARK_GREEN + "Reloaded chatFunctions " + EnumChatFormatting.GREEN + '\u2713');
+        } catch (IOException e) {
+            Utils.writeError("There was a problem with reloading chatFunctions: " + e.getMessage());
+        }
+
+        try {
+            reloadWaypoints();
+            Utils.addMinecraftMessageWithPrefix(EnumChatFormatting.DARK_GREEN + "Reloaded waypoints " + EnumChatFormatting.GREEN + '\u2713');
+        } catch (JsonIOException | JsonSyntaxException | FileNotFoundException e) {
+            Utils.writeError("There was a problem with reloading waypoints: " + e.getMessage());
+        }
+
+        try {
+            reloadMacroWaypoints();
+            Utils.addMinecraftMessageWithPrefix(EnumChatFormatting.DARK_GREEN + "Reloaded macroWaypoints " + EnumChatFormatting.GREEN + '\u2713');
+        } catch (JsonIOException | JsonSyntaxException | FileNotFoundException e) {
+            Utils.writeError("There was a problem with reloading macroWaypoints: " + e.getMessage());
+        }
+
+        try {
+            reloadMiningPaths();
+            Utils.addMinecraftMessageWithPrefix(EnumChatFormatting.DARK_GREEN + "Reloaded miningPaths " + EnumChatFormatting.GREEN + '\u2713');
+        } catch (IOException e) {
+            Utils.writeError("There was a problem with reloading miningPaths: " + e.getMessage());
+        }
+
+
+		
+		
 		SoundsHandler.reloadSounds();
+		Utils.addMinecraftMessageWithPrefix(EnumChatFormatting.DARK_GREEN + "Reloaded sounds " + EnumChatFormatting.GREEN + '\u2713');
     }
 
-    public static void reloadAlerts() {
-        try {
+    public static void reloadAlerts() throws IOException {
 	    	if(new File(directory + "/mesky/utils/meskyAlerts.json").exists()) {
 	            Object[] alerts = initJsonArray(directory + "/mesky/utils/meskyAlerts.json", Alerts.Alert[].class);
 	            if (alerts != null) {
@@ -92,90 +132,84 @@ public class ConfigHandler {
 	            	 Alerts.putAllImagesToCache();
 	            }
 	        }
-        } catch (Exception e) {
-			Utils.writeError(e);
-		}
+
     }
     
-    public static void reloadChatFunctions() {
-    	try {
-	        if(new File(directory + "/mesky/utils/meskyChatFunctions.json").exists()) {
-	            Object[] chatFunctions = initJsonArray(directory + "/mesky/utils/meskyChatFunctions.json", ChatFunctions.ChatFunction[].class);
-	            if (chatFunctions != null) {
-	            	 ArrayList<ChatFunction> list = new ArrayList<>(Arrays.asList((ChatFunctions.ChatFunction[]) chatFunctions));
-	            	 
-	            	 for (ChatFunction chatFunction : list) {
-						chatFunction.fixNulls();
-	            	 }
-	            	 
-	            	 ChatFunctions.chatFunctionsList = list;
-	            }
-	        }
-    	} catch (Exception e) {
-			Utils.writeError(e);
-		}
-    }
-    
-
-    
-    public static void reloadWaypoints() {
-        try {
-            File file = new File(directory + "/mesky/utils/meskyWaypoints.json");
-            if (!file.exists()) return;
-
-            JsonElement json = new JsonParser().parse(new FileReader(file));
-            Map<String, WaypointGroup> tempLoadedGroups = new LinkedHashMap<>();
-
-            if (json.isJsonObject()) {
-                JsonObject obj = json.getAsJsonObject();
-                for (Map.Entry<String, JsonElement> entry : obj.entrySet()) {
-                    String key = entry.getKey();
-
-                    WaypointGroup loadedGroup = new Gson().fromJson(entry.getValue(), WaypointGroup.class);
-
-                    if (loadedGroup != null && loadedGroup.list != null) {
-                        for (Waypoint w : loadedGroup.list) {
-                            if (w != null) {
-                               w.fixNulls();
-                            }
-                        }
-                        
-                        if(loadedGroup.world == null) {
-                        	if(!loadedGroup.list.isEmpty()) {
-                        		loadedGroup.world = loadedGroup.list.get(0).world;
-                        		
-                        		key += " %" + loadedGroup.world;
-                        	}
-                        }
-                    }
-                    
-                    tempLoadedGroups.put(key, loadedGroup);
-                }
-            } else if (json.isJsonArray()) { // legacy
-                Waypoint[] flatWaypoints = new Gson().fromJson(json, Waypoint[].class);
-                List<Waypoint> list = new ArrayList<>(Arrays.asList(flatWaypoints));
-
-                for (Waypoint w : list) w.fixNulls();
-
-                String world = null;
-                
-                if(!list.isEmpty()) {
-            		world = list.get(0).world;
-            	}
-                
-                tempLoadedGroups.put("default %" + world, new WaypointGroup(list, world, true, true));
+    public static void reloadChatFunctions() throws IOException {
+        if(new File(directory + "/mesky/utils/meskyChatFunctions.json").exists()) {
+            Object[] chatFunctions = initJsonArray(directory + "/mesky/utils/meskyChatFunctions.json", ChatFunctions.ChatFunction[].class);
+            if (chatFunctions != null) {
+            	 ArrayList<ChatFunction> list = new ArrayList<>(Arrays.asList((ChatFunctions.ChatFunction[]) chatFunctions));
+            	 
+            	 for (ChatFunction chatFunction : list) {
+					chatFunction.fixNulls();
+            	 }
+            	 
+            	 ChatFunctions.chatFunctionsList = list;
             }
-            
-            Waypoints.waypointsList = tempLoadedGroups;
-
-        } catch (Exception e) {
-            Utils.writeError(e);
         }
     }
+    
 
     
-    public static void reloadMacroWaypoints() {
-    	try {
+    public static void reloadWaypoints() throws JsonIOException, JsonSyntaxException, FileNotFoundException {
+        File file = new File(directory + "/mesky/utils/meskyWaypoints.json");
+        if (!file.exists()) return;
+
+        JsonElement json = new JsonParser().parse(new FileReader(file));
+        Map<String, WaypointGroup> tempLoadedGroups = new LinkedHashMap<>();
+
+        if (json.isJsonObject()) {
+            JsonObject obj = json.getAsJsonObject();
+            for (Map.Entry<String, JsonElement> entry : obj.entrySet()) {
+                String originalKey = entry.getKey();
+                WaypointGroup loadedGroup = new Gson().fromJson(entry.getValue(), WaypointGroup.class);
+
+                if (loadedGroup != null && loadedGroup.list != null) {
+                    // Fix nulls and group waypoints by world
+                    Map<String, List<Waypoint>> byWorld = new HashMap<>();
+
+                    for (Waypoint w : loadedGroup.list) {
+                        if (w == null || w.world == null) continue;
+                        w.fixNulls();
+                        byWorld.computeIfAbsent(w.world, k -> new ArrayList<>()).add(w);
+                    }
+
+                    // Split into per-world groups
+                    for (Map.Entry<String, List<Waypoint>> groupEntry : byWorld.entrySet()) {
+                        String world = groupEntry.getKey();
+                        List<Waypoint> worldList = groupEntry.getValue();
+
+                        String newKey = (originalKey.endsWith(" %" + world)) ? originalKey : originalKey + " %" + world;
+                        WaypointGroup newGroup = new WaypointGroup(worldList, world, loadedGroup.enabled, loadedGroup.opened);
+
+                        tempLoadedGroups.put(newKey, newGroup);
+                    }
+                }
+            }
+        } else if (json.isJsonArray()) { // legacy
+            Waypoint[] flatWaypoints = new Gson().fromJson(json, Waypoint[].class);
+
+            Map<String, List<Waypoint>> byWorld = new HashMap<>();
+
+            for (Waypoint w : flatWaypoints) {
+                if (w == null || w.world == null) continue;
+                w.fixNulls();
+                byWorld.computeIfAbsent(w.world, k -> new ArrayList<>()).add(w);
+            }
+
+            for (Map.Entry<String, List<Waypoint>> entry : byWorld.entrySet()) {
+                String world = entry.getKey();
+                List<Waypoint> list = entry.getValue();
+
+                tempLoadedGroups.put("default %" + world, new WaypointGroup(list, world, true, true));
+            }
+        }
+
+        Waypoints.waypointsList = tempLoadedGroups;
+    }
+
+    public static void reloadMacroWaypoints() throws JsonIOException, JsonSyntaxException, FileNotFoundException {
     		File file = new File(directory + "/mesky/utils/meskyMacroWaypoints.json");
     		if (!file.exists()) return;
     		
@@ -185,54 +219,55 @@ public class ConfigHandler {
             if (json.isJsonObject()) {
                 JsonObject obj = json.getAsJsonObject();
                 for (Map.Entry<String, JsonElement> entry : obj.entrySet()) {
-                    String key = entry.getKey();
-
+                    String originalKey = entry.getKey();
                     MacroWaypointGroup loadedGroup = new Gson().fromJson(entry.getValue(), MacroWaypointGroup.class);
 
                     if (loadedGroup != null && loadedGroup.list != null) {
+                        // Fix nulls and group waypoints by world
+                        Map<String, List<MacroWaypoint>> byWorld = new HashMap<>();
+
                         for (MacroWaypoint w : loadedGroup.list) {
-                            if (w != null) {
-                               w.fixNulls();
-                            }
+                            if (w == null || w.waypoint == null || w.waypoint.world == null) continue;
+                            w.fixNulls();
+                            byWorld.computeIfAbsent(w.waypoint.world, k -> new ArrayList<>()).add(w);
                         }
-                        
-                        if(loadedGroup.world == null) {
-                        	if(!loadedGroup.list.isEmpty()) {
-                        		loadedGroup.world = loadedGroup.list.get(0).waypoint.world;
-                        		
-                        		key += " %" + loadedGroup.world;
-                        	}
+
+                        // Split into per-world groups
+                        for (Map.Entry<String, List<MacroWaypoint>> groupEntry : byWorld.entrySet()) {
+                            String world = groupEntry.getKey();
+                            List<MacroWaypoint> worldList = groupEntry.getValue();
+
+                            String newKey = (originalKey.endsWith(" %" + world))?originalKey:originalKey + " %" + world;
+                            MacroWaypointGroup newGroup = new MacroWaypointGroup(worldList, world, loadedGroup.enabled, loadedGroup.opened);
+
+                            tempLoadedGroups.put(newKey, newGroup);
                         }
                     }
-                    
-                    
-                    
-                    tempLoadedGroups.put(key, loadedGroup);
                 }
-            } else if (json.isJsonArray()) { // legacy
-                MacroWaypoint[] flatWaypoints = new Gson().fromJson(json, MacroWaypoint[].class);
-                List<MacroWaypoint> list = new ArrayList<>(Arrays.asList(flatWaypoints));
+            }else if (json.isJsonArray()) { // legacy
+	    	    MacroWaypoint[] flatWaypoints = new Gson().fromJson(json, MacroWaypoint[].class);
+	
+	    	    Map<String, List<MacroWaypoint>> byWorld = new HashMap<>();
+	
+	    	    for (MacroWaypoint w : flatWaypoints) {
+	    	        if (w == null || w.waypoint == null || w.waypoint.world == null) continue;
+	    	        w.fixNulls();
+	    	        byWorld.computeIfAbsent(w.waypoint.world, k -> new ArrayList<>()).add(w);
+	    	    }
+	
+	    	    for (Map.Entry<String, List<MacroWaypoint>> entry : byWorld.entrySet()) {
+	    	        String world = entry.getKey();
+	    	        List<MacroWaypoint> list = entry.getValue();
+	
+	    	        tempLoadedGroups.put("default %" + world, new MacroWaypointGroup(list, world, true, true));
+	    	    }
+    	}
 
-                for (MacroWaypoint w : list) w.fixNulls();
-
-                String world = null;
-                
-            	if(!list.isEmpty()) {
-            		world = list.get(0).waypoint.world;
-            	}
-                
-                tempLoadedGroups.put("default %" + world, new MacroWaypointGroup(list, world, true, true));
-            }
-
+            
             MacroWaypoints.waypointsList = tempLoadedGroups;
-
-        } catch (Exception e) {
-            Utils.writeError(e);
-        }
     }
     
-    public static void reloadMiningPaths() {
-    	try {
+    public static void reloadMiningPaths() throws IOException {
     		if(new File(directory + "/mesky/utils/meskyMiningPaths.json").exists()) {
 	            Object[] paths = initJsonArray(directory + "/mesky/utils/meskyMiningPaths.json", MiningUtils.MiningPath[].class);
 	            if (paths != null) {
@@ -241,9 +276,6 @@ public class ConfigHandler {
 	            	MiningUtils.miningPaths = list;
 	            }
             }
-    	} catch (Exception e) {
-			Utils.writeError(e);
-		}
     }
     
 	public static void SaveAlert(List<Alerts.Alert> alerts) {
@@ -300,22 +332,19 @@ public class ConfigHandler {
     // Saving friends locations is in FriendsLocations file
     // !!!
 
-    public static void reloadSettings(){
+    public static void reloadSettings() throws FileNotFoundException{
     	File file = new File(Mesky.configDirectory + "/mesky/meskySettings.json");
         if (file.exists()) {
-            try (FileReader reader = new FileReader(file)) {
-                Gson gson = new Gson();
-                Type type = new TypeToken<Map<String, Setting>>(){}.getType();
-                Map<String, Setting> settings = gson.fromJson(reader, type);
+        	FileReader reader = new FileReader(file);
+            Gson gson = new Gson();
+            Type type = new TypeToken<Map<String, Setting>>(){}.getType();
+            Map<String, Setting> settings = gson.fromJson(reader, type);
 
-                if(settings != null) {
-                	loadSettingsFromFileToClass(SettingsConfig.class, settings);
-                	loadSettingsFromFileToClass(CosmeticHandler.class, settings);
-	                
-	                if(CosmeticHandler.CapeType.number == 5) CustomCapeGui.iterateImagesInFolder(CosmeticHandler.CustomCapeTexture.text, "CustomCape");
-                }
-            } catch (IOException ex) {
-                ex.printStackTrace();
+            if(settings != null) {
+            	loadSettingsFromFileToClass(SettingsConfig.class, settings);
+            	loadSettingsFromFileToClass(CosmeticHandler.class, settings);
+                
+                if(CosmeticHandler.CapeType.number == 5) CustomCapeGui.iterateImagesInFolder(CosmeticHandler.CustomCapeTexture.text, "CustomCape");
             }
         }     
     }

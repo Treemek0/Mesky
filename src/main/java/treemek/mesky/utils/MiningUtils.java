@@ -37,9 +37,21 @@ import treemek.mesky.utils.manager.CameraManager;
 
 public class MiningUtils {
 	
+	public enum MiningType {
+		GOLD,
+		DIAMOND,
+		IRON,
+		REDSTONE,
+		COAL,
+		LAPIS,
+		MITHRIL,
+		GEMSTONE
+	}
+	
 	public static boolean isMining = false;
 	private static List<double[]> blocks = new ArrayList<>();
 	private static double[] currentMiningBlock;
+	private static MiningType currentMiningType = null;
 	
 	private static HashMap playersLookingAtUs = new HashMap<EntityPlayer, Integer>();
 	
@@ -53,20 +65,21 @@ public class MiningUtils {
 		}
 	}
 	
-	public static void startMining() {
+	public static void startMining(MiningType type) {
 		KeyBinding.setKeyBindState(MovementUtils.leftClick.getKeyCode(), false); 
 		isMining = true;
+		currentMiningType = type;
 		
 		InventoryPlayer inventory = Minecraft.getMinecraft().thePlayer.inventory;
 		if(inventory.getCurrentItem() != null) {
 			String currentId = Utils.getSkyblockId(inventory.getCurrentItem());
-	        if(!currentId.equals("GEMSTONE_GAUNTLET") && !currentId.contains("DRILL")) {
+	        if(currentId == null || (!currentId.equals("GEMSTONE_GAUNTLET") && !currentId.contains("DRILL") && !currentId.contains("PICKAXE"))) {
 	        	boolean hasItem = false;
 	        	for (int i = 0; i < 9; i++) {
 			        ItemStack item = inventory.mainInventory[i];
 			        if(item == null || inventory.currentItem == i) continue;
 			        String id = Utils.getSkyblockId(item);
-			        if(id.equals("GEMSTONE_GAUNTLET") || id.contains("DRILL")) {
+			        if(id != null && (id.equals("GEMSTONE_GAUNTLET") || id.contains("DRILL") || id.contains("PICKAXE"))) {
 			        	Minecraft.getMinecraft().thePlayer.inventory.currentItem = i;
 			        	hasItem = true;
 			        	break;
@@ -74,7 +87,7 @@ public class MiningUtils {
 				}
 	        	
 	        	if(!hasItem) {
-	        		Utils.addMinecraftMessageWithPrefix("No drill in inventory");
+	        		Utils.addMinecraftMessageWithPrefix("No drill/gauntlet/pickaxe in inventory");
 	        		stopMining();
 	        		return;
 	        	}
@@ -118,6 +131,7 @@ public class MiningUtils {
 	
 	public static void stopMining() {
 		isMining = false;
+		currentMiningType = null;
 		blocks.clear();
 		currentMiningBlock = null;
 		KeyBinding.setKeyBindState(MovementUtils.leftClick.getKeyCode(), false);
@@ -243,9 +257,60 @@ public class MiningUtils {
 	        Block block = state.getBlock();
 	        int meta = block.getMetaFromState(state);
 
-	        return block == Blocks.prismarine || 
-	               (block == Blocks.wool && (meta == 3 || meta == 7)) || // Light blue wool (11), Gray wool (7)
-	               (block == Blocks.stone && meta == 4); // Polished Diorite
+	        if(currentMiningType == MiningType.MITHRIL) { 
+		        return (block == Blocks.prismarine || 
+		               (block == Blocks.wool && (meta == 3 || meta == 7)) || // Light blue wool (11), Gray wool (7)
+		               (block == Blocks.stone && meta == 4)); // Polished Diorite
+	        }
+	        
+	        if(currentMiningType == MiningType.GOLD) { 
+		        return (block == Blocks.gold_block || 
+		               block == Blocks.gold_ore);
+	        }
+	        
+	        if(currentMiningType == MiningType.DIAMOND) { 
+		        return (block == Blocks.diamond_block || 
+		               block == Blocks.diamond_ore);
+	        }
+	        
+	        if(currentMiningType == MiningType.COAL) { 
+		        return (block == Blocks.coal_block || 
+		               block == Blocks.coal_ore);
+	        }
+	        
+	        if(currentMiningType == MiningType.REDSTONE) { 
+		        return (block == Blocks.redstone_block || 
+		               block == Blocks.redstone_ore);
+	        }
+	        
+	        if(currentMiningType == MiningType.IRON) { 
+		        return (block == Blocks.iron_block || 
+		               block == Blocks.iron_ore);
+	        }
+	        
+	        if(currentMiningType == MiningType.LAPIS) { 
+		        return (block == Blocks.lapis_block || 
+		               block == Blocks.lapis_ore);
+	        }
+	        
+	        if (currentMiningType == MiningType.GEMSTONE) {
+	        	return (block == Blocks.stained_glass || block == Blocks.stained_glass_pane) &&
+	        	           (meta == 1  || // Amber
+	        	            meta == 2  || // Jasper
+	        	            meta == 3  || // Sapphire
+	        	            meta == 4  || // Topaz
+	        	            meta == 5  || // Peridot
+	        	            meta == 8  || // Opal
+	        	            meta == 10 || // Amethyst
+	        	            meta == 11 || // Aquamarine
+	        	            meta == 12 || // Citrine
+	        	            meta == 13 || // Jade
+	        	            meta == 14 || // Ruby
+	        	            meta == 15);  // Onyx
+	        }
+	        
+	        
+	        return false;
 	    }
 	 
 	 private static int getBlockHardness(IBlockState state) {
@@ -292,7 +357,7 @@ public class MiningUtils {
 		
 		if(inventory.getCurrentItem() != null) {
 			String id = Utils.getSkyblockId(inventory.getCurrentItem());
-	        if(id.equals("GEMSTONE_GAUNTLET") || id.contains("DRILL")) {
+	        if(id != null && (id.equals("GEMSTONE_GAUNTLET") || id.contains("DRILL") || id.contains("PICKAXE"))) {
 	        	hasItem = true;
 	        }
 		}
@@ -302,7 +367,7 @@ public class MiningUtils {
 		        ItemStack item = inventory.mainInventory[i];
 		        if(item == null || inventory.currentItem == i) continue;
 		        String id = Utils.getSkyblockId(item);
-		        if(id.equals("GEMSTONE_GAUNTLET") || id.contains("DRILL")) {
+		        if(id != null && (id.equals("GEMSTONE_GAUNTLET") || id.contains("DRILL") || id.contains("PICKAXE"))) {
 		        	hasItem = true;
 		        	Minecraft.getMinecraft().thePlayer.inventory.currentItem = i;
 		        	break;

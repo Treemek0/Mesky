@@ -24,17 +24,21 @@ import treemek.mesky.config.ConfigHandler;
 import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.features.BlockFlowerPlacing;
 import treemek.mesky.handlers.RenderHandler;
+import treemek.mesky.handlers.gui.elements.ButtonWithToolkit;
 import treemek.mesky.handlers.gui.elements.ScrollBar;
+import treemek.mesky.handlers.gui.elements.buttons.AddButton;
 import treemek.mesky.handlers.gui.elements.buttons.CheckButton;
 import treemek.mesky.handlers.gui.elements.buttons.DeleteButton;
 import treemek.mesky.handlers.gui.elements.buttons.EditButton;
 import treemek.mesky.handlers.gui.elements.buttons.ListBox;
 import treemek.mesky.handlers.gui.elements.buttons.MeskyButton;
+import treemek.mesky.handlers.gui.elements.buttons.SaveButton;
 import treemek.mesky.handlers.gui.elements.sliders.Slider;
 import treemek.mesky.handlers.gui.elements.buttons.ListBox.Option;
 import treemek.mesky.handlers.gui.elements.textFields.TextField;
 import treemek.mesky.handlers.gui.elements.warnings.CloseWarning;
 import treemek.mesky.handlers.gui.waypoints.WaypointElement;
+import treemek.mesky.handlers.gui.waypoints.WaypointGroupElement;
 import treemek.mesky.utils.Alerts;
 import treemek.mesky.utils.HypixelCheck;
 import treemek.mesky.utils.Locations;
@@ -145,6 +149,17 @@ public class AlertsGui extends GuiScreen {
 	    
 		drawRect(0, 0, width, height/3 - 1, new Color(33, 33, 33,255).getRGB());
 		
+		// Toolkit
+    	if(holdingElement == null) {
+			for (AlertElement alert : alerts) {
+		    	for (GuiButton button : alert.getListOfButtons()) {
+		    	    if (button instanceof ButtonWithToolkit && ((ButtonWithToolkit) button).shouldShowTooltip()) {
+		    	    	RenderHandler.drawToolkit(button, mouseX, mouseY);
+		    	    }
+		    	}
+			}
+    	}
+		
 		float scale = (float) ((height*0.1f) / mc.fontRendererObj.FONT_HEIGHT) / 2;
 
         int textLength = mc.fontRendererObj.getStringWidth("Alerts");
@@ -188,6 +203,14 @@ public class AlertsGui extends GuiScreen {
         
 	    super.drawScreen(mouseX, mouseY, partialTicks);
 	    
+	    if(holdingElement == null) {
+    		for (GuiButton guiButton : buttonList) {
+    			if (guiButton instanceof ButtonWithToolkit && ((ButtonWithToolkit) guiButton).shouldShowTooltip()) {
+	    	    	RenderHandler.drawToolkit(guiButton, mouseX, mouseY);
+	    	    }
+			}
+	    }
+	    
 	    closeWarning.drawElement(mc, mouseX, mouseY);
 	}
 	
@@ -208,12 +231,16 @@ public class AlertsGui extends GuiScreen {
     	int time_X = display_X + (width / 4);
     	int editX = (int) (time_X + width/12 + spaceBetween + 10);
     	
+        float mainButtonsScale = (float) ((height*0.1f) / mc.fontRendererObj.FONT_HEIGHT) / 2;
+        int mainButtonsSize = (int) RenderHandler.getTextHeight(mainButtonsScale);
+        int mainButtonsY = (int) (height * 0.05f);
+        
         // Save button
-    	saveButton = new MeskyButton(-1, (int)(width * 0.8f), (height/15), (int)(width * 0.2f), 20, "Save");
+        saveButton = new SaveButton(-1, (int)(width * 0.9f) - mainButtonsSize/2, mainButtonsY, mainButtonsSize ,mainButtonsSize, "Save");
         this.buttonList.add(saveButton);
         
-        // New Alert button
-        this.buttonList.add(new MeskyButton(-2, 0, (height/15), (int)(width * 0.2f), 20, "New alert"));
+        // New waypoint button
+        this.buttonList.add(new AddButton(-2, (int)(width * 0.1f) - mainButtonsSize/2, mainButtonsY, mainButtonsSize, mainButtonsSize, "New alert"));
         
     	// This is so you cant scroll limitless, it takes every waypoint height with their margin and removes visible inputs height so you can scroll max to how much of inputs isnt visible
         scrollbar.updateVisibleHeight(height - (height/3));
@@ -229,10 +256,10 @@ public class AlertsGui extends GuiScreen {
 	        	CheckButton enabled = new CheckButton(0, editX + (spaceBetween/2 + inputHeight)*2, inputFullPosition, inputHeight, inputHeight, "", Alerts.alertsList.get(i).enabled);
 	        	
 	        	// Delete button
-	        	DeleteButton deleteButton = new DeleteButton(0, editX + spaceBetween/2 + inputHeight, inputFullPosition, inputHeight, inputHeight, "");
+	        	DeleteButton deleteButton = new DeleteButton(0, editX + spaceBetween/2 + inputHeight, inputFullPosition, inputHeight, inputHeight, "Delete alert");
 	        	deleteButton.enabled = Alerts.alertsList.get(i).enabled;
 	        	
-	        	EditButton editButton = new EditButton(1, editX, inputFullPosition, inputHeight, inputHeight, "");
+	        	EditButton editButton = new EditButton(1, editX, inputFullPosition, inputHeight, inputHeight, "Edit position");
 	        	editButton.enabled = Alerts.alertsList.get(i).enabled;
 	        	
 	        	// onlyParty button
@@ -282,10 +309,10 @@ public class AlertsGui extends GuiScreen {
 	 			int inputFullPosition = positionY + ((inputHeight*2 + 5 + inputMargin) * i);
 	        	
 	        	// Delete button
-	        	DeleteButton deleteButton = new DeleteButton(0, editX + (spaceBetween/2 + inputHeight), inputFullPosition, inputHeight, inputHeight, "");
+	        	DeleteButton deleteButton = new DeleteButton(0, editX + (spaceBetween/2 + inputHeight), inputFullPosition, inputHeight, inputHeight, "Delete alert");
 	        	deleteButton.enabled = alerts.get(i).enabled.isFull();
 	        	
-	        	EditButton editButton = new EditButton(1, editX, inputFullPosition, inputHeight, inputHeight, "");
+	        	EditButton editButton = new EditButton(1, editX, inputFullPosition, inputHeight, inputHeight, "Edit position");
 	        	editButton.enabled = alerts.get(i).enabled.isFull();
 	        	
 	        	CheckButton enabled = new CheckButton(0, editX + (spaceBetween/2 + inputHeight)*2, inputFullPosition, inputHeight, inputHeight, "", alerts.get(i).enabled.isFull());
@@ -357,9 +384,9 @@ public class AlertsGui extends GuiScreen {
 	    	int topOfWaypoints = height/3 - inputHeight*2 - inputMargin;
 			
 	    	
-			DeleteButton deleteButton = new DeleteButton(0, editX + spaceBetween/2 + inputHeight, 0, inputHeight, inputHeight, "");
+			DeleteButton deleteButton = new DeleteButton(0, editX + spaceBetween/2 + inputHeight, 0, inputHeight, inputHeight, "Delete alert");
 			
-			EditButton editButton = new EditButton(1, editX, 0, inputHeight, inputHeight, "");
+			EditButton editButton = new EditButton(1, editX, 0, inputHeight, inputHeight, "Edit position");
         	
 			CheckButton enabled = new CheckButton(0, editX + (spaceBetween/2 + inputHeight)*2, 0, inputHeight, inputHeight, "", true);
 			

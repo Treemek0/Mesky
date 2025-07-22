@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -38,12 +39,18 @@ import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.features.BlockFlowerPlacing;
 import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.handlers.gui.alerts.AlertElement;
+import treemek.mesky.handlers.gui.elements.ButtonWithToolkit;
 import treemek.mesky.handlers.gui.elements.ColorPicker;
+import treemek.mesky.handlers.gui.elements.Popup;
 import treemek.mesky.handlers.gui.elements.ScrollBar;
+import treemek.mesky.handlers.gui.elements.buttons.AddButton;
 import treemek.mesky.handlers.gui.elements.buttons.CheckButton;
 import treemek.mesky.handlers.gui.elements.buttons.DeleteButton;
 import treemek.mesky.handlers.gui.elements.buttons.EditButton;
+import treemek.mesky.handlers.gui.elements.buttons.ExportButton;
+import treemek.mesky.handlers.gui.elements.buttons.ImportButton;
 import treemek.mesky.handlers.gui.elements.buttons.MeskyButton;
+import treemek.mesky.handlers.gui.elements.buttons.SaveButton;
 import treemek.mesky.handlers.gui.elements.sliders.Slider;
 import treemek.mesky.handlers.gui.elements.textFields.TextField;
 import treemek.mesky.handlers.gui.elements.warnings.ChangingRegionWarning;
@@ -62,7 +69,7 @@ import treemek.mesky.utils.Waypoints.WaypointGroup;
 
 public class WaypointsGui extends GuiScreen {
 	public static GuiTextField region;
-	private GuiButton saveButton;
+	private ButtonWithToolkit saveButton;
 	
 	public static List<WaypointGroupElement> waypoints = new ArrayList<>();
 	
@@ -80,7 +87,7 @@ public class WaypointsGui extends GuiScreen {
 	private float scrollbarBg_height;
 	private float scrollbar_width;
 
-
+	Popup popup;
 	
 	@Override
 	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
@@ -190,6 +197,33 @@ public class WaypointsGui extends GuiScreen {
 	    }
     	
 		drawRect(0, 0, width, height/4 - 1, new Color(33, 33, 33,255).getRGB());
+    	
+    	// Toolkit
+    	if(holdingElement == null && holdingGroup == null) {
+	    	for (WaypointGroupElement waypointGroupElement : waypoints) {
+	    		if(waypointGroupElement.opened.isOpened()) {
+					for (WaypointElement waypoint : waypointGroupElement.list) {
+				    	for (GuiButton button : waypoint.getListOfButtons()) {
+				    	    if (button instanceof ButtonWithToolkit && ((ButtonWithToolkit) button).shouldShowTooltip()) {
+				    	    	RenderHandler.drawToolkit(button, mouseX, mouseY);
+				    	    }
+				    	}
+					}
+	    		}
+	    		
+	    		if(waypointGroupElement.addWaypoint.shouldShowTooltip()) {
+	    			RenderHandler.drawToolkit(waypointGroupElement.addWaypoint, mouseX, mouseY);
+	    		}
+	    		
+	    		if(waypointGroupElement.delete.shouldShowTooltip()) {
+	    			RenderHandler.drawToolkit(waypointGroupElement.delete, mouseX, mouseY);
+	    		}
+	    		
+	    		if(waypointGroupElement.move.shouldShowTooltip()) {
+	    			RenderHandler.drawToolkit(waypointGroupElement.move, mouseX, mouseY);
+	    		}
+	    	}
+    	}
 		
 		float scale = (float) ((height*0.1f) / mc.fontRendererObj.FONT_HEIGHT) / 2;
 
@@ -228,8 +262,18 @@ public class WaypointsGui extends GuiScreen {
        
 	    super.drawScreen(mouseX, mouseY, partialTicks);
 	    
+	    if(holdingElement == null && holdingGroup == null) {
+    		for (GuiButton guiButton : buttonList) {
+    			if (guiButton instanceof ButtonWithToolkit && ((ButtonWithToolkit) guiButton).shouldShowTooltip()) {
+	    	    	RenderHandler.drawToolkit(guiButton, mouseX, mouseY);
+	    	    }
+			}
+	    }
+	    
 	    changingRegionWarning.drawElement(mc, mouseX, mouseY);
         closeWarning.drawElement(mc, mouseX, mouseY);
+        
+        popup.drawPopup();
 	}
 	
 	private void resetColor() { // because drawRect destroys some logic
@@ -245,18 +289,28 @@ public class WaypointsGui extends GuiScreen {
 	    closeWarning = new CloseWarning();
 	    changingRegionWarning = new ChangingRegionWarning();
 	    
+	    popup = new Popup(1500);
+	    
         int checkX = (int)(width / 4);
         int buttonWidth = 20;
         int buttonHeight = 20;
         
+        float mainButtonsScale = (float) ((height*0.1f) / mc.fontRendererObj.FONT_HEIGHT) / 2;
+        int mainButtonsSize = (int) RenderHandler.getTextHeight(mainButtonsScale);
+        int mainButtonsY = (int) (height * 0.05f);
         
         // Save button
-        int mainButtonsY = Math.max(22, (height/15));
-        saveButton = new MeskyButton(-1, (int)(width * 0.8f), mainButtonsY, (int)(width * 0.2f), 20, "Save");
+        saveButton = new SaveButton(-1, (int)(width * 0.9f) - mainButtonsSize/2, mainButtonsY, mainButtonsSize ,mainButtonsSize, "Save");
         this.buttonList.add(saveButton);
         
         // New waypoint button
-        this.buttonList.add(new MeskyButton(-2, 0, mainButtonsY, (int)(width * 0.2f), 20, "New group"));
+        this.buttonList.add(new AddButton(-2, (int)(width * 0.1f) - mainButtonsSize/2, mainButtonsY, mainButtonsSize, mainButtonsSize, "New group"));
+        
+        ImportButton importButton = new ImportButton(-3, (int)(width * 0.1f) + mainButtonsSize, mainButtonsY, mainButtonsSize, mainButtonsSize, "Import and save waypoints");
+        importButton.changeTimeForToolkitToShow(500);
+        this.buttonList.add(importButton);
+        
+        this.buttonList.add(new ExportButton(-4, (int)(width * 0.9f) - mainButtonsSize - mainButtonsSize, mainButtonsY, mainButtonsSize, mainButtonsSize, "Export waypoints"));
         
         // Updating location from tab
         Location.checkTabLocation();
@@ -301,7 +355,7 @@ public class WaypointsGui extends GuiScreen {
 		        	// Position 0 for inputs + every input height and their bottom margin
 		        	int inputFullPosition = positionY + ((inputHeight + inputMargin) * i);
 		        	
-		        	DeleteButton deleteButton = new DeleteButton(0, (int)(width * 0.85f), inputFullPosition, inputHeight, inputHeight, "");
+		        	DeleteButton deleteButton = new DeleteButton(0, (int)(width * 0.85f), inputFullPosition, inputHeight, inputHeight, "Delete waypoint");
 		        	deleteButton.enabled = waypoint.enabled;
 		        	
 		        	CheckButton enabled = new CheckButton(0, (int)(width * 0.9f), inputFullPosition, inputHeight, inputHeight, "", waypoint.enabled);
@@ -363,7 +417,7 @@ public class WaypointsGui extends GuiScreen {
 		        	// Position 0 for inputs + every input height and their bottom margin
 		        	int inputFullPosition = positionY + ((inputHeight + inputMargin) * i);
 		        	
-		        	DeleteButton deleteButton = new DeleteButton(0 + (5*i), (int)(width * 0.85f), inputFullPosition, inputHeight, inputHeight, "");
+		        	DeleteButton deleteButton = new DeleteButton(0 + (5*i), (int)(width * 0.85f), inputFullPosition, inputHeight, inputHeight, "Delete waypoint");
 		        	deleteButton.enabled = waypoint.enabled.isFull();
 		        	
 		        	CheckButton enabled = new CheckButton(0, (int)(width * 0.9f), inputFullPosition, inputHeight, inputHeight, "", waypoint.enabled.isFull());
@@ -428,7 +482,124 @@ public class WaypointsGui extends GuiScreen {
             waypoints.add(0, group);
             return;
 		}
+		
+		if(button.id == -3) {
+			// Import waypoints button
+			try {
+				LinkedHashMap<String, WaypointGroup> waypoints = Waypoints.importSkytilsWaypoints(getClipboardString());
+				
+		        if(waypoints != null && !waypoints.isEmpty()) {
+		        	for (Map.Entry<String, WaypointGroup> entry : waypoints.entrySet()) {
+		                String key = entry.getKey();
+		                WaypointGroup group = entry.getValue();
+    		   
+        		        Utils.addMinecraftMessage('\u25B6' + " " + EnumChatFormatting.DARK_GREEN + "Waypoint group: " + EnumChatFormatting.DARK_AQUA + key);
+    		            
+    		            Waypoints.waypointsList.compute(key, (k, existingGroup) -> {
+    		                if (existingGroup == null) return group;
+    		                for (Waypoint waypoint : existingGroup.list) {
+    		                	Utils.addMinecraftMessage('\u21AA' + " " + EnumChatFormatting.DARK_AQUA + waypoint.name + EnumChatFormatting.GOLD + " [" + waypoint.coords[0] + ", " + waypoint.coords[1] + ", " + waypoint.coords[2] + "]");
+							}
+    		                
+    		                existingGroup.list.addAll(group.list);
+    		                return existingGroup;
+    		            });
+    		            
+    		        	popup.resetPopups();
+    		            popup.showPopup("Imported waypoints");
+    		            
+    		            refreshGui();
+    		        	popup.showPopup("Saving waypoints", 500);
+    		            ConfigHandler.SaveWaypoint(Waypoints.waypointsList);
+    		        }
+		        }else {
+		        	popup.showPopup("Invalid Skytils format");
+		        }
+		        
+				
+			} catch (IOException e) {
+				Utils.writeError(e);
+				popup.showPopup("There's error with importing");
+			}
+			
+            return;
+		}
 
+		if(button.id == -4) {
+			// Export waypoints button
+			try {
+				popup.resetPopups();
+				
+				Map<String, WaypointGroup> waypointsList = new LinkedHashMap<>();
+				boolean isError = false;
+				for (WaypointGroupElement group : waypoints) {
+					String originalName = group.name;
+			    	String finalName = originalName;
+			    	int suffix = 1;
+
+			    	while (nameExists(finalName, group, waypointsList)) {
+			    	    finalName = originalName + suffix;
+			    	    suffix++;
+			    	}
+			    	
+			    	group.changeName(finalName);
+					
+					List<Waypoint> groupList = new ArrayList<>();
+					for (int j = group.list.size() - 1; j >= 0; j--) {
+						WaypointElement waypoint = group.list.get(j);
+			
+				    	waypoint.color.setTextColor(14737632);
+				    	waypoint.x.setTextColor(14737632);
+				    	waypoint.y.setTextColor(14737632);
+				    	waypoint.z.setTextColor(14737632);
+				    	
+				        String name = waypoint.name.getText();
+				        String color = waypoint.color.getColorString().replace("#", ""); 
+				        double scale = waypoint.scale.getValue();
+				        boolean enabled = waypoint.enabled.isFull();
+				        
+				        if(color.length() == 0) color = "ffffff";
+				        
+				        try {
+				        	Color.decode("#" + color);
+				        } catch (NumberFormatException e) {
+				        	waypoint.color.setTextColor(11217193);
+				            isError = true;
+				        }
+				        
+				        float x = 0, y = 0, z = 0;
+				        try {
+				            x = Float.parseFloat(waypoint.x.getText());
+				        } catch (NumberFormatException e) { waypoint.x.setTextColor(11217193); isError = true; }
+				        
+				        try {
+				            y = Float.parseFloat(waypoint.y.getText());
+				        } catch (NumberFormatException e) { waypoint.y.setTextColor(11217193); isError = true; }
+				        
+				        try {
+				        	z = Float.parseFloat(waypoint.z.getText()); 
+				        } catch (NumberFormatException e) { waypoint.z.setTextColor(11217193); isError = true; }
+				        
+				        if(isError) {
+				        	popup.showPopup("There's error with some waypoints, can't import");
+				        	return; // skip
+				        }
+				        
+				    	groupList.add(0, new Waypoint(name, color, x, y, z, Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld), (float) scale, enabled));
+					}
+					
+					waypointsList.computeIfAbsent(finalName + " %" + group.world, k -> new WaypointGroup(new ArrayList<>(), group.world, group.enabled.isFull(), group.opened.isOpened())).list.addAll(0, groupList);
+			    }
+				
+				Utils.copyToClipboard(Waypoints.exportWaypointsSkytilsFormat(waypointsList));
+				popup.showPopup("Exported string to clipboard");
+			} catch (IOException e) {
+				Utils.writeError(e);
+				popup.showPopup("There's error with exporting");
+			}
+			
+            return;
+		}
 
 		for (WaypointGroupElement group : waypoints) {
 			if(button == (GuiButton)group.addWaypoint) {
@@ -445,7 +616,7 @@ public class WaypointsGui extends GuiScreen {
 				
 				int topOfGroup = group.yPosition;
 				
-				DeleteButton deleteButton = new DeleteButton(0, (int)(width * 0.85f), 0, inputHeight, inputHeight, "");
+				DeleteButton deleteButton = new DeleteButton(0, (int)(width * 0.85f), 0, inputHeight, inputHeight, "Delete waypoint");
 				
 				CheckButton enabled = new CheckButton(0, (int)(width * 0.9f), 0, inputHeight, inputHeight, "", true);
 				
@@ -595,6 +766,10 @@ public class WaypointsGui extends GuiScreen {
 							}
 						}
 					}
+					
+					waypointGroupElement.nameField.setCursorPositionZero();
+					waypointGroupElement.nameField.setFocused(false);
+					waypointGroupElement.nameField.setVisible(false);
 				}
 				
 				if(!isOpenedColorPicker) {
@@ -674,22 +849,12 @@ public class WaypointsGui extends GuiScreen {
 					continue;
 				}
 				
-				double groupNameScale = RenderHandler.getTextScale("Players", width / 20);
-		        double groupNameWidth = RenderHandler.getTextWidth(waypointGroupElement.name, groupNameScale);
-				double groupNameHeight = RenderHandler.getTextHeight(groupNameScale);
-		        double groupNameY = waypointGroupElement.yPosition + ((inputHeight + inputMargin/2)/2 - RenderHandler.getTextHeight(groupNameScale)/2);
-				
-				if (mouseX >= waypointGroupElement.xPosition && mouseX <= waypointGroupElement.xPosition + groupNameWidth && mouseY >= groupNameY && mouseY <= groupNameY + groupNameHeight) {
+
+				if (mouseX >= waypointGroupElement.nameField.xPosition && mouseX <= waypointGroupElement.nameField.xPosition + waypointGroupElement.nameField.width && mouseY >= waypointGroupElement.nameField.yPosition && mouseY <= waypointGroupElement.nameField.yPosition + waypointGroupElement.nameField.height) {
 					waypointGroupElement.nameField.mouseClicked(mouseX, mouseY, mouseButton);
 					waypointGroupElement.nameField.setVisible(true);
 				}else {
 					if(waypointGroupElement.nameField.getVisible()) {
-						if (mouseX >= waypointGroupElement.xPosition && mouseX <= waypointGroupElement.xPosition + width/4 && mouseY >= groupNameY && mouseY <= groupNameY + groupNameHeight) {
-							waypointGroupElement.nameField.mouseClicked(mouseX, mouseY, mouseButton);
-						}else {
-							waypointGroupElement.nameField.setVisible(false);
-						}
-					}else {
 						waypointGroupElement.nameField.setVisible(false);
 					}
 				}
@@ -1086,49 +1251,139 @@ public class WaypointsGui extends GuiScreen {
 		Map<String, WaypointGroup> currentWaypoints = Waypoints.GetLocationWaypoints();
 		if(currentWaypoints.size() != waypoints.size()) return true;
 		
-		for (WaypointGroupElement group : waypoints) {
-			WaypointGroup waypointFromCurrent = currentWaypoints.get(group.name + " %" + group.world);
-			List<Waypoint> storedList = waypointFromCurrent.list;
-			if (storedList == null || storedList.size() != group.list.size()) return true;
-			if(group.enabled.isFull() !=  waypointFromCurrent.enabled) return true;
-			if(group.opened.isOpened() !=  waypointFromCurrent.opened) return true;
-			
-			for (int i = 0; i < group.list.size(); i++) {
-				WaypointElement waypoint = group.list.get(i);
-				Waypoint current = storedList.get(i);
-
-				String name = waypoint.name.getText();
-				String color = waypoint.color.getColorString().replace("#", "");
-				float scale = (float) waypoint.scale.getValue();
-				boolean enabled = waypoint.enabled.isFull();
-
-				try {
-					Color.decode("#" + color);
-					float x = Float.parseFloat(waypoint.x.getText());
-					float y = Float.parseFloat(waypoint.y.getText());
-					float z = Float.parseFloat(waypoint.z.getText());
-
-					if (!name.equals(current.name) ||
-					    !color.equalsIgnoreCase(ColorUtils.fixColor(current.color)) ||
-					    enabled != current.enabled ||
-					    Float.compare(current.scale, scale) != 0 ||
-					    Float.compare(current.coords[0], x) != 0 ||
-					    Float.compare(current.coords[1], y) != 0 ||
-					    Float.compare(current.coords[2], z) != 0) {
+		try {
+			for (WaypointGroupElement group : waypoints) {
+				WaypointGroup waypointFromCurrent = currentWaypoints.get(group.name + " %" + group.world);
+				if(waypointFromCurrent == null) return true;
+				List<Waypoint> storedList = waypointFromCurrent.list;
+				if (storedList == null || storedList.size() != group.list.size()) return true;
+				if(group.enabled.isFull() !=  waypointFromCurrent.enabled) return true;
+				if(group.opened.isOpened() !=  waypointFromCurrent.opened) return true;
+				
+				for (int i = 0; i < group.list.size(); i++) {
+					WaypointElement waypoint = group.list.get(i);
+					Waypoint current = storedList.get(i);
+	
+					String name = waypoint.name.getText();
+					String color = waypoint.color.getColorString().replace("#", "");
+					float scale = (float) waypoint.scale.getValue();
+					boolean enabled = waypoint.enabled.isFull();
+	
+					try {
+						Color.decode("#" + color);
+						float x = Float.parseFloat(waypoint.x.getText());
+						float y = Float.parseFloat(waypoint.y.getText());
+						float z = Float.parseFloat(waypoint.z.getText());
+	
+						if (!name.equals(current.name) ||
+						    !color.equalsIgnoreCase(ColorUtils.fixColor(current.color)) ||
+						    enabled != current.enabled ||
+						    Float.compare(current.scale, scale) != 0 ||
+						    Float.compare(current.coords[0], x) != 0 ||
+						    Float.compare(current.coords[1], y) != 0 ||
+						    Float.compare(current.coords[2], z) != 0) {
+							return true;
+						}
+					} catch (NumberFormatException e) {
 						return true;
 					}
-				} catch (NumberFormatException e) {
-					return true;
 				}
 			}
+	
+			// Check for extra groups in stored data not present in UI
+			if (currentWaypoints.size() != waypoints.size()) return true;
+	
+			return false;
+		} catch (Exception e) {
+			Utils.writeError(e);
+			return true;
 		}
-
-		// Check for extra groups in stored data not present in UI
-		if (currentWaypoints.size() != waypoints.size()) return true;
-
-		return false;
 	}
 
+	private void refreshGui() {
+		inputHeight = ((height / 25) < 12)?12:(height / 25);
+		inputMargin = ((height / 40) < 5)?5:(height / 40);
+        
+        int waypointColor_X = width / 20;
+        int waypointScale_X = waypointColor_X + inputHeight + 10;
+        int waypointName_X = waypointScale_X + width / 8 + 5;
+		int coords_X = waypointName_X + (width/4) + 5;
+		int coord_Width = width / 10;
+
+		// its gonna be 0 btw
+		int ScrollOffset = scrollbar.getOffset();
+		
+        int positionY = (int) (height / 4 + ScrollOffset);
+		
+        ArrayList newWaypoints = new ArrayList<>();
+
+        for (Entry<String, WaypointGroup> waypointGroup : Waypoints.GetLocationWaypoints().entrySet()) {
+        	List<WaypointElement> list = new ArrayList<>();
+        	
+			String groupName = waypointGroup.getKey();
+			List<Waypoint> groupList = waypointGroup.getValue().list;
+			
+			for (Waypoint waypoint : groupList) {
+				int i = 1;
+				
+	        	// Position 0 for inputs + every input height and their bottom margin
+	        	int inputFullPosition = positionY + ((inputHeight + inputMargin) * i);
+	        	
+	        	DeleteButton deleteButton = new DeleteButton(0, (int)(width * 0.85f), inputFullPosition, inputHeight, inputHeight, "Delete waypoint");
+	        	deleteButton.enabled = waypoint.enabled;
+	        	
+	        	CheckButton enabled = new CheckButton(0, (int)(width * 0.9f), inputFullPosition, inputHeight, inputHeight, "", waypoint.enabled);
+	        	
+	    		// Name text input
+	        	TextField waypointName = new TextField(0, waypointName_X, inputFullPosition, width / 4, inputHeight);
+	        	waypointName.setColoredField(true);
+	            waypointName.setMaxStringLength(512);
+	            waypointName.setCanLoseFocus(true);
+	            waypointName.setText(waypoint.name);
+	            
+	            
+	            // color text input
+	            ColorPicker colorPicker = new ColorPicker(0, waypointColor_X, 0, inputHeight);	        	
+	            colorPicker.setText(waypoint.color);
+	            colorPicker.enabled = waypoint.enabled;
+	            
+	            // scale slider
+	            Slider scale = new Slider(0, waypointScale_X, inputFullPosition, width / 8, inputHeight, "", 0.5f, 5, 0.1f);
+	            scale.setValue(waypoint.scale);
+	            
+	            // X coordinate input
+	            TextField waypointX = new TextField(2, coords_X, inputFullPosition, coord_Width, inputHeight);
+	            waypointX.setMaxStringLength(16);
+	            waypointX.setCanLoseFocus(true);
+	            waypointX.setText(Float.toString(waypoint.coords[0]));
+	            
+	            // Y coordinate input
+	            TextField waypointY = new TextField(3, coords_X + coord_Width + 5, inputFullPosition, coord_Width, inputHeight);
+	            waypointY.setMaxStringLength(16);
+	            waypointY.setCanLoseFocus(true);
+	            waypointY.setText(Float.toString(waypoint.coords[1]));
+	            
+	            // Z coordinate input
+	            TextField waypointZ = new TextField(4, coords_X + (width / 5) + 10, inputFullPosition, coord_Width, inputHeight);
+	            waypointZ.setMaxStringLength(16);
+	            waypointZ.setCanLoseFocus(true);
+	            waypointZ.setText(Float.toString(waypoint.coords[2]));
+	
+	            
+	            list.add(new WaypointElement(waypointName, colorPicker, scale, waypointX, waypointY, waypointZ, deleteButton, enabled, inputMargin));
+			}
+			 
+			WaypointGroupElement group = new WaypointGroupElement(groupName, list, waypointGroup.getValue().world);
+			group.xPosition = waypointName_X;
+			group.setEnabled(waypointGroup.getValue().enabled);
+			group.opened.setOpened(waypointGroup.getValue().opened);
+			newWaypoints.add(group);
+			
+        }
+        
+        waypoints = newWaypoints;
+        snapToWaypointY();
+	}
 	
 	@Override
     public void onGuiClosed() {

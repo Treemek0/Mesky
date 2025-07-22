@@ -8,8 +8,9 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ResourceLocation;
 import treemek.mesky.Reference;
 import treemek.mesky.handlers.RenderHandler;
+import treemek.mesky.handlers.gui.elements.ButtonWithToolkit;
 
-public class HoldButton extends GuiButton{
+public class HoldButton extends ButtonWithToolkit{
 	
 	public HoldButton(int buttonId, int x, int y, int width, int height, String buttonText){
 		super(buttonId, x, y, width, height, buttonText);
@@ -33,6 +34,8 @@ public class HoldButton extends GuiButton{
         	 zLevel = 1;
      		drawModalRectWithCustomSizedTexture(xPosition, yPosition, 0, 0, width, height, width, height);
          }
+         
+         super.drawButton(mc, mouseX, mouseY);
 	}
 	
 	public void update(int x, int y, int width, int height) {

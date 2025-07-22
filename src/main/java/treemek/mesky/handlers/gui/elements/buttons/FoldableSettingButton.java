@@ -155,6 +155,10 @@ public class FoldableSettingButton extends GuiButton{
 					if(hiddenObjects.get(i) instanceof SettingSlider) {
 						foldHeight += ((SettingSlider)hiddenObjects.get(i)).allHeight + 2;
 					}
+					
+					if(hiddenObjects.get(i) instanceof SettingListBox) {
+						foldHeight += ((SettingListBox)hiddenObjects.get(i)).allHeight + 2;
+					}
 				}
 				if(hiddenObjects.get(i) instanceof GuiTextField) {
 					if(hiddenObjects.get(i) instanceof SettingTextField) {
@@ -179,8 +183,12 @@ public class FoldableSettingButton extends GuiButton{
 				((SettingColorPicker)object).drawPickerOpened(); // because it has to be on top and for some reason it didnt worked like everything else
 			}
 			
+			if(object instanceof SettingListBox) {
+				((SettingListBox)object).drawOpenedList();; // because it has to be on top and for some reason it didnt worked like everything else
+			}
+			
 			if(object instanceof FoldableSettingButton) {
-				((FoldableSettingButton)object).drawElementOnTop();; // because it has to be on top and for some reason it didnt worked like everything else
+				((FoldableSettingButton)object).drawElementOnTop(); // because it has to be on top and for some reason it didnt worked like everything else
 			}
 		}
 	}
@@ -208,7 +216,9 @@ public class FoldableSettingButton extends GuiButton{
 	        		
 	        		if(hiddenObjects.get(j) instanceof SettingSlider) {
 	                	((SettingSlider)hiddenObjects.get(j)).mouseClicked(mouseX, mouseY, mouseButton);
-	                }else {
+	                }else if(hiddenObjects.get(j) instanceof SettingListBox) {
+	                	((SettingListBox)hiddenObjects.get(j)).mousePressed(mouseX, mouseY, mouseButton);
+        			}else {
 		                if (guiButton.mousePressed(Minecraft.getMinecraft(), mouseX, mouseY))
 		                {
 		                    guiButton.playPressSound(Minecraft.getMinecraft().getSoundHandler());

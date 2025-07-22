@@ -14,6 +14,7 @@ import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.handlers.gui.elements.SettingColorPicker;
 import treemek.mesky.handlers.gui.elements.buttons.FoldableSettingButton;
 import treemek.mesky.handlers.gui.elements.buttons.SettingButton;
+import treemek.mesky.handlers.gui.elements.buttons.SettingListBox;
 import treemek.mesky.handlers.gui.elements.sliders.SettingSlider;
 import treemek.mesky.handlers.gui.elements.textFields.SettingTextField;
 
@@ -106,12 +107,13 @@ public class SubCategory extends GuiScreen{
                             SettingsGUI.buttonClicked(guiButton); // here is function to buttonClicked maybe for future searching XD
                         }
             		}else {
-            		
 		                GuiButton guibutton = (GuiButton)this.list.get(i);
 		                
 		                if(this.list.get(i) instanceof SettingSlider) {
 		                	((SettingSlider)this.list.get(i)).mouseClicked(mouseX, mouseY, mouseButton);
-		                }else {
+		                }else if(this.list.get(i) instanceof SettingListBox) {
+		                	((SettingListBox)this.list.get(i)).mousePressed(mouseX, mouseY, mouseButton);
+            			}else {
 			                if (guibutton.mousePressed(this.mc, mouseX, mouseY))
 			                {
 			                    guibutton.playPressSound(Minecraft.getMinecraft().getSoundHandler());

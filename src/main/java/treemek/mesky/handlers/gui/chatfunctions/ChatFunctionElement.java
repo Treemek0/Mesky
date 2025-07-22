@@ -61,11 +61,11 @@ public class ChatFunctionElement {
 	
 	public List<GuiButton> getListOfButtons() {
 		List<GuiButton> buttons = new ArrayList<>();
+		buttons.add(enabled);
 		buttons.add(deleteButton);
 		buttons.add(onlyParty);
 		buttons.add(ignorePlayers);
 		buttons.add(isEqual);
-		buttons.add(enabled);
 		return buttons;
 	}
 	

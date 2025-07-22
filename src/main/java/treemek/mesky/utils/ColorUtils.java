@@ -2,6 +2,8 @@ package treemek.mesky.utils;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +14,7 @@ import java.util.regex.Pattern;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.StringUtils;
 import treemek.mesky.Reference;
+import treemek.mesky.handlers.gui.elements.buttons.ListBox.Option;
 
 public class ColorUtils {
 	
@@ -39,6 +42,45 @@ public class ColorUtils {
 	        this.code = code;
 	    }
 	}
+	
+	public static ArrayList<Option> EnumColorsOptionList = new ArrayList<>(Arrays.asList(
+		    new Option("BLACK", "BLACK"),
+		    new Option("DARK_BLUE", "DARK_BLUE"),
+		    new Option("DARK_GREEN", "DARK_GREEN"),
+		    new Option("DARK_AQUA", "DARK_AQUA"),
+		    new Option("DARK_RED", "DARK_RED"),
+		    new Option("DARK_PURPLE", "DARK_PURPLE"),
+		    new Option("GOLD", "GOLD"),
+		    new Option("GRAY", "GRAY"),
+		    new Option("DARK_GRAY", "DARK_GRAY"),
+		    new Option("BLUE", "BLUE"),
+		    new Option("GREEN", "GREEN"),
+		    new Option("AQUA", "AQUA"),
+		    new Option("RED", "RED"),
+		    new Option("LIGHT_PURPLE", "LIGHT_PURPLE"),
+		    new Option("YELLOW", "YELLOW"),
+		    new Option("WHITE", "WHITE")
+		));
+
+	
+	public static ArrayList<Option> ColoredEnumColorsOptionList = new ArrayList<>(Arrays.asList(
+		    new Option("BLACK", "BLACK", EnumChatFormatting.BLACK),
+		    new Option("DARK_BLUE", "DARK_BLUE", EnumChatFormatting.DARK_BLUE),
+		    new Option("DARK_GREEN", "DARK_GREEN", EnumChatFormatting.DARK_GREEN),
+		    new Option("DARK_AQUA", "DARK_AQUA", EnumChatFormatting.DARK_AQUA),
+		    new Option("DARK_RED", "DARK_RED", EnumChatFormatting.DARK_RED),
+		    new Option("DARK_PURPLE", "DARK_PURPLE", EnumChatFormatting.DARK_PURPLE),
+		    new Option("GOLD", "GOLD", EnumChatFormatting.GOLD),
+		    new Option("GRAY", "GRAY", EnumChatFormatting.GRAY),
+		    new Option("DARK_GRAY", "DARK_GRAY", EnumChatFormatting.DARK_GRAY),
+		    new Option("BLUE", "BLUE", EnumChatFormatting.BLUE),
+		    new Option("GREEN", "GREEN", EnumChatFormatting.GREEN),
+		    new Option("AQUA", "AQUA", EnumChatFormatting.AQUA),
+		    new Option("RED", "RED", EnumChatFormatting.RED),
+		    new Option("LIGHT_PURPLE", "LIGHT_PURPLE", EnumChatFormatting.LIGHT_PURPLE),
+		    new Option("YELLOW", "YELLOW", EnumChatFormatting.YELLOW),
+		    new Option("WHITE", "WHITE", EnumChatFormatting.WHITE)
+		));
 	
 	public static int getFullBrightnessColor(int color) {
         // Extract RGB components
@@ -444,6 +486,10 @@ public class ColorUtils {
             "<&f>"  // White
         };
         return colors[new java.util.Random().nextInt(colors.length)];
+    }
+    
+    public static EnumChatFormatting getEnumFromColorName(String name) {
+    	return EnumChatFormatting.getValueByName(name.toLowerCase());
     }
 
     public static String convertMinecraftColorsToMeskyCodes(String input) {

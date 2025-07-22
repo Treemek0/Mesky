@@ -20,6 +20,7 @@ import javax.imageio.ImageIO;
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
@@ -251,6 +252,16 @@ public class Alerts extends GuiScreen {
 		if(soundLocation == null) return;
 		for (int i = 0; i < soundIteration; i++) {
 			 Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.create(soundLocation, pitch));
+		}
+	}
+	
+	public static void DisplayCustomAlert(String display, int dur, int soundIteration, Float[] position, float scale, ResourceLocation soundLocation, float pitch, float volume) {
+		AlertRenderInfo info = new AlertRenderInfo(display, dur, System.currentTimeMillis(), null, null, position, scale);
+		renderingQueue.add(info);
+		
+		if(soundLocation == null) return;
+		for (int i = 0; i < soundIteration; i++) {
+			SoundsHandler.playSound(soundLocation, volume, pitch);
 		}
 	}
 	

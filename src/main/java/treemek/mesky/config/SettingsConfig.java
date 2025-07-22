@@ -7,6 +7,7 @@ import com.google.gson.annotations.SerializedName;
 
 import akka.actor.ActorSystem.Settings;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.util.EnumChatFormatting;
 
 public class SettingsConfig {
 	public static class Setting {
@@ -74,11 +75,13 @@ public class SettingsConfig {
 	public static Setting FreeLookToogle = new Setting(false, null, null);
     
     public static Setting NickMentionDetection = new Setting(false, null, null);
+    public static Setting NickMentionDetectionColor = new Setting(EnumChatFormatting.AQUA.name(), null, null);
 
 	public static Setting JawbusDetection = new Setting(false, null, null);
 	public static Setting JawbusDetectionWaypoint = new Setting(false, null, null);
 	public static Setting JawbusNotifyParty = new Setting(false, null, null);
 	public static Setting JawbusPlayerDeathDetection = new Setting(false, null, null);
+	public static Setting JawbusPlayerDeathDetectionSoundVolume = new Setting(1, null, null);
 	
 	public static Setting AutoFish = new Setting(false, null, null);
 	public static Setting KillSeaCreatures = new Setting(false, null, null);

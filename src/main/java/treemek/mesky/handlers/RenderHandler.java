@@ -11,6 +11,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.GlStateManager;
@@ -36,6 +37,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import treemek.mesky.Mesky;
 import treemek.mesky.Reference;
 import treemek.mesky.features.illegal.Freelook;
+import treemek.mesky.handlers.gui.elements.ButtonWithToolkit;
 import treemek.mesky.utils.ColorUtils;
 import treemek.mesky.utils.Utils;
 import treemek.mesky.utils.Waypoints;
@@ -52,6 +54,26 @@ public class RenderHandler {
     public void cameraSetup(EntityViewRenderEvent.CameraSetup e) {
 		camera = e;
     }
+	
+	public static void drawToolkit(GuiButton btn, int mouseX, int mouseY) {
+        double textScale = Math.max(0.66f, Math.min(1, getTextScale(btn.height / 2)));
+        double textWidth = getTextWidth(btn.displayString, textScale);
+        double textHeight = getTextHeight(textScale);
+        int startY = (int) (mouseY - textHeight * 1.5f);
+        
+        int width = new ScaledResolution(Minecraft.getMinecraft()).getScaledWidth();
+        
+
+        mouseX = Math.min(mouseX, (int) (width - (textWidth + 10)));
+        
+        drawRect(mouseX + 2, startY, (int) (mouseX + textWidth + 10),
+                 (int) (startY + textHeight * 1.5f), new Color(10, 10, 10, 200).getRGB());
+
+        RenderHandler.drawText(btn.displayString,
+            mouseX + 2 + (textWidth + 10) / 2 - textWidth / 2,
+            startY + (textHeight * 1.5f) / 2 - textHeight / 2,
+            textScale, btn.enabled, 0xFFFFFF);
+	}
 	
 	public static void drawImage(int x, int y, int width, int height, ResourceLocation location) {
 		Minecraft.getMinecraft().renderEngine.bindTexture(location);

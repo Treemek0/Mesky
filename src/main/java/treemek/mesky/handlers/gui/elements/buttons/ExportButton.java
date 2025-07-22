@@ -1,7 +1,5 @@
 package treemek.mesky.handlers.gui.elements.buttons;
 
-import java.awt.Color;
-
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
@@ -12,14 +10,14 @@ import treemek.mesky.Reference;
 import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.handlers.gui.elements.ButtonWithToolkit;
 
-public class DeleteButton extends ButtonWithToolkit{
+public class ExportButton extends ButtonWithToolkit{
 	
-	public DeleteButton(int buttonId, int x, int y, int width, int height, String buttonText){
+	public ExportButton(int buttonId, int x, int y, int width, int height, String buttonText){
 		super(buttonId, x, y, width, height, buttonText);
 	}
 	
-	ResourceLocation delete = new ResourceLocation(Reference.MODID, "gui/delete.png");
-	ResourceLocation delete_hovered = new ResourceLocation(Reference.MODID, "gui/delete_hovered.png");
+	ResourceLocation button = new ResourceLocation(Reference.MODID, "gui/export.png");
+	ResourceLocation button_hovered = new ResourceLocation(Reference.MODID, "gui/export_hovered.png");
 	
 	@Override
 	public void drawButton(Minecraft mc, int mouseX, int mouseY) {
@@ -29,14 +27,14 @@ public class DeleteButton extends ButtonWithToolkit{
 		
 		 this.hovered = mouseX >= this.xPosition && mouseY >= this.yPosition && mouseX < this.xPosition + this.width && mouseY < this.yPosition + this.height;
          if(enabled && this.hovered) {
-        	 mc.renderEngine.bindTexture(delete_hovered);
+        	 mc.renderEngine.bindTexture(button_hovered);
      		drawModalRectWithCustomSizedTexture(xPosition, yPosition, 0, 0, width, height, width, height);
          }else {
-        	 mc.renderEngine.bindTexture(delete);
+        	 mc.renderEngine.bindTexture(button);
         	 zLevel = 1;
      		drawModalRectWithCustomSizedTexture(xPosition, yPosition, 0, 0, width, height, width, height);
          }
-
+         
          super.drawButton(mc, mouseX, mouseY);
 	}
 	

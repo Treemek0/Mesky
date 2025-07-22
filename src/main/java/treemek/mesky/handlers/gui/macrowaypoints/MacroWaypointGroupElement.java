@@ -13,6 +13,7 @@ import treemek.mesky.handlers.gui.elements.buttons.DeleteButton;
 import treemek.mesky.handlers.gui.elements.buttons.HoldButton;
 import treemek.mesky.handlers.gui.elements.textFields.TextField;
 import treemek.mesky.handlers.gui.waypoints.WaypointElement;
+import treemek.mesky.utils.Utils;
 // TODO
 public class MacroWaypointGroupElement {
 	String name;
@@ -30,14 +31,15 @@ public class MacroWaypointGroupElement {
 	public String world;
 	
 	public MacroWaypointGroupElement(String name, List<MacroWaypointElement> list, String world) {
+		Utils.debug("Name: " + name + ", world: " + world + ", endsWith? " + name.endsWith(" %" + world));
 		if(name.endsWith(" %" + world)) name = name.substring(0, name.lastIndexOf(" %" + world));
 		this.name = name;
 		
 		this.world = world;
 		this.list = list;
 		this.addWaypoint = new AddButton(0, 0, 0, 0, 0, "Add Waypoint");
-		this.delete = new DeleteButton(0, 0, 0, 0, 0, "");
-		this.move = new HoldButton(0, 0, 0, 0, 0, "");
+		this.delete = new DeleteButton(0, 0, 0, 0, 0, "Delete group");
+		this.move = new HoldButton(0, 0, 0, 0, 0, "Move group");
 		this.yPosition = 0;
 		this.yPositionD = 0;
 		this.nameField = new TextField(0, 0, 0, 0, 0);

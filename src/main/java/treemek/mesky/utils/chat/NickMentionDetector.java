@@ -23,6 +23,9 @@ import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import treemek.mesky.config.SettingsConfig;
+import treemek.mesky.utils.ColorUtils;
+import treemek.mesky.utils.HypixelCheck;
+import treemek.mesky.utils.Utils;
 
 public class NickMentionDetector {
 	
@@ -50,7 +53,7 @@ public class NickMentionDetector {
 		        if(siblings.size() > 0) {
 		        	newChatComponent = getMessageWithNickMention(siblings, chatComponent);
 		        }else {
-		        	newChatComponent = getMessageWithNickMention(splitMessage[1]);
+		        	newChatComponent =  getMessageWithNickMention(message);
 		        	
 		        	if(chatComponent.getChatStyle().getChatClickEvent() != null) {
 			        	ChatStyle click = new ChatStyle();
@@ -61,10 +64,7 @@ public class NickMentionDetector {
       	
 		        
 		        if(!newChatComponent.equals(new ChatComponentText(""))) {
-			        event.setCanceled(true);
 			        event.message = newChatComponent;
-//					Minecraft.getMinecraft().thePlayer.addChatMessage(newChatComponent);
-			        System.out.println(newChatComponent.getFormattedText());
 		        }
 	        }
 		}
@@ -77,11 +77,9 @@ public class NickMentionDetector {
 		
 		String nick = Minecraft.getMinecraft().thePlayer.getGameProfile().getName();
 		
-		System.out.println(onlyMessage);
-		
 		String componentText = author;
 		for (Integer i : findWordPositions(onlyMessage, nick)) {
-			componentText += onlyMessage.substring(0, i) + EnumChatFormatting.DARK_AQUA + nick;
+			componentText += onlyMessage.substring(0, i) + ColorUtils.getEnumFromColorName(SettingsConfig.NickMentionDetectionColor.text) + "@" + nick;
 			onlyMessage = onlyMessage.substring(i + nick.length());
 		}
 
@@ -104,7 +102,6 @@ public class NickMentionDetector {
 		
 		for (int i = 0; i < siblings.size(); i++) {
 			IChatComponent current = siblings.get(i);
-			Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(current.getFormattedText()));
 			String message = current.getFormattedText();
 			EnumChatFormatting color = EnumChatFormatting.RESET;
 			
@@ -118,7 +115,7 @@ public class NickMentionDetector {
 					for (Integer p : positions) {
 						if(hadColon || !fullMessage.contains(":")) {
 							skippedPart = skippedPart.replace(String.valueOf('\u127E'), "").replace(String.valueOf('\u2692'), "");
-							componentText += color + skippedPart.substring(0, p) + EnumChatFormatting.DARK_AQUA + nick;
+							componentText += color + skippedPart.substring(0, p) + ColorUtils.getEnumFromColorName(SettingsConfig.NickMentionDetectionColor.text) + "@" + nick;
 							skippedPart = skippedPart.substring(p + nick.length());
 						}else {
 							hadColon = true;
@@ -139,7 +136,7 @@ public class NickMentionDetector {
 					if(hadColon || !fullMessage.contains(":")) {
 						// idk how tf does that work when i substring from message and then try to get position from already substringed message IT SHOULD GIVE DIFFERENT RESOULT
 						message = message.replace(String.valueOf('\u127E'), "").replace(String.valueOf('\u2692'), "");
-						componentText += color + message.substring(0, p) + EnumChatFormatting.DARK_AQUA + nick;
+						componentText += color + message.substring(0, p) + ColorUtils.getEnumFromColorName(SettingsConfig.NickMentionDetectionColor.text) + "@" + nick;
 						message = message.substring(p + nick.length());
 					}else {
 						hadColon = true;
@@ -182,6 +179,7 @@ public class NickMentionDetector {
 	
 	private boolean haveSender(String message) {
     	if(!message.contains(":")) return false;
+    	if(!HypixelCheck.isOnHypixel() && message.contains(":")) return true;
     	int colonIndex = message.replace(String.valueOf('\u127E'), "").replace(String.valueOf('\u2692'), "").indexOf(':');
     	if(colonIndex-2 < 0) return true; // it means that the nick is one letter long :O
     	if(message.length() < 3 || colonIndex < 3) return false;
@@ -194,7 +192,7 @@ public class NickMentionDetector {
 		if(haveSender(message)) {
 			Integer p = (message.indexOf(":")+1 > 0)? message.indexOf(":")+1 : 0;
 			String author = message.substring(0, p);
-			String onlyMessage = message.substring(p - 1).replace(String.valueOf('\u127E'), "").replace(String.valueOf('\u2692'), "");
+			String onlyMessage = message.substring(p).replace(String.valueOf('\u127E'), "").replace(String.valueOf('\u2692'), "");
 			return new String[] {author,onlyMessage};
 		}else {
 			return new String[] {"", message};

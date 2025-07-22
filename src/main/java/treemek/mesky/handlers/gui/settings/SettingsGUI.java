@@ -3,6 +3,7 @@ package treemek.mesky.handlers.gui.settings;
 import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.lwjgl.input.Mouse;
@@ -30,10 +31,14 @@ import treemek.mesky.handlers.gui.elements.SettingColorPicker;
 import treemek.mesky.handlers.gui.elements.buttons.CheckButton;
 import treemek.mesky.handlers.gui.elements.buttons.FoldableSettingButton;
 import treemek.mesky.handlers.gui.elements.buttons.SettingButton;
+import treemek.mesky.handlers.gui.elements.buttons.SettingListBox;
+import treemek.mesky.handlers.gui.elements.buttons.ListBox.Option;
 import treemek.mesky.handlers.gui.elements.sliders.SettingSlider;
 import treemek.mesky.handlers.gui.elements.sliders.Slider;
 import treemek.mesky.handlers.gui.elements.textFields.SettingTextField;
 import treemek.mesky.handlers.gui.waypoints.WaypointElement;
+import treemek.mesky.utils.Alerts;
+import treemek.mesky.utils.ColorUtils;
 
 public class SettingsGUI extends GuiScreen {
 	static List<Category> categories = new ArrayList<>();
@@ -130,7 +135,9 @@ public class SettingsGUI extends GuiScreen {
 	    List<Object> generalSub = new ArrayList<>();
 	    generalSub.add(new SettingButton(6, checkSize, "Hide Players", SettingsConfig.HidePlayers));
 	    generalSub.add(new SettingSlider(41849, 2 * checkSize, checkSize, "Holding items size", SettingsConfig.HoldingItemSize, 0.1, 0.5, 3));
-	    if(Mesky.debug) generalSub.add(new SettingButton(6, checkSize, "Nick detection", SettingsConfig.NickMentionDetection));
+	    List<Object> nickDetectionFoldable = new ArrayList<>();
+	    nickDetectionFoldable.add(new SettingListBox(2, 4*checkSize, checkSize, "Detection color", ColorUtils.ColoredEnumColorsOptionList, SettingsConfig.NickMentionDetectionColor));
+	    generalSub.add(new FoldableSettingButton(6, checkSize, "Nick detection", SettingsConfig.NickMentionDetection, nickDetectionFoldable));
 	    
 	    List<Object> freelookFoldable = new ArrayList<>();
 	    freelookFoldable.add(new SettingButton(2, checkSize, "Ignore walkable blocks collision (some mods destroys view)", SettingsConfig.FreeLookIgnoreWalkableBlocksCollision));
@@ -216,7 +223,9 @@ public class SettingsGUI extends GuiScreen {
         List<Object> jawbusFoldable = new ArrayList<>();
         jawbusFoldable.add(new SettingButton(-1, checkSize, "Notify party with coords", SettingsConfig.JawbusNotifyParty));
         jawbusFoldable.add(new SettingButton(-1, checkSize, "Jawbus coords and waypoint", SettingsConfig.JawbusDetectionWaypoint, true));
-        jawbusFoldable.add(new SettingButton(-1, checkSize, "Player death from jawbus detection", SettingsConfig.JawbusPlayerDeathDetection, true));
+        List<Object> jawbusPlayerDeathDetectionFoldable = new ArrayList<>();
+        jawbusPlayerDeathDetectionFoldable.add(new SettingSlider(-1, checkSize*2, checkSize, "Notification sound volume", SettingsConfig.JawbusPlayerDeathDetectionSoundVolume, 0.1, 0, 1));
+        jawbusFoldable.add(new FoldableSettingButton(-1, checkSize, "Player death from jawbus detection", SettingsConfig.JawbusPlayerDeathDetection, jawbusPlayerDeathDetectionFoldable, true));
         illegalSub.add(new FoldableSettingButton(2, checkSize, "Jawbus Detection", SettingsConfig.JawbusDetection, jawbusFoldable));
 
         // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

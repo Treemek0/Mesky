@@ -223,9 +223,11 @@ public class Cape extends ModelBase{
     		GL11.glRotated(0, 1, 0, 0);
     		GL11.glRotated(180 + rotate, 0, 1, 0); // Rotate the wings to be with the player.
     		
+    		float max = 95F;
+    		
     		if(player.isSneaking()) GlStateManager.translate(0, 0, -0.072);
     		GlStateManager.translate(0.0F, -1.42F, 0.17F);
-            GlStateManager.rotate(Math.min(6.0F + f2 / 2.0F + f1, 95), 1.0F, 0.0F, 0.0F);
+            GlStateManager.rotate(Math.min(6.0F + f2 / 2.0F + f1, max), 1.0F, 0.0F, 0.0F);
             GlStateManager.rotate(f3 / 2.0F, 0.0F, 0.0F, 1.0F);
             GlStateManager.rotate(-f3 / 2.0F, 0.0F, 1.0F, 0.0F);
             

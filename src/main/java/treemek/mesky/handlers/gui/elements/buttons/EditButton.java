@@ -8,8 +8,9 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ResourceLocation;
 import treemek.mesky.Reference;
 import treemek.mesky.handlers.RenderHandler;
+import treemek.mesky.handlers.gui.elements.ButtonWithToolkit;
 
-public class EditButton extends GuiButton{
+public class EditButton extends ButtonWithToolkit{
 	
 	public EditButton(int buttonId, int x, int y, int width, int height, String buttonText){
 		super(buttonId, x, y, width, height, buttonText);
@@ -43,6 +44,7 @@ public class EditButton extends GuiButton{
 	    GlStateManager.enableBlend();
 	    GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
 		    
+	    super.drawButton(mc, mouseX, mouseY);
 	}
 	
 	

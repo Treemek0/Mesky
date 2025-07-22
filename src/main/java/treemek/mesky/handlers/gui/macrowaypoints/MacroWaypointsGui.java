@@ -41,11 +41,14 @@ import treemek.mesky.features.BlockFlowerPlacing;
 import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.handlers.gui.GUI;
 import treemek.mesky.handlers.gui.chatfunctions.ChatFunctionElement;
+import treemek.mesky.handlers.gui.elements.ButtonWithToolkit;
 import treemek.mesky.handlers.gui.elements.ColorPicker;
 import treemek.mesky.handlers.gui.elements.ScrollBar;
+import treemek.mesky.handlers.gui.elements.buttons.AddButton;
 import treemek.mesky.handlers.gui.elements.buttons.CheckButton;
 import treemek.mesky.handlers.gui.elements.buttons.DeleteButton;
 import treemek.mesky.handlers.gui.elements.buttons.MeskyButton;
+import treemek.mesky.handlers.gui.elements.buttons.SaveButton;
 import treemek.mesky.handlers.gui.elements.sliders.Slider;
 import treemek.mesky.handlers.gui.elements.textFields.TextField;
 import treemek.mesky.handlers.gui.elements.warnings.CloseWarning;
@@ -185,6 +188,33 @@ public class MacroWaypointsGui extends GuiScreen {
 	    
 	    drawRect(0, 0, width, height/4 - 1, new Color(33, 33, 33,255).getRGB());
 		
+	    // Toolkit
+    	if(holdingElement == null && holdingGroup == null) {
+	    	for (MacroWaypointGroupElement waypointGroupElement : waypoints) {
+	    		if(waypointGroupElement.opened.isOpened()) {
+					for (MacroWaypointElement waypoint : waypointGroupElement.list) {
+				    	for (GuiButton button : waypoint.getListOfButtons()) {
+				    	    if (button instanceof ButtonWithToolkit && ((ButtonWithToolkit) button).shouldShowTooltip()) {
+				    	    	RenderHandler.drawToolkit(button, mouseX, mouseY);
+				    	    }
+				    	}
+					}
+	    		}
+	    		
+	    		if(waypointGroupElement.addWaypoint.shouldShowTooltip()) {
+	    			RenderHandler.drawToolkit(waypointGroupElement.addWaypoint, mouseX, mouseY);
+	    		}
+	    		
+	    		if(waypointGroupElement.delete.shouldShowTooltip()) {
+	    			RenderHandler.drawToolkit(waypointGroupElement.delete, mouseX, mouseY);
+	    		}
+	    		
+	    		if(waypointGroupElement.move.shouldShowTooltip()) {
+	    			RenderHandler.drawToolkit(waypointGroupElement.move, mouseX, mouseY);
+	    		}
+	    	}
+    	}
+	    
 		float scale = (float) ((height*0.1f) / mc.fontRendererObj.FONT_HEIGHT) / 2;
 
         int textLength = mc.fontRendererObj.getStringWidth("Macro Waypoints");
@@ -219,6 +249,14 @@ public class MacroWaypointsGui extends GuiScreen {
        
 	    super.drawScreen(mouseX, mouseY, partialTicks);
 	    
+	    if(holdingElement == null && holdingGroup == null) {
+    		for (GuiButton guiButton : buttonList) {
+    			if (guiButton instanceof ButtonWithToolkit && ((ButtonWithToolkit) guiButton).shouldShowTooltip()) {
+	    	    	RenderHandler.drawToolkit(guiButton, mouseX, mouseY);
+	    	    }
+			}
+	    }
+	    
 	    closeWarning.drawElement(mc, mouseX, mouseY);
 	}
 	
@@ -238,13 +276,16 @@ public class MacroWaypointsGui extends GuiScreen {
         int buttonWidth = 20;
         int buttonHeight = 20;
         
+        float mainButtonsScale = (float) ((height*0.1f) / mc.fontRendererObj.FONT_HEIGHT) / 2;
+        int mainButtonsSize = (int) RenderHandler.getTextHeight(mainButtonsScale);
+        int mainButtonsY = (int) (height * 0.05f);
         
         // Save button
-        saveButton = new MeskyButton(-1, (int)(width * 0.8f), (height/15), (int)(width * 0.2f), 20, "Save");
+        saveButton = new SaveButton(-1, (int)(width * 0.9f) - mainButtonsSize/2, mainButtonsY, mainButtonsSize ,mainButtonsSize, "Save");
         this.buttonList.add(saveButton);
         
         // New waypoint button
-        this.buttonList.add(new MeskyButton(-2, 0, (height/15), (int)(width * 0.2f), 20, "New group"));
+        this.buttonList.add(new AddButton(-2, (int)(width * 0.1f) - mainButtonsSize/2, mainButtonsY, mainButtonsSize, mainButtonsSize, "New group"));
         
         // Updating location from tab
         Location.checkTabLocation();
@@ -280,7 +321,7 @@ public class MacroWaypointsGui extends GuiScreen {
 		        	// Position 0 for inputs + every input height and their bottom margin
 		        	int inputFullPosition = positionY + ((waypointHeight + inputMargin) * 1);
 		        	
-		        	DeleteButton deleteButton = new DeleteButton(0 + (5), deleteX, inputFullPosition, inputHeight, inputHeight, "");
+		        	DeleteButton deleteButton = new DeleteButton(0 + (5), deleteX, inputFullPosition, inputHeight, inputHeight, "Delete waypoint");
 		        	deleteButton.enabled = macroWaypoint.enabled;
 		        	
 		        	CheckButton enabled = new CheckButton(0, (int) (deleteX + inputHeight + spaceBetween*1.5f), inputFullPosition, inputHeight, inputHeight, "", macroWaypoint.enabled);
@@ -366,7 +407,7 @@ public class MacroWaypointsGui extends GuiScreen {
 					// Position 0 for inputs + every input height and their bottom margin
 		        	int inputFullPosition = positionY + ((waypointHeight + inputMargin) * i);
 		        	
-		        	DeleteButton deleteButton = new DeleteButton(0 + (5*i), deleteX, inputFullPosition, inputHeight, inputHeight, "");
+		        	DeleteButton deleteButton = new DeleteButton(0 + (5*i), deleteX, inputFullPosition, inputHeight, inputHeight, "Delete waypoint");
 		        	deleteButton.enabled = macroWaypoint.enabled.isFull();
 		        	
 		        	CheckButton enabled = new CheckButton(0, (int) (deleteX + inputHeight + spaceBetween*1.5f), inputFullPosition, inputHeight, inputHeight, "", macroWaypoint.enabled.isFull());
@@ -482,7 +523,7 @@ public class MacroWaypointsGui extends GuiScreen {
 				
 				
 				
-	        	DeleteButton deleteButton = new DeleteButton(0 + (5*1), deleteX, topOfGroup, inputHeight, inputHeight, "");
+	        	DeleteButton deleteButton = new DeleteButton(0 + (5*1), deleteX, topOfGroup, inputHeight, inputHeight, "Delete waypoint");
 	        	deleteButton.enabled = true;
 	        	
 	        	CheckButton enabled = new CheckButton(0, (int) (deleteX + inputHeight + spaceBetween*1.5f), topOfGroup, inputHeight, inputHeight, "", true);
@@ -651,6 +692,10 @@ public class MacroWaypointsGui extends GuiScreen {
 							}
 						}
 					}
+					
+					waypointGroupElement.nameField.setCursorPositionZero();
+					waypointGroupElement.nameField.setFocused(false);
+					waypointGroupElement.nameField.setVisible(false);
 				}
 				
 				if(!isOpenedColorPicker) {
@@ -732,22 +777,11 @@ public class MacroWaypointsGui extends GuiScreen {
 					continue;
 				}
 				
-				double groupNameScale = RenderHandler.getTextScale("Players", width / 20);
-		        double groupNameWidth = RenderHandler.getTextWidth(waypointGroupElement.name, groupNameScale);
-				double groupNameHeight = RenderHandler.getTextHeight(groupNameScale);
-		        double groupNameY = waypointGroupElement.yPosition + ((inputHeight + inputMargin/2)/2 - RenderHandler.getTextHeight(groupNameScale)/2);
-				
-				if (mouseX >= waypointGroupElement.xPosition && mouseX <= waypointGroupElement.xPosition + groupNameWidth && mouseY >= groupNameY && mouseY <= groupNameY + groupNameHeight) {
+				if (mouseX >= waypointGroupElement.nameField.xPosition && mouseX <= waypointGroupElement.nameField.xPosition + waypointGroupElement.nameField.width && mouseY >= waypointGroupElement.nameField.yPosition && mouseY <= waypointGroupElement.nameField.yPosition + waypointGroupElement.nameField.height) {
 					waypointGroupElement.nameField.mouseClicked(mouseX, mouseY, mouseButton);
 					waypointGroupElement.nameField.setVisible(true);
 				}else {
 					if(waypointGroupElement.nameField.getVisible()) {
-						if (mouseX >= waypointGroupElement.xPosition && mouseX <= waypointGroupElement.xPosition + width/4 && mouseY >= groupNameY && mouseY <= groupNameY + groupNameHeight) {
-							waypointGroupElement.nameField.mouseClicked(mouseX, mouseY, mouseButton);
-						}else {
-							waypointGroupElement.nameField.setVisible(false);
-						}
-					}else {
 						waypointGroupElement.nameField.setVisible(false);
 					}
 				}
@@ -1116,67 +1150,72 @@ public class MacroWaypointsGui extends GuiScreen {
 	    Map<String, MacroWaypointGroup> currentWaypoints = MacroWaypoints.GetLocationWaypoints();
 	    if (currentWaypoints.size() != waypoints.size()) return true;
 
-	    for (MacroWaypointGroupElement group : waypoints) {
-	        MacroWaypointGroup storedGroup = currentWaypoints.get(group.name + " %" + group.world);
-	        if (storedGroup == null || storedGroup.list.size() != group.list.size()) return true;
-	        if (group.enabled.isFull() != storedGroup.enabled) return true;
-	        if (group.opened.isOpened() != storedGroup.opened) return true;
-
-	        for (int i = 0; i < group.list.size(); i++) {
-	            MacroWaypointElement waypoint = group.list.get(i);
-	            MacroWaypoint current = storedGroup.list.get(i);
-
-	            String name = waypoint.name.getText();
-	            String color = waypoint.color.getColorString().replace("#", "");
-	            String function = waypoint.function.getText();
-	            boolean enabled = waypoint.enabled.isFull();
-
-	            boolean leftClick = waypoint.leftClick.isFull;
-	            boolean rightClick = waypoint.rightClick.isFull;
-	            boolean left = waypoint.left.isFull;
-	            boolean right = waypoint.right.isFull;
-	            boolean back = waypoint.back.isFull;
-	            boolean forward = waypoint.forward.isFull;
-	            boolean sneak = waypoint.sneak.isFull;
-
-	            try {
-	                Color.decode("#" + color);
-	                float x = Float.parseFloat(waypoint.x.getText());
-	                float y = Float.parseFloat(waypoint.y.getText());
-	                float z = Float.parseFloat(waypoint.z.getText());
-	                float noiseLevel = Float.parseFloat(waypoint.noiseLevel.getText());
-
-	                Float yaw = null, pitch = null;
-	                try { yaw = Float.parseFloat(waypoint.yaw.getText()); } catch (NumberFormatException ignored) {}
-	                try { pitch = Float.parseFloat(waypoint.pitch.getText()); } catch (NumberFormatException ignored) {}
-
-	                Waypoint wp = current.waypoint;
-	                if (!name.equals(wp.name) ||
-	                    !color.equalsIgnoreCase(wp.color) ||
-	                    !function.equals(current.function) ||
-	                    enabled != current.enabled ||
-	                    leftClick != current.leftClick ||
-	                    rightClick != current.rightClick ||
-	                    left != current.left ||
-	                    right != current.right ||
-	                    back != current.back ||
-	                    forward != current.forward ||
-	                    sneak != current.sneak ||
-	                    Float.compare(current.noiseLevel, noiseLevel) != 0 ||
-	                    Float.compare(wp.coords[0], x) != 0 ||
-	                    Float.compare(wp.coords[1], y) != 0 ||
-	                    Float.compare(wp.coords[2], z) != 0 ||
-	                    !floatEqualsNullable(current.yaw, yaw) ||
-	                    !floatEqualsNullable(current.pitch, pitch)) {
-	                    return true;
-	                }
-	            } catch (NumberFormatException e) {
-	                return true;
-	            }
-	        }
-	    }
-
-	    return false;
+	    try {
+		    for (MacroWaypointGroupElement group : waypoints) {
+		        MacroWaypointGroup storedGroup = currentWaypoints.get(group.name + " %" + group.world);
+		        if (storedGroup == null || storedGroup.list.size() != group.list.size()) return true;
+		        if (group.enabled.isFull() != storedGroup.enabled) return true;
+		        if (group.opened.isOpened() != storedGroup.opened) return true;
+	
+		        for (int i = 0; i < group.list.size(); i++) {
+		            MacroWaypointElement waypoint = group.list.get(i);
+		            MacroWaypoint current = storedGroup.list.get(i);
+	
+		            String name = waypoint.name.getText();
+		            String color = waypoint.color.getColorString().replace("#", "");
+		            String function = waypoint.function.getText();
+		            boolean enabled = waypoint.enabled.isFull();
+	
+		            boolean leftClick = waypoint.leftClick.isFull;
+		            boolean rightClick = waypoint.rightClick.isFull;
+		            boolean left = waypoint.left.isFull;
+		            boolean right = waypoint.right.isFull;
+		            boolean back = waypoint.back.isFull;
+		            boolean forward = waypoint.forward.isFull;
+		            boolean sneak = waypoint.sneak.isFull;
+	
+		            try {
+		                Color.decode("#" + color);
+		                float x = Float.parseFloat(waypoint.x.getText());
+		                float y = Float.parseFloat(waypoint.y.getText());
+		                float z = Float.parseFloat(waypoint.z.getText());
+		                float noiseLevel = Float.parseFloat(waypoint.noiseLevel.getText());
+	
+		                Float yaw = null, pitch = null;
+		                try { yaw = Float.parseFloat(waypoint.yaw.getText()); } catch (NumberFormatException ignored) {}
+		                try { pitch = Float.parseFloat(waypoint.pitch.getText()); } catch (NumberFormatException ignored) {}
+	
+		                Waypoint wp = current.waypoint;
+		                if (!name.equals(wp.name) ||
+		                    !color.equalsIgnoreCase(wp.color) ||
+		                    !function.equals(current.function) ||
+		                    enabled != current.enabled ||
+		                    leftClick != current.leftClick ||
+		                    rightClick != current.rightClick ||
+		                    left != current.left ||
+		                    right != current.right ||
+		                    back != current.back ||
+		                    forward != current.forward ||
+		                    sneak != current.sneak ||
+		                    Float.compare(current.noiseLevel, noiseLevel) != 0 ||
+		                    Float.compare(wp.coords[0], x) != 0 ||
+		                    Float.compare(wp.coords[1], y) != 0 ||
+		                    Float.compare(wp.coords[2], z) != 0 ||
+		                    !floatEqualsNullable(current.yaw, yaw) ||
+		                    !floatEqualsNullable(current.pitch, pitch)) {
+		                    return true;
+		                }
+		            } catch (NumberFormatException e) {
+		                return true;
+		            }
+		        }
+		    }
+	
+		    return false;
+	    } catch (Exception e) {
+			Utils.writeError(e);
+			return true;
+		}
 	}
 
 	private boolean floatEqualsNullable(Float a, Float b) {

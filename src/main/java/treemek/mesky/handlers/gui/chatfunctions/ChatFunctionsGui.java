@@ -26,11 +26,14 @@ import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.features.BlockFlowerPlacing;
 import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.handlers.gui.alerts.AlertElement;
+import treemek.mesky.handlers.gui.elements.ButtonWithToolkit;
 import treemek.mesky.handlers.gui.elements.ScrollBar;
+import treemek.mesky.handlers.gui.elements.buttons.AddButton;
 import treemek.mesky.handlers.gui.elements.buttons.CheckButton;
 import treemek.mesky.handlers.gui.elements.buttons.DeleteButton;
 import treemek.mesky.handlers.gui.elements.buttons.EditButton;
 import treemek.mesky.handlers.gui.elements.buttons.MeskyButton;
+import treemek.mesky.handlers.gui.elements.buttons.SaveButton;
 import treemek.mesky.handlers.gui.elements.textFields.TextField;
 import treemek.mesky.handlers.gui.elements.warnings.CloseWarning;
 import treemek.mesky.handlers.gui.waypoints.WaypointElement;
@@ -116,6 +119,16 @@ public class ChatFunctionsGui extends GuiScreen {
 	    
 		drawRect(0, 0, width, height/3 - 1, new Color(33, 33, 33,255).getRGB());
 		
+		// Toolkit
+    	if(holdingElement == null) {
+			for (ChatFunctionElement chatFunction : chatFunctions) {
+		    	for (GuiButton button : chatFunction.getListOfButtons()) {
+		    	    if (button instanceof ButtonWithToolkit && ((ButtonWithToolkit) button).shouldShowTooltip()) {
+		    	    	RenderHandler.drawToolkit(button, mouseX, mouseY);
+		    	    }
+		    	}
+			}
+    	}
         
 		float scale = (float) ((height*0.1f) / mc.fontRendererObj.FONT_HEIGHT) / 2;
 
@@ -156,6 +169,14 @@ public class ChatFunctionsGui extends GuiScreen {
         
 	    super.drawScreen(mouseX, mouseY, partialTicks);
 	    
+	    if(holdingElement == null) {
+    		for (GuiButton guiButton : buttonList) {
+    			if (guiButton instanceof ButtonWithToolkit && ((ButtonWithToolkit) guiButton).shouldShowTooltip()) {
+	    	    	RenderHandler.drawToolkit(guiButton, mouseX, mouseY);
+	    	    }
+			}
+	    }
+	    
 	    closeWarning.drawElement(mc, mouseX, mouseY);
 	}
 	
@@ -174,12 +195,16 @@ public class ChatFunctionsGui extends GuiScreen {
         int trigger_X = width / 5;
     	int function_X = trigger_X + (width / 3) + 10;	
     	
+        float mainButtonsScale = (float) ((height*0.1f) / mc.fontRendererObj.FONT_HEIGHT) / 2;
+        int mainButtonsSize = (int) RenderHandler.getTextHeight(mainButtonsScale);
+        int mainButtonsY = (int) (height * 0.05f);
+        
         // Save button
-    	saveButton = new MeskyButton(-1, (int)(width * 0.8f), (height/15), (int)(width * 0.2f), 20, "Save");
+        saveButton = new SaveButton(-1, (int)(width * 0.9f) - mainButtonsSize/2, mainButtonsY, mainButtonsSize ,mainButtonsSize, "Save");
         this.buttonList.add(saveButton);
         
-        // New function button
-        this.buttonList.add(new MeskyButton(-2, 0, (height/15), (int)(width * 0.2f), 20, "New function"));
+        // New waypoint button
+        this.buttonList.add(new AddButton(-2, (int)(width * 0.1f) - mainButtonsSize/2, mainButtonsY, mainButtonsSize, mainButtonsSize, "New chatFunction"));
         
         // This is so you cant scroll limitless, it takes every waypoint height with their margin and removes visible inputs height so you can scroll max to how much of inputs isnt visible
   		scrollbar.updateVisibleHeight(height - (height/3));
@@ -194,7 +219,7 @@ public class ChatFunctionsGui extends GuiScreen {
 	        	
 	        	
 	        	// Delete function button
-	            DeleteButton deleteButton = new DeleteButton(0, (int)(function_X + (width/4) + 10), inputFullPosition, inputHeight, inputHeight, "");
+	            DeleteButton deleteButton = new DeleteButton(0, (int)(function_X + (width/4) + 10), inputFullPosition, inputHeight, inputHeight, "Delete chatFunction");
 	            deleteButton.enabled = ChatFunctions.chatFunctionsList.get(i).isEnabled();
 	            
 	            CheckButton enabled = new CheckButton(0, (int)(function_X + (width/4) + inputHeight + 20), inputFullPosition, inputHeight, inputHeight, "", ChatFunctions.chatFunctionsList.get(i).isEnabled());            
@@ -230,7 +255,7 @@ public class ChatFunctionsGui extends GuiScreen {
 	        	
 	        	
 	        	// Delete function button
-	            DeleteButton deleteButton = new DeleteButton(0, (int)(function_X + (width/4) + 10), inputFullPosition, inputHeight, inputHeight, "");
+	            DeleteButton deleteButton = new DeleteButton(0, (int)(function_X + (width/4) + 10), inputFullPosition, inputHeight, inputHeight, "Delete chatFunction");
 	            deleteButton.enabled = chatFunctions.get(i).enabled.isFull();
 	            
 	            CheckButton enabled = new CheckButton(0, (int)(function_X + (width/4) + inputHeight + 20), inputFullPosition, inputHeight, inputHeight, "", chatFunctions.get(i).enabled.isFull());
@@ -277,7 +302,7 @@ public class ChatFunctionsGui extends GuiScreen {
 
 	    	int topOfWaypoints = height/3 - inputHeight - inputMargin;
 	    	
-    		DeleteButton deleteButton = new DeleteButton(0, (int)(function_X + (width/4) + 10), 0, inputHeight, inputHeight, "");
+    		DeleteButton deleteButton = new DeleteButton(0, (int)(function_X + (width/4) + 10), 0, inputHeight, inputHeight, "Delete chatFunction");
     		
     		CheckButton enabled = new CheckButton(0, (int)(function_X + (width/4) + inputHeight + 20), 0, inputHeight, inputHeight, "", true);
     		

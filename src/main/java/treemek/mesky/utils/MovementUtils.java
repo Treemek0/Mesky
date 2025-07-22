@@ -129,6 +129,8 @@ public class MovementUtils {
 	private static List<BlockPos> movingPath = new ArrayList<>();
 	private static Queue<Movement> movementQueue = new LinkedList<>();
 	private static Queue<Movement> miniMovementQueue = new LinkedList<>();
+	
+	private static Queue<Movement> commandQueue = new LinkedList<>();
 	private static boolean useRotation = false;
 	private static int currentPosIndex = -1;
 	static int rotationIndex = 0;
@@ -151,12 +153,20 @@ public class MovementUtils {
 		miniMovementQueue.add(movement); // its for multimovement like when you use multiple aotv functions on movementQueue and have to use another queue to make aotv movement happen (make it list in future)
 	}
 	
+	public static void addCommand(Movement movement) {
+		commandQueue.add(movement); // its for multimovement like when you use multiple aotv functions on movementQueue and have to use another queue to make aotv movement happen (make it list in future)
+	}
+	
 	public static void resetMovementsList() {
 		movementQueue.clear();
 	}
 	
 	public static void resetMiniMovementsList() {
 		miniMovementQueue.clear();
+	}
+	
+	public static void resetCommandList() {
+		commandQueue.clear();
 	}
 	
 	// its getting stuck when block that it wants to jump to also has no blocks under it (y-1), it goes under it and dupa
@@ -289,8 +299,8 @@ public class MovementUtils {
 		            float pitchDiff = targetPitch - player.rotationPitch;
 
 		            // Apply easing factor (smaller = slower, smoother)
-		            float yawStep = yawDiff * 0.1f;
-		            float pitchStep = pitchDiff * 0.1f;
+		            float yawStep = yawDiff * 0.3f;
+		            float pitchStep = pitchDiff * 0.15f;
 
 		            // Apply rotation gradually
 		            RotationUtils.addToRotation(yawStep, pitchStep);
@@ -342,6 +352,15 @@ public class MovementUtils {
                 miniMovementQueue.poll();
             }
         }
+        
+        if (!commandQueue.isEmpty()) {
+            Movement movement = commandQueue.peek();
+            if (!movement.wasFunctionExecuted()) {
+                movement.executeFunction(); 
+            } else if (movement.isNearEnd()) {
+                commandQueue.poll();
+            }
+        }
     }
 
 	private void movePlayerInDirection(BlockPos oldPos, BlockPos targetPos) {
@@ -356,8 +375,17 @@ public class MovementUtils {
 	    double diffY = targetPos.getY() - player.posY;
 	    double diffZ = targetCenterZ - player.posZ;
 
-	    // Convert to local space (relative to player's yaw)
-	    double yaw = Math.toRadians(player.rotationYaw);
+    	BlockPos playerPos = Utils.playerPosition();
+    	double lookAtY = (player.onGround)?player.getEyeHeight():player.getEyeHeight()+(player.posY - targetPos.getY());
+        float[] rotation = RotationUtils.getPlayerRotationToLookAtVector(targetPos.getX()+0.5, targetPos.getY() + lookAtY, targetPos.getZ()+0.5f);
+        
+        float targetYaw = rotation[0];
+
+        // Normalize yaw difference to -180 to 180
+        float yawDiff = MathHelper.wrapAngleTo180_float(targetYaw - player.rotationYaw);
+        float yawStep = yawDiff * 0.3f;
+	    
+	    double yaw = Math.toRadians(player.rotationYaw + yawStep);
 	    double sinYaw = Math.sin(yaw);
 	    double cosYaw = Math.cos(yaw);
 
@@ -365,7 +393,7 @@ public class MovementUtils {
 	    double localX = diffX * cosYaw + diffZ * sinYaw;
 	    double localZ = diffZ * cosYaw - diffX * sinYaw;
 
-	 // Estimate horizontal speed (including Speed effect, sprinting, etc.)
+	    // Estimate horizontal speed (including Speed effect, sprinting, etc.)
 	    double velocity = Math.sqrt(player.motionX * player.motionX + player.motionZ * player.motionZ);
 
 	    // Add a small constant to cover deceleration time
@@ -398,10 +426,30 @@ public class MovementUtils {
 	    }
 	    
 	    if(!moveBackward && !moveForward && !moveLeft && !moveRight) {
-	    	moveForward = true;
+	    	moveForward = (localZ > 0);
+	    	moveBackward = (localZ < 0);
+	    	moveLeft = (localX > 0);
+	    	moveRight = (localX < 0);
+	    	
+	    	if(localZ == 0 && localX == 0) {
+	    		moveForward = true;
+	    	}
 	    }
 
 	    boolean isGap = isAirGapBetween(oldPos, targetPos);
+	    
+	    double deltaX = player.posX - player.lastTickPosX;
+	    double deltaZ = player.posZ - player.lastTickPosZ;
+	    
+	    double speed = Math.sqrt(deltaX * deltaX + deltaZ * deltaZ);
+	    if(player.isSneaking()) speed /= 0.33;
+	    Utils.debug(speed + " speed");
+	    KeyBinding.setKeyBindState(shift, (speed > 0.45));
+	    
+	    KeyBinding.setKeyBindState(forward, false);
+        KeyBinding.setKeyBindState(back, false);
+        KeyBinding.setKeyBindState(left, false);
+        KeyBinding.setKeyBindState(right, false);
 	    
 	    // Apply combined movement to prevent getting stuck at diagonal walls
 	    if(!isGap || (isGap && targetPos.getY() - oldPos.getY() <= 3)) {
@@ -426,6 +474,7 @@ public class MovementUtils {
 		    }
 	    }
 
+	    
 	    // Ensure lateral movement is disabled if not needed
 	    if (!moveLeft && !moveRight) {
 	        KeyBinding.setKeyBindState(left, false);
@@ -462,7 +511,7 @@ public class MovementUtils {
 			        KeyBinding.setKeyBindState(jump, false);
 			    }
 	    	}else {
-	    		if (diffY > 0 && shouldJump(targetPos) && isOnEdge(targetPos)) {
+	    		if (diffY > 0) {
 	    			KeyBinding.setKeyBindState(jump, true);
 		    		Utils.debug("jump3");
 			    } else {

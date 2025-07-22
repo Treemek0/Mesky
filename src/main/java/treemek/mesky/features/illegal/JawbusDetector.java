@@ -180,7 +180,7 @@ public class JawbusDetector {
 	                ChatComponentText clickableMessage = new ChatComponentText(" [Quick mark]");
 	                clickableMessage.setChatStyle(temp); 
 	                
-	                Alerts.DisplayCustomAlert("", 1, 3, new Float[] {50f, 50f}, 3, new ResourceLocation(Reference.MODID, "alarm"), 3);
+	                Alerts.DisplayCustomAlert("", 1, 3, new Float[] {50f, 50f}, 3, new ResourceLocation(Reference.MODID, "alarm"), 3, SettingsConfig.JawbusPlayerDeathDetectionSoundVolume.number.floatValue());
 	                Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_AQUA + playerName + EnumChatFormatting.AQUA + " last rendered position: " + EnumChatFormatting.GOLD + playerLocation.getX() + " " + playerLocation.getY() + " " + playerLocation.getZ()).appendSibling(clickableMessage));
 	            }else {
 	            	Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "No data about location of: " + EnumChatFormatting.DARK_AQUA + playerName));

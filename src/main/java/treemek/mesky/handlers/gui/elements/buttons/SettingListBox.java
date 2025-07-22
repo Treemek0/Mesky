@@ -5,63 +5,44 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
+import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.ResourceLocation;
 import treemek.mesky.Reference;
+import treemek.mesky.config.SettingsConfig.Setting;
 import treemek.mesky.handlers.RenderHandler;
+import treemek.mesky.handlers.gui.elements.buttons.ListBox.Option;
 import treemek.mesky.handlers.gui.elements.textFields.TextField;
 import treemek.mesky.utils.Utils;
 import treemek.mesky.utils.Waypoints;
 import treemek.mesky.utils.Waypoints.Waypoint;
 
-public class ListBox extends GuiButton{
-	public static class Option{
-		private String visibleText;
-		private String argument;
-		public float currentTextPos = 0;
-		public boolean reverseTextPos = false;
-		public EnumChatFormatting textColor = EnumChatFormatting.RESET;
-		
-		public Option(String visibleText, String argument) {
-			this.visibleText = visibleText;
-			this.argument = argument;
-		}
-		
-		public Option(String visibleText, String argument, EnumChatFormatting textColor) {
-			this.visibleText = visibleText;
-			this.argument = argument;
-			this.textColor  = textColor;
-		}
-		
-		public String getVisibleText() {
-			return visibleText;
-		}
-		
-		public String getArgument() {
-			return argument;
-		}
-	}
+public class SettingListBox extends GuiButton{
 	
 	int currentOption = 0;
 	List<Option> options;
 	boolean opened = false;
 	public int endY = 0;
+	public int allHeight = 0;
+	int color = 0x3e91b5;
 	
 	Option custom;
 	TextField customField;
+	Setting setting;
 	
 	ResourceLocation arrowRight = new ResourceLocation(Reference.MODID, "gui/arrow_right.png");
 	ResourceLocation arrowDown = new ResourceLocation(Reference.MODID, "gui/arrow_down.png");
 	
-	public ListBox(int buttonId, int x, int y, int widthIn, int heightIn, String buttonText, List<Option> options, String current) {
-		super(buttonId, x, y, widthIn, heightIn, buttonText);
+	public SettingListBox(int buttonId, int widthIn, int heightIn, String buttonText, List<Option> options, Setting setting) {
+		super(buttonId, 0, 0, widthIn, heightIn, buttonText);
 		this.options = options;
+		this.setting = setting;
+		String current = setting.text;
 		
 		Optional<Option> foundOption = options.stream().filter(option -> option.getArgument().equals(current)).findFirst();
 		
@@ -70,12 +51,14 @@ public class ListBox extends GuiButton{
 		}
 	}
 	
-	public ListBox(int buttonId, int x, int y, int widthIn, int heightIn, String buttonText, List<Option> options, String customText, String current) {
-		super(buttonId, x, y, widthIn, heightIn, buttonText);
+	public SettingListBox(int buttonId, int widthIn, int heightIn, String buttonText, List<Option> options, String customText, Setting setting) {
+		super(buttonId, 0, 0, widthIn, heightIn, buttonText);
 		this.options = options;
 		this.custom = new Option(customText, customText);
-		this.customField = new TextField(0, x+1, y+1, width-height, height-2);
+		this.customField = new TextField(0, 0+1, 0+1, width-height, height-2);
 		customField.setText(custom.getVisibleText());
+		this.setting = setting;
+		String current = setting.text;
 		
 		Optional<Option> foundOption = options.stream().filter(option -> option.getArgument().equals(current)).findFirst();
 		
@@ -86,15 +69,17 @@ public class ListBox extends GuiButton{
 			currentOption = options.size();
 		}
 	}
-	
+
 	public boolean isCurrentCustomOption() {
 		return currentOption >= options.size();
 	}
 	
 	public void setCustom(String text) {
 		custom = new Option(text, text);
-		if(!customField.getText().equals(text)) {
-			customField.setText(text);
+		if(customField != null) {
+			if(!customField.getText().equals(text)) {
+				customField.setText(text);
+			}
 		}
 	}
 	
@@ -117,9 +102,17 @@ public class ListBox extends GuiButton{
 	
 	
 	@Override
-	public void drawButton(Minecraft mc, int mouseX, int mouseY) {
-		customField.yPosition = yPosition + 1;
-		Option current;
+	public void drawButton(Minecraft mc, int x, int y) {
+		this.xPosition = x;
+		this.yPosition = y;
+		if(this.customField != null) {
+			this.customField.xPosition = x+1;
+			this.customField.yPosition = y+1;
+		}
+
+		ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
+		int mouseX = Mouse.getX() * sr.getScaledWidth() / Minecraft.getMinecraft().displayWidth;
+		int mouseY = sr.getScaledHeight() - Mouse.getY() * sr.getScaledHeight() / Minecraft.getMinecraft().displayHeight - 1;
 		
 		if(mouseX >= this.xPosition && mouseY >= yPosition && mouseX < this.xPosition + this.width && mouseY < yPosition + height) {
 			GL11.glColor3f(0.6f, 0.6f, 0.6f);
@@ -129,8 +122,18 @@ public class ListBox extends GuiButton{
 			drawButtonForegroundLayer(xPosition, yPosition);
 		}
 		
+		if(opened) {
+			int arrowSize = height/2;
+			RenderHandler.drawImage((int)(xPosition + width - height/2 - arrowSize/2 - 1), yPosition + height/2 - arrowSize/2, arrowSize, arrowSize, arrowDown);
+		}else {
+			int arrowSize = height/2;
+			RenderHandler.drawImage((int)(xPosition + width - height/2 - arrowSize/2 - 1), yPosition + height/2 - arrowSize/2, arrowSize, arrowSize, arrowRight);
+		}
+		
 		double scale = RenderHandler.getTextScale(height/2.5);
 		double textY = yPosition + height/2 - RenderHandler.getTextHeight(scale)/2;
+
+		Option current;
 		
 		if(isCurrentCustomOption()) {
 			current = custom;
@@ -149,11 +152,66 @@ public class ListBox extends GuiButton{
 			
 			updateTextPos(current, maxTextPos);
 		}
+		
+		float defaultFontHeight = mc.fontRendererObj.FONT_HEIGHT;
+		float scaleFactor = (float) (height / defaultFontHeight) / 2;
+		
+		float displayedTextY = (float) (yPosition + (height / 2) - RenderHandler.getTextHeight(scaleFactor)/2) + 2;
+		
+		allHeight = height;
+		
+		String text = RenderHandler.trimWordsToWidth(displayString, (int) (sr.getScaledWidth()*0.9f - x - (width*1.30) - (sr.getScaledHeight() / 10) - 10), false, scaleFactor);
+		
+		if(text.equals(displayString)) {
+			RenderHandler.drawText(displayString, x + (width*1.2), displayedTextY, scaleFactor, true, color);
+		}else {
+			String oldText = displayString;
+			int newHeight = allHeight;
+			while (!text.equals(oldText)) {
+				RenderHandler.drawText(text, x + (width*1.25), displayedTextY, scaleFactor, true, color);
+				oldText = oldText.substring(text.length());
+				text = RenderHandler.trimWordsToWidth(oldText, (int) (sr.getScaledWidth()*0.9f - x - (width*1.30) - (sr.getScaledHeight() / 10) - 10), false, scaleFactor);
+				
+				if(text.split(" ").length == 1 || text.length() == 0) {
+					String newText = RenderHandler.trimStringToWidth(oldText, (int) (sr.getScaledWidth()*0.9f - x - (width*1.30) - (sr.getScaledHeight() / 10) - 10), false, scaleFactor);
+					
+					if(newText.length() > 0) {
+						text = newText;
+					}else {
+						break;
+					}
+				}
+				
+				displayedTextY += height + 1;
+				newHeight += height + 1;
+			}
 
-		if(opened){		
-			int arrowSize = height/2;
-			RenderHandler.drawImage((int)(xPosition + width - height/2 - arrowSize/2 - 1), yPosition + height/2 - arrowSize/2, arrowSize, arrowSize, arrowDown);
+			RenderHandler.drawText(text, x + (width*1.2), displayedTextY, scaleFactor, true, color);
 			
+			allHeight = newHeight;
+		}
+			
+	}
+	
+	
+	
+	public void drawOpenedList() {
+		ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
+		int mouseX = Mouse.getX() * sr.getScaledWidth() / Minecraft.getMinecraft().displayWidth;
+		int mouseY = sr.getScaledHeight() - Mouse.getY() * sr.getScaledHeight() / Minecraft.getMinecraft().displayHeight - 1;
+		
+		double scale = RenderHandler.getTextScale(height/2.5);
+		double textY = yPosition + height/2 - RenderHandler.getTextHeight(scale)/2;
+		
+		Option current;
+		
+		if(isCurrentCustomOption()) {
+			current = custom;
+		}else {
+			current = options.get(currentOption);
+		}
+		
+		if(opened){	
 			int y = yPosition;
 			
 			for (Option option : options) {
@@ -177,7 +235,7 @@ public class ListBox extends GuiButton{
 				if(textStartP > maxTextPos) textStartP = maxTextPos;
 				
 				String currentText = RenderHandler.trimStringToWidth(option.getVisibleText().substring((int) textStartP), width - 12, false, (float) scale);
-				RenderHandler.drawText(currentText, xPosition + 5, textY, scale, true, 0xFFFFFF);
+				RenderHandler.drawText(option.textColor + currentText, xPosition + 5, textY, scale, true, 0xFFFFFF);
 				
 				updateTextPos(option, maxTextPos);
 			}
@@ -213,8 +271,6 @@ public class ListBox extends GuiButton{
 			
 			GL11.glColor3f(1,1,1);
 		}else {
-			int arrowSize = height/2;
-			RenderHandler.drawImage((int)(xPosition + width - height/2 - arrowSize/2 - 1), yPosition + height/2 - arrowSize/2, arrowSize, arrowSize, arrowRight);
 			endY = yPosition + height;
 		}
 	}
@@ -241,10 +297,12 @@ public class ListBox extends GuiButton{
 	public boolean mousePressed(int mouseX, int mouseY, int buttonId) {
 		Minecraft mc = Minecraft.getMinecraft();
 		
-		if(isCurrentCustomOption()) {
-			customField.mouseClicked(mouseX, mouseY, buttonId);
-		}else {
-			customField.setFocused(false);
+		if(customField != null) {
+			if(isCurrentCustomOption()) {
+				customField.mouseClicked(mouseX, mouseY, buttonId);
+			}else {
+				customField.setFocused(false);
+			}
 		}
 		
 		if(!opened) {
@@ -294,6 +352,7 @@ public class ListBox extends GuiButton{
 				}
 				
 				opened = false;
+				setting.text = getCurrentArgument();
 				return true;
 			}
 			
@@ -303,8 +362,11 @@ public class ListBox extends GuiButton{
 	}
 	
 	public void textboxKeyTyped(char typedChar, int keyCode){
-		customField.textboxKeyTyped(typedChar, keyCode);
-		setCustom(customField.getText());
+		if(customField != null) {
+			customField.textboxKeyTyped(typedChar, keyCode);
+			setCustom(customField.getText());
+			setting.text = getCurrentArgument();
+		}
     }
 	
 	

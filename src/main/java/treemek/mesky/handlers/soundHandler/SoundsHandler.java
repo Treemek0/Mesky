@@ -418,6 +418,16 @@ public class SoundsHandler {
 		}
 	}
 	
+	public static void playSound(ResourceLocation soundLocation, float volume, float pitch) {
+		Sound Isound = new Sound(soundLocation, volume, pitch);
+		
+		if(!doesSoundExistsInMeskyRegistry(Isound)) {
+			Minecraft.getMinecraft().getSoundHandler().playSound(Isound); // pitch is capped (0.5 - 2) and volume (0 - 1) by minecraft
+		}else {
+			playSoundFromFile(Isound);
+		}
+	}
+	
 	
 	private static void playSoundFromFile(Sound sound) {
 		SoundSystem sndSystem = getSoundSystem();
@@ -466,7 +476,7 @@ public class SoundsHandler {
 						e.printStackTrace();
 					}
 	             }
-	
+				
 	             sndSystem.setPitch(s, d);
 	             sndSystem.setVolume(s, f);
 	             sndSystem.play(s);

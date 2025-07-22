@@ -12,6 +12,7 @@ import net.minecraft.client.gui.ScaledResolution;
 import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.handlers.gui.elements.SettingColorPicker;
 import treemek.mesky.handlers.gui.elements.buttons.FoldableSettingButton;
+import treemek.mesky.handlers.gui.elements.buttons.SettingListBox;
 import treemek.mesky.utils.Utils;
 import treemek.mesky.utils.Utils.smoothFunction;
 
@@ -81,6 +82,10 @@ public class Category extends Gui{
 			for (Object ob : sub.list) {
 				if(ob instanceof SettingColorPicker) {
 					((SettingColorPicker)ob).drawPickerOpened();
+				}
+				
+				if(ob instanceof SettingListBox) {
+					((SettingListBox)ob).drawOpenedList();; // because it has to be on top and for some reason it didnt worked like everything else
 				}
 				
 				if(ob instanceof FoldableSettingButton) {

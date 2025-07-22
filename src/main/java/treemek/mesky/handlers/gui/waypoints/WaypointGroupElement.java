@@ -36,8 +36,8 @@ public class WaypointGroupElement {
 		this.world = world;
 		this.list = list;
 		this.addWaypoint = new AddButton(0, 0, 0, 0, 0, "Add Waypoint");
-		this.delete = new DeleteButton(0, 0, 0, 0, 0, "");
-		this.move = new HoldButton(0, 0, 0, 0, 0, "");
+		this.delete = new DeleteButton(0, 0, 0, 0, 0, "Delete group");
+		this.move = new HoldButton(0, 0, 0, 0, 0, "Move group");
 		this.yPosition = 0;
 		this.yPositionD = 0;
 		this.nameField = new TextField(0, 0, 0, 0, 0);

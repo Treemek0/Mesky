@@ -12,6 +12,7 @@ The fix for it is just using computer and cable connected to phone to move file 
 
 ⪢ Features: 
 - [x] Stops flower weapons from placing on blocks (*Flower of Truth & Spirit Sceptre*)
+- [x] Best crafting recipes for profit (/mesky craftprofit)
 - [x] Fishing timer
 - [x] Alerts (with custom sounds, colors and with importing images)
 - [x] Waypoints (with custom colors)
@@ -33,4 +34,3 @@ The fix for it is just using computer and cable connected to phone to move file 
 - [x] Freelook [**!Illegal!**]
 - [x] Mining macro (/mesky miningmacro) [**!Illegal!**]   
 - [ ] Utils for Kuudra (standing spots, pearl spots, etc) *but i have to learn them first*
-- [ ] Lowest bin (don't know anything about api)

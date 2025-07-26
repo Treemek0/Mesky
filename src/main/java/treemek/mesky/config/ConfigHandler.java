@@ -25,6 +25,8 @@ import scala.util.parsing.input.Reader;
 import treemek.mesky.Mesky;
 import treemek.mesky.config.SettingsConfig.Setting;
 import treemek.mesky.cosmetics.CosmeticHandler;
+import treemek.mesky.handlers.ItemsHandler;
+import treemek.mesky.handlers.RecipeHandler;
 import treemek.mesky.handlers.gui.cosmetics.CustomCapeGui;
 import treemek.mesky.handlers.soundHandler.SoundsHandler;
 import treemek.mesky.utils.Alerts;
@@ -112,8 +114,9 @@ public class ConfigHandler {
         }
 
 
-		
-		
+		RecipeHandler.reloadRecipes();
+		ItemsHandler.reloadItemIdMapping();
+        
 		SoundsHandler.reloadSounds();
 		Utils.addMinecraftMessageWithPrefix(EnumChatFormatting.DARK_GREEN + "Reloaded sounds " + EnumChatFormatting.GREEN + '\u2713');
     }

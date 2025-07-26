@@ -2,9 +2,10 @@ package treemek.mesky.utils.manager;
 
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import treemek.mesky.utils.HypixelCheck;
 
 public class PartyManager {
-	public static boolean isInParty = false;
+	private static boolean isInParty = false;
 	
 	@SubscribeEvent
     public void onChat(ClientChatReceivedEvent event) {
@@ -21,5 +22,9 @@ public class PartyManager {
 			if(message.contains("You left the party.")) isInParty = false;
 			if(message.contains("has disbanded the party!")) isInParty = false;
 		}
+	}
+	
+	public static boolean isInParty() {
+		return HypixelCheck.isOnHypixel() && isInParty;
 	}
 }

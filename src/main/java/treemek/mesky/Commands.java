@@ -2,16 +2,31 @@ package treemek.mesky;
 
 import java.io.StringWriter;
 import javax.imageio.spi.ImageReaderSpi;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
+
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
 
@@ -20,6 +35,7 @@ import javax.imageio.ImageReader;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -32,16 +48,27 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatStyle;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Vec3;
 import scala.Char;
 import treemek.mesky.config.ConfigHandler;
 import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.features.FishingTimer;
 import treemek.mesky.features.SeaCreaturesDetection;
+import treemek.mesky.features.ShardsProfit;
+import treemek.mesky.features.ShardsProfit.Shard;
+import treemek.mesky.features.ShardsProfit.ShardsWrapper;
 import treemek.mesky.features.illegal.AutoFish;
 import treemek.mesky.features.illegal.EntityDetector;
 import treemek.mesky.features.illegal.JawbusDetector;
+import treemek.mesky.handlers.ApiHandler;
+import treemek.mesky.handlers.ApiHandler.ApiType;
 import treemek.mesky.handlers.GuiHandler;
+import treemek.mesky.handlers.RecipeHandler;
+import treemek.mesky.handlers.api.Auction;
+import treemek.mesky.handlers.api.Bazaar;
+import treemek.mesky.handlers.api.Bazaar.BuyType;
+import treemek.mesky.handlers.api.Bazaar.SellType;
 import treemek.mesky.handlers.gui.GUI;
 import treemek.mesky.handlers.gui.GuiLocations;
 import treemek.mesky.handlers.gui.TestGui;
@@ -57,6 +84,7 @@ import treemek.mesky.utils.MacroWaypoints;
 import treemek.mesky.utils.MacroWaypoints.MacroWaypoint;
 import treemek.mesky.utils.MiningUtils;
 import treemek.mesky.utils.MiningUtils.MiningPath;
+import treemek.mesky.utils.MiningUtils.MiningType;
 import treemek.mesky.utils.MovementUtils;
 import treemek.mesky.utils.MovementUtils.Movement;
 import treemek.mesky.utils.PathfinderUtils;
@@ -64,7 +92,10 @@ import treemek.mesky.utils.RotationUtils;
 import treemek.mesky.utils.Utils;
 import treemek.mesky.utils.Waypoints;
 import treemek.mesky.utils.Waypoints.Waypoint;
+import treemek.mesky.utils.Waypoints.WaypointGroup;
 import treemek.mesky.utils.chat.CoordsDetector;
+import treemek.mesky.utils.manager.CommandLoop;
+import treemek.mesky.utils.manager.CommandLoop.Loop;
 import treemek.mesky.utils.manager.PartyManager;
 
 public class Commands extends CommandBase{
@@ -75,10 +106,12 @@ public class Commands extends CommandBase{
 	            "findclear", "whatentity", "region", "path", "pathxray", "pathtowaypoint",
 	            "pathtomacrowaypoint", "clearpath", "flyingpath", "flyingpathtowaypoint",
 	            "moveto", "movetowaypoint", "stopmoving", "lookat", "id", "sharks", 
-	            "copy", "sounds", "colors", "miningmacro", "withdelay", " mining", "miningspeed",
-	            "setwebhook", "aotv", "rotate"
+	            "copy", "sounds", "colors", "miningmacro", " mining", "miningspeed",
+	            "setwebhook", "aotv", "rotate", "delay", "and", "loop", "importskytilsfromclipboard"
 	        ));
 	
+	 private Thread craftProfitThread;
+	 
 	@Override
     public void processCommand(ICommandSender sender, String[] args) throws CommandException {
 		if(args.length == 0) {
@@ -97,7 +130,7 @@ public class Commands extends CommandBase{
     			
     			String commandsList = " ";
     			for (String string : commands) {
-					commandsList += EnumChatFormatting.GOLD + string + EnumChatFormatting.WHITE + ", ";
+					commandsList += ColorUtils.getRandomMinecraftColor() + string + EnumChatFormatting.WHITE + ", ";
 				}
     			
     			Utils.addMinecraftMessage( commandsList);
@@ -110,53 +143,212 @@ public class Commands extends CommandBase{
     			}
     			return;
     		}
+    		if(command.equals("craftprofit")) {
+    			if(args.length > 3) {
+    				try {
+    					Float tax = Math.max(1, Math.min(1.25f, Float.parseFloat(args[1])));
+
+	    				BuyType buy = null;
+	    				SellType sell = null;
+	    				
+	    				if(args[2].equalsIgnoreCase("order")) {
+	    					buy = BuyType.ORDER_BUY;
+	    				}else if(args[2].equalsIgnoreCase("insta")) {
+	    					buy = BuyType.INSTA_BUY;
+	    				}else {
+	    					Utils.addMinecraftMessageWithPrefix("Correct way of using this command /mesky craftprofit <bazaar tax> <buy \"insta\"/\"order\"> <sell \"insta\"/\"order\"> {minProfit}");
+	    				}
+	    				
+	    				if(args[3].equalsIgnoreCase("order")) {
+	    					sell = SellType.ORDER_SELL;
+	    				}else if(args[3].equalsIgnoreCase("insta")) {
+	    					sell = SellType.INSTA_SELL;
+	    				}else {
+	    					Utils.addMinecraftMessageWithPrefix("Correct way of using this command /mesky craftprofit <bazaar tax> <buy \"insta\"/\"order\"> <sell \"insta\"/\"order\"> {minProfit}");
+	    				}
+	    				
+	    				final BuyType buyType = buy;
+	    				final SellType sellType = sell;
+	    				
+	    				Long minProfit = 0L;
+	    				if(args.length > 4) minProfit = Long.parseLong(args[4]);
+	    				
+	    				final Long minProfitFinal = minProfit;
+	    				
+	    				if(craftProfitThread != null && craftProfitThread.isAlive()) {
+	    					Utils.addMinecraftMessageWithPrefix("Stopping searching for new craft profits");
+	    					craftProfitThread.interrupt();
+	    				}
+	    				
+	    				Utils.addMinecraftMessageWithPrefix("Looking for best crafting offers with: Tax: " + tax + ", Buying: " + buy.code + ", Selling: " + sell.code + ", Min Profit: " + Utils.formatNumber(minProfitFinal));
+	    				
+	    				craftProfitThread = new Thread(() -> {
+	    					Bazaar.getHighestProfitCrafts(tax, buyType, sellType, minProfitFinal);
+	    				});
+	    				
+	    				craftProfitThread.start();
+					} catch (Exception e) {
+						Utils.addMinecraftMessageWithPrefix("Correct way of using this command /mesky craftprofit <bazaar tax> <buy \"insta\"/\"order\"> <sell \"insta\"/\"order\"> {minProfit}");
+						Utils.writeError(e);
+					}
+    			}else {
+    				Utils.addMinecraftMessageWithPrefix("Correct way of using this command /mesky craftprofit <bazaar tax> <buy \"insta\"/\"order\"> <sell \"insta\"/\"order\"> {minProfit}");
+    			}
+    			
+    			return;
+    		}
+    		if(command.equals("itemcraftprofit")) {
+    			if(args.length > 4) {
+    				try {
+    					String id = args[1].toUpperCase().replace(" ", "_");
+    					Float tax = Math.max(1, Math.min(1.25f, Float.parseFloat(args[2])));
+    					
+	    				BuyType buy = null;
+	    				SellType sell = null;
+	    				
+	    				if(args[3].equalsIgnoreCase("order")) {
+	    					buy = BuyType.ORDER_BUY;
+	    				}else if(args[3].equalsIgnoreCase("insta")) {
+	    					buy = BuyType.INSTA_BUY;
+	    				}else {
+	    					Utils.addMinecraftMessageWithPrefix("Correct way of using this command /mesky craftprofit <item ID> <bazaar tax> <buy \"insta\"/\"order\"> <sell \"insta\"/\"order\">");
+	    				}
+	    				
+	    				if(args[4].equalsIgnoreCase("order")) {
+	    					sell = SellType.ORDER_SELL;
+	    				}else if(args[4].equalsIgnoreCase("insta")) {
+	    					sell = SellType.INSTA_SELL;
+	    				}else {
+	    					Utils.addMinecraftMessageWithPrefix("Correct way of using this command /mesky itemcraftprofit <item ID> <bazaar tax> <buy \"insta\"/\"order\"> <sell \"insta\"/\"order\">");
+	    				}
+	    				
+	    				final BuyType buyType = buy;
+	    				final SellType sellType = sell;
+
+	    				if(craftProfitThread != null && craftProfitThread.isAlive()) {
+	    					Utils.addMinecraftMessageWithPrefix("Stopping searching for new craft profits");
+	    					craftProfitThread.interrupt();
+	    				}
+	    				
+	    				Utils.addMinecraftMessageWithPrefix("Looking for crafting profit for " + id + " with: Tax: " + tax + ", Buying: " + buy.code + ", Selling: " + sell.code);
+	    				
+	    				craftProfitThread = new Thread(() -> {
+	    					Bazaar.clearCraftCostMap();
+	    					JsonObject bazaar = Bazaar.getBaazar();
+	    					if (bazaar == null || !bazaar.has("products")) {
+	    						Utils.addMinecraftMessageWithPrefix("There was a problem with reading bazaar data. Try again later");
+	    					}else {
+	    						float[] craft = Bazaar.getCraftProfit(id, bazaar, tax, buyType, sellType, true);
+	    						
+	    						if(craft[0] == 0 && craft[1] == 0 && craft[2] == 0 && craft[3] == 0 && craft[4] == 0) {
+	    							Utils.addMinecraftMessage(EnumChatFormatting.RED + "There's no recipe for " + id);
+	    						}else {
+		    						String message = EnumChatFormatting.AQUA + id + EnumChatFormatting.GOLD + " | Craft cost: " + Utils.formatNumber(craft[2])
+		    			   			 + EnumChatFormatting.YELLOW + " | Sell price: " + Utils.formatNumber(craft[1])
+		    			   			 + EnumChatFormatting.BLUE + " | Profit: " + Utils.formatNumber(craft[0]);
+		    			
+		    						ChatComponentText chatText = new ChatComponentText(message);
+		    				        ChatStyle style = new ChatStyle();
+		    				        style.setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/bz " + id));
+		    				        chatText.setChatStyle(style);
+		    				
+		    				        Utils.addMinecraftMessage(chatText);
+	    						}
+	    					}
+	    				});
+	    				
+	    				craftProfitThread.start();
+					} catch (Exception e) {
+						Utils.addMinecraftMessageWithPrefix("Bazaar tax you provided isn't a number. Correct way of using this command /mesky craftprofit <item ID> <bazaar tax> <buy \"insta\"/\"order\"> <sell \"insta\"/\"order\">");
+					}
+    			}else {
+    				Utils.addMinecraftMessageWithPrefix("Correct way of using this command /mesky craftprofit <item ID> <bazaar tax> <buy \"insta\"/\"order\"> <sell \"insta\"/\"order\">");
+    			}
+    			
+    			return;
+    		}
+    		if(command.equals("loop")) {
+    			if(args.length > 2) {
+    				try {
+    					long milis = parseLong(args[1]);
+    					
+    					if(milis < 500) {
+    						Utils.addMinecraftMessageWithPrefix("Time should be 500ms and above. " + milis + " is lower than 500");
+    						return;
+    					}
+    					
+    					String loopedCommand = connectArgs(args, 2, args.length);
+    					
+    					if(loopedCommand.contains("mesky loop")) {
+    						Utils.addMinecraftMessageWithPrefix("You can't loop a loop");
+    						return;
+    					}
+    					
+    					Utils.addMinecraftMessageWithPrefix("Setting up loop (" + milis + "ms) for command: " + EnumChatFormatting.GOLD + loopedCommand);
+    					Utils.addMinecraftMessageWithPrefix("To stop it use /mesky resetloop");
+    					
+    					CommandLoop.setCurrentLoop(new Loop(milis, loopedCommand));
+					} catch (Exception e) {
+						Utils.addMinecraftMessageWithPrefix("Correct way of using this command /mesky loop <time [ms]> <command>");
+					}
+    			}else {
+    				Utils.addMinecraftMessageWithPrefix("Correct way of using this command /mesky loop <time [ms]> <command>");
+    			}
+    			
+    			return;
+    		}
+    		if(command.equals("resetloop")) {
+    			CommandLoop.setCurrentLoop(null);
+    			Utils.addMinecraftMessageWithPrefix("Command loop is set to null");
+    		}
     		if(command.equals("isplayervisible")) {
     			Utils.addMinecraftMessageWithPrefix("Visible player: " + Utils.isAnyPlayerVisible());
     			return;
     		}
-    		if(command.equals("withdelay")) {
+    		if(command.equals("delay")) {
     			if(args.length > 2) {
     				try {
     					long milis = parseLong(args[1]);
-    					String delayedCommand = args[2];
+    					String delayedCommand = connectArgs(args, 2, args.length);
     					
-    					Utils.addMinecraftMessageWithPrefix("Setting up delay for command:" + delayedCommand);
+    					Utils.addMinecraftMessageWithPrefix("Setting up delay for command: " + EnumChatFormatting.GOLD + delayedCommand);
     					
-    					MovementUtils.addMovement(new Movement(() -> {
-    						try {
-								processCommand(sender, Arrays.copyOfRange(args, 2, args.length));
-							} catch (CommandException e) {
-								e.printStackTrace();
-							}
+    					MovementUtils.addCommand(new Movement(() -> {
+    						Utils.executeCommand(connectArgs(args, 2, args.length));
     					}, milis));
 					} catch (Exception e) {
-						
+						Utils.addMinecraftMessageWithPrefix("Correct way of using this command /mesky delay <time [ms]> <command>");
 					}
+    			}else {
+    				Utils.addMinecraftMessageWithPrefix("Correct way of using this command /mesky delay <time [ms]> <command>");
+    			}
+    			
+    			return;
+    		}
+    		if(command.equals("and")) { // /mesky and /mesky mining & /mesky delay 5000 /mesky and /mesky stopmining & /mesky aotv
+    			if(args.length > 3) {
+    				int index = -1;
+    				for (int i = 0; i < args.length; i++) {
+    				    if (args[i].equals("&")) {
+    				        index = i;
+    				        break;
+    				    }
+    				}
+
+    				if (index > 1 && index < args.length) {
+    				    Utils.executeCommand(connectArgs(args, 1, index));
+    				    Utils.executeCommand(connectArgs(args, index+1, args.length));
+    				}else {
+    					Utils.addMinecraftMessageWithPrefix("Correct way of using this command /mesky and <command> & <command>");
+    				}
+    			}else {
+    				Utils.addMinecraftMessageWithPrefix("Correct way of using this command /mesky and <command> & <command>");
     			}
     			
     			return;
     		}
     		if(command.equals("test")){
-				long delay = 200;
-				int randomInt = 25 + new Random().nextInt(6); // 25 - 30
-				
-				float pitch = RotationUtils.getNeededPitchFromMinecraftRotation(70) + Utils.getRandomizedMinusOrPlus(new Random().nextInt(5));
-				float rotationTime = (((delay+50) * randomInt) + 10);
-				Alerts.DisplayCustomAlert("AntyAFK", (int) rotationTime, new Float[] {50f, 40f}, 2f);
-				
-				float addYaw = Utils.getRandomizedMinusOrPlus(new Random().nextInt(20));
-				
-				RotationUtils.rotateBezierCurve(80, pitch, 40 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), pitch + Utils.getRandomizedMinusOrPlus(new Random().nextInt(2)), 1f, true);
-				RotationUtils.rotateBezierCurve(-160 + addYaw, 0, -70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
-				RotationUtils.rotateBezierCurve(160 - addYaw/2, 0, 70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
-				RotationUtils.rotateBezierCurve(-160 + addYaw/2, 0, -70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
-				RotationUtils.rotateBezierCurve(160 - addYaw, 0, 70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
-				RotationUtils.rotateBezierCurve(-160 + addYaw, 0, -70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
-				RotationUtils.rotateBezierCurve(160 - addYaw/2, 0, 70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
-				RotationUtils.rotateBezierCurve(-160 + addYaw/2, 0, -70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
-				RotationUtils.rotateBezierCurve(160 - addYaw, 0, 70 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), Utils.getRandomizedMinusOrPlus(new Random().nextInt(30)), 0.6f, true);
-				RotationUtils.rotateBezierCurve(-80, -pitch, -40 + Utils.getRandomizedMinusOrPlus(new Random().nextInt(10)), -pitch + Utils.getRandomizedMinusOrPlus(new Random().nextInt(2)), 1f, true);
-						return;
+
     		}
     		if(command.equals("rotate")) {
     			if(args.length > 2) {
@@ -209,7 +401,19 @@ public class Commands extends CommandBase{
     			return;
     		}
     		if(command.equals("mining")) {
-    			MovementUtils.addMovement(new Movement(MiningUtils::startMining, 1000));
+    			if(args.length > 1) {
+    				String miningType = args[1];
+    				try {
+    				    MiningType type = MiningType.valueOf(miningType.toUpperCase());
+    				    MovementUtils.addMovement(new Movement(() -> MiningUtils.startMining(type), 1000));
+    				} catch (IllegalArgumentException e) {
+    				    Utils.addMinecraftMessageWithPrefix("Invalid mining type: " + miningType);
+    				}
+    			}else {
+    				Utils.addMinecraftMessageWithPrefix("You have to specify mining type: ");
+    				Utils.addMinecraftMessage(EnumChatFormatting.AQUA + "MITHRIL, GEMSTONE, GOLD, DIAMOND, IRON, COAL, REDSTONE, LAPIS");
+    			}
+    			
     			return;
     		}
     		if(command.equals("miningspeed")) {
@@ -250,7 +454,7 @@ public class Commands extends CommandBase{
     			}
     		}
     		if(command.equals("isinparty")) {
-    			Utils.addMinecraftMessage(PartyManager.isInParty + "");
+    			Utils.addMinecraftMessage(PartyManager.isInParty() + "");
     			return;
     		}
     		if(command.equals("copy")) {
@@ -258,6 +462,26 @@ public class Commands extends CommandBase{
     			Utils.addMinecraftMessageWithPrefix("Copied: " + text);
     			Utils.copyToClipboard(text);
     	        return;
+    		}
+    		if(command.equals("shards")) {
+    			//ShardsProfit.getShardsProfit();
+				
+				return;
+    		}
+    		if(command.equals("auction")) {
+    			if(args.length > 1) {
+    				try {
+    					float minProfit = Float.parseFloat(args[1]);
+    					
+    					Auction.findProfitAuctions(minProfit);
+					} catch (Exception e) {
+						Utils.addMinecraftMessageWithPrefix(args[1] + " isn't a number. Correct way of using this command: /mesky auction <min profit>");
+					}
+    			}else {
+    				Utils.addMinecraftMessageWithPrefix("Correct way of using this command: /mesky auction <min profit>");
+    			}
+				
+				return;
     		}
     		if(command.equals("id")) {
     			Utils.addMinecraftMessage(Utils.getSkyblockId(Minecraft.getMinecraft().thePlayer.getCurrentEquippedItem()));
@@ -272,53 +496,118 @@ public class Commands extends CommandBase{
     			Utils.addMinecraftMessageWithPrefix("Debug is now set to: " + Mesky.debug);
     			return;
     		}
+    		if (command.equals("importskytilsfromclipboard")) {
+    		    String hash = GuiScreen.getClipboardString();
+    		    try {
+    		        LinkedHashMap<String, WaypointGroup> waypoints = Waypoints.importSkytilsWaypoints(hash);
+
+    		        if(waypoints != null && !waypoints.isEmpty()) {
+    		        	Utils.addMinecraftMessageWithPrefix(EnumChatFormatting.GREEN + "" + '\u2713' + EnumChatFormatting.DARK_GREEN + " Imported Skytils waypoints:");
+    		        	
+    		        	for (Map.Entry<String, WaypointGroup> entry : waypoints.entrySet()) {
+    		                String key = entry.getKey();
+    		                WaypointGroup group = entry.getValue();
+	    		   
+	        		        Utils.addMinecraftMessage('\u25B6' + " " + EnumChatFormatting.DARK_GREEN + "Waypoint group: " + EnumChatFormatting.DARK_AQUA + key);
+	    		            
+	    		            Waypoints.waypointsList.compute(key, (k, existingGroup) -> {
+	    		                if (existingGroup == null) return group;
+	    		                for (Waypoint waypoint : existingGroup.list) {
+	    		                	Utils.addMinecraftMessage('\u21AA' + " " + EnumChatFormatting.DARK_AQUA + waypoint.name + EnumChatFormatting.GOLD + " [" + waypoint.coords[0] + ", " + waypoint.coords[1] + ", " + waypoint.coords[2] + "]");
+								}
+	    		                
+	    		                existingGroup.list.addAll(group.list);
+	    		                return existingGroup;
+	    		            });
+	    		        }
+    		        	
+    		        	ConfigHandler.SaveWaypoint(Waypoints.waypointsList);
+    		        }else {
+    		        	Utils.writeError("Something went wrong with importing your waypoints. Check if the string is correct.");
+    		        }
+    		    } catch (IOException e) {
+    		        Utils.writeError("Failed to import Skytils waypoints: " + e.getMessage());
+    		    }
+    		    
+    		    return;
+    		}
     		if(command.equals("reload")) {
     			if(args.length > 1) {
     				String type = args[1].toLowerCase();
     				switch (type) {
 	    				case "settings": {
-							ConfigHandler.reloadSettings();
-							Utils.addMinecraftMessageWithPrefix("Reloaded settings.");
-							break;
-						}
-						case "sounds": {
-							SoundsHandler.reloadSounds();
-							Utils.addMinecraftMessageWithPrefix("Reloaded sounds.");
-							break;
-						}
-						case "alerts": {
-							ConfigHandler.reloadAlerts();
-							Utils.addMinecraftMessageWithPrefix("Reloaded alerts.");
-							break;
-						}
-						case "chatfunctions": {
-							ConfigHandler.reloadChatFunctions();
-							Utils.addMinecraftMessageWithPrefix("Reloaded chatFunctions.");
-							break;
-						}
-						case "waypoints": {
-							ConfigHandler.reloadWaypoints();
-							Utils.addMinecraftMessageWithPrefix("Reloaded waypoints.");
-							break;
-						}
-						case "macrowaypoints": {
-							ConfigHandler.reloadMacroWaypoints();
-							Utils.addMinecraftMessageWithPrefix("Reloaded macroWaypoints.");
-							break;
-						}
-						default: {
-							Utils.addMinecraftMessageWithPrefix("There's nothing to reload named: " + type);
-						}
+	    				    try {
+	    				        ConfigHandler.reloadSettings();
+	    				        Utils.addMinecraftMessageWithPrefix(EnumChatFormatting.DARK_GREEN + "Reloaded settings " + EnumChatFormatting.GREEN + '\u2713');
+	    				    } catch (FileNotFoundException e) {
+	    				        Utils.writeError("There was a problem with reloading settings: " + e.getMessage());
+	    				    }
+	    				    break;
+	    				}
+	    				case "sounds": {
+	    				    SoundsHandler.reloadSounds();
+	    				    Utils.addMinecraftMessageWithPrefix(EnumChatFormatting.DARK_GREEN + "Reloaded sounds " + EnumChatFormatting.GREEN + '\u2713');
+	    				    break;
+	    				}
+	    				case "alerts": {
+	    				    try {
+	    				        ConfigHandler.reloadAlerts();
+	    				        Utils.addMinecraftMessageWithPrefix(EnumChatFormatting.DARK_GREEN + "Reloaded alerts " + EnumChatFormatting.GREEN + '\u2713');
+	    				    } catch (IOException e) {
+	    				        Utils.writeError("There was a problem with reloading alerts: " + e.getMessage());
+	    				    }
+	    				    break;
+	    				}
+	    				case "chatfunctions": {
+	    				    try {
+	    				        ConfigHandler.reloadChatFunctions();
+	    				        Utils.addMinecraftMessageWithPrefix(EnumChatFormatting.DARK_GREEN + "Reloaded chatFunctions " + EnumChatFormatting.GREEN + '\u2713');
+	    				    } catch (IOException e) {
+	    				        Utils.writeError("There was a problem with reloading chatFunctions: " + e.getMessage());
+	    				    }
+	    				    break;
+	    				}
+	    				case "waypoints": {
+	    				    try {
+	    				        ConfigHandler.reloadWaypoints();
+	    				        Utils.addMinecraftMessageWithPrefix(EnumChatFormatting.DARK_GREEN + "Reloaded waypoints " + EnumChatFormatting.GREEN + '\u2713');
+	    				    } catch (JsonIOException | JsonSyntaxException | FileNotFoundException e) {
+	    				        Utils.writeError("There was a problem with reloading waypoints: " + e.getMessage());
+	    				    }
+	    				    break;
+	    				}
+	    				case "macrowaypoints": {
+	    				    try {
+	    				        ConfigHandler.reloadMacroWaypoints();
+	    				        Utils.addMinecraftMessageWithPrefix(EnumChatFormatting.DARK_GREEN + "Reloaded macroWaypoints " + EnumChatFormatting.GREEN + '\u2713');
+	    				    } catch (JsonIOException | JsonSyntaxException | FileNotFoundException e) {
+	    				        Utils.writeError("There was a problem with reloading macroWaypoints: " + e.getMessage());
+	    				    }
+	    				    break;
+	    				}
+	    				case "miningPaths": {
+	    				    try {
+	    				        ConfigHandler.reloadMiningPaths();
+	    				        Utils.addMinecraftMessageWithPrefix(EnumChatFormatting.DARK_GREEN + "Reloaded miningPaths " + EnumChatFormatting.GREEN + '\u2713');
+	    				    } catch (IOException e) {
+	    				        Utils.writeError("There was a problem with reloading miningPaths: " + e.getMessage());
+	    				    }
+	    				    break;
+	    				}
+	    				default: {
+	    				    Utils.addMinecraftMessageWithPrefix(EnumChatFormatting.YELLOW + "There's nothing to reload named: " + type);
+	    				}
+
 					}
     			}else {
 	    			ConfigHandler.reloadConfig();
-	    			Utils.addMinecraftMessageWithPrefix("Reloaded config.");
+	    			Utils.addMinecraftMessageWithPrefix("Finished reloading.");
     			}
     			
     			return;
     		}
     		if(command.equals("locate")) {
-    			if(args.length >= 2) {
+    			if(args.length > 1) {
     				String name = args[1];
     				if(Locations.currentLocation == Location.CRIMSON_ISLE && SettingsConfig.JawbusPlayerDeathDetection.isOn) {
     					BlockPos playerLocation = JawbusDetector.getPlayerLastSeenLocation(name);
@@ -335,6 +624,8 @@ public class Commands extends CommandBase{
     				}else {
     					Utils.addMinecraftMessageWithPrefix("This command only works when on Crimson Isle and while JawbusPlayerDeathDetection is on");
     				}
+    			}else {
+    				Utils.addMinecraftMessageWithPrefix("Correct way of using this command: /mesky locate <player>");
     			}
     			return;
     		}
@@ -699,10 +990,6 @@ public class Commands extends CommandBase{
 				
 				return;
 			}
-			if(command.equals("miningmacropath")) {
-				
-				return;
-			}
 			if(command.equals("miningmacro")) {
 				if(args.length > 1) {
 					if(args[1].equalsIgnoreCase("paths")){
@@ -834,11 +1121,25 @@ public class Commands extends CommandBase{
 					}
 					
 					Utils.addMinecraftMessageWithPrefix("Wrong argument " + args[1] + ", you should use one of these: changeepath, addpath, removepath");
+					if(args[1].equalsIgnoreCase("start")) {
+						if(args.length > 2) {
+		    				String miningType = args[2];
+		    				try {
+		    				    MiningType type = MiningType.valueOf(miningType.toUpperCase());
+		    				    MovementUtils.resetMovementsList();
+		    					Utils.executeCommand("/warp forge");
+		    					MiningUtils.miningmacroPath(SettingsConfig.MiningMacroPath.number.intValue());
+		    				    MovementUtils.addMovement(new Movement(() -> MiningUtils.startMining(type), 1000));
+		    				} catch (IllegalArgumentException e) {
+		    				    Utils.addMinecraftMessageWithPrefix("Invalid mining type: " + miningType);
+		    				}
+		    			}else {
+		    				Utils.addMinecraftMessageWithPrefix("You have to specify mining type (/mesky miningmacro start <type>): ");
+		    				Utils.addMinecraftMessage(EnumChatFormatting.AQUA + "MITHRIL, GEMSTONE, GOLD, DIAMOND, IRON, COAL, REDSTONE, LAPIS");
+		    			}
+					}
 				}else {
-					MovementUtils.resetMovementsList();
-					Utils.executeCommand("/warp forge");
-					MiningUtils.miningmacroPath(SettingsConfig.MiningMacroPath.number.intValue());
-					MovementUtils.addMovement(new Movement(MiningUtils::startMining, 1000));
+					Utils.addMinecraftMessageWithPrefix(EnumChatFormatting.RED + "Correct way of using this command /mesky miningmacro <start / removepath / addpath / showpath / changepath / paths>");
 				}
 				return;
 			}

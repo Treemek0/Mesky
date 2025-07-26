@@ -17,6 +17,9 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MathHelper;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent.Action;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientDisconnectionFromServerEvent;
@@ -153,6 +156,22 @@ public class AntyGhostBlock {
 	@SubscribeEvent
     public void onClientDisconnect(ClientDisconnectionFromServerEvent event) {
 		blockAntyGhostBlocks();
+	}
+	
+	@SubscribeEvent(priority = EventPriority.HIGHEST)
+    public void onPlayerInteract(PlayerInteractEvent event) {
+		if(BLOCK) return;
+		
+		if(event.action == Action.RIGHT_CLICK_BLOCK || event.action == Action.RIGHT_CLICK_AIR) {
+			if(Minecraft.getMinecraft().thePlayer != null && Minecraft.getMinecraft().thePlayer.getCurrentEquippedItem() != null) {
+				String id = Utils.getSkyblockId(Minecraft.getMinecraft().thePlayer.getCurrentEquippedItem());
+				if(id != null) {
+					if(id.equals("ASPECT_OF_THE_VOID") || id.equals("ASPECT_OF_THE_END") || id.equals("HYPERION") || id.equals("ASTRAEA") || id.equals("VALKYRIE") || id.equals("SCYLLA")) {
+						blockAntyGhostBlocks(); // TELEPORTING BUT INTO THE BLOCKS SO COORDS DONT CHANGE
+					}
+				}
+			}
+		}
 	}
 	
 	public void blockAntyGhostBlocks() {

@@ -1,13 +1,28 @@
 package treemek.mesky.utils;
 
 import java.awt.Color;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
+
+import org.brotli.dec.BrotliInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
@@ -303,6 +318,160 @@ public class Waypoints {
         }
 
         return groupedWaypoints;
+    }
+    
+    
+    public static LinkedHashMap<String, WaypointGroup> importSkytilsWaypoints(String input) throws IOException {
+        if (!input.startsWith("<Skytils-Waypoint-Data>(V")) {
+        	Utils.writeError("Invalid Skytils format");
+        	return null;
+        }
+           
+
+        int version = Integer.parseInt(input.substring(input.indexOf('V') + 1, input.indexOf(')')));
+        String base64 = input.substring(input.indexOf(':') + 1);
+        byte[] decoded = Base64.getDecoder().decode(base64);
+
+        InputStream decompressed;
+        if (version == 1) {
+            decompressed = new GZIPInputStream(new ByteArrayInputStream(decoded));
+        } else if (version == 2) {
+        	decompressed = new BrotliInputStream(new ByteArrayInputStream(decoded));
+        } else {
+        	Utils.writeError("Unknown Skytils waypoint version: " + version);
+            return null;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        byte[] buffer = new byte[1024];
+        int len;
+        while ((len = decompressed.read(buffer)) != -1) {
+            sb.append(new String(buffer, 0, len, StandardCharsets.UTF_8));
+        }
+
+        String json = sb.toString();
+        JsonObject root = new Gson().fromJson(json, JsonObject.class);
+        JsonArray categories = root.getAsJsonArray("categories");
+
+        LinkedHashMap<String, WaypointGroup> groups = new LinkedHashMap<>();
+
+        for (JsonElement catEl : categories) {
+            JsonObject cat = catEl.getAsJsonObject();
+            String categoryName = cat.has("name") ? cat.get("name").getAsString() : null;
+            JsonArray wps = cat.getAsJsonArray("waypoints");
+            String worldRaw = cat.has("island") ? cat.get("island").getAsString() : "Unknown";
+            String world = Utils.convertSkytilsRegionToLocation(worldRaw);
+
+            List<Waypoint> list = new ArrayList<>();
+
+            for (JsonElement wpEl : wps) {
+                JsonObject wp = wpEl.getAsJsonObject();
+                String name = wp.has("name") ? wp.get("name").getAsString() : "Unnamed";
+                int x = wp.get("x").getAsInt();
+                int y = wp.get("y").getAsInt();
+                int z = wp.get("z").getAsInt();
+                String color = wp.has("color") ? wp.get("color").getAsString().replace("#", "") : "ffffff";
+
+                list.add(new Waypoint(name, color, x, y, z, world, 1f, true));
+            }
+
+            String key = (categoryName != null ? categoryName : "skytils") + " %" + world;
+            groups.put(key, new WaypointGroup(list, world, true, true));
+        }
+
+        return groups;
+    }
+
+    public static String exportCurrentLocationWaypointsSkytilsFormat() throws IOException {
+        Map<String, WaypointGroup> currentLocationWaypoints = GetLocationWaypoints();
+
+        // Build a Skytils-like JSON structure from your waypoints
+        JsonArray categories = new JsonArray();
+
+        for (Map.Entry<String, WaypointGroup> entry : currentLocationWaypoints.entrySet()) {
+            WaypointGroup group = entry.getValue();
+
+            JsonObject category = new JsonObject();
+            String categoryName = entry.getKey().substring(0, entry.getKey().lastIndexOf(" %" + group.world));
+            category.addProperty("name", categoryName);
+
+            JsonArray waypoints = new JsonArray();
+            for (Waypoint wp : group.list) {
+                JsonObject jsonWp = new JsonObject();
+                jsonWp.addProperty("name", wp.name);
+                jsonWp.addProperty("x", (int) wp.coords[0]);
+                jsonWp.addProperty("y", (int) wp.coords[1]);
+                jsonWp.addProperty("z", (int) wp.coords[2]);
+                jsonWp.addProperty("color", "#" + wp.color);
+                waypoints.add(jsonWp);
+            }
+            category.add("waypoints", waypoints);
+            category.addProperty("island", (HypixelCheck.isOnHypixel())?group.world.toLowerCase().replace(" ", "_"):group.world); // skytils style
+
+            categories.add(category);
+        }
+
+        JsonObject root = new JsonObject();
+        root.add("categories", categories);
+
+        String jsonString = root.toString();
+
+        // Compress with GZIP
+        ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+        try (GZIPOutputStream gzipStream = new GZIPOutputStream(byteStream)) {
+            gzipStream.write(jsonString.getBytes("UTF-8"));
+        }
+
+        // Base64 encode
+        String base64 = Base64.getEncoder().encodeToString(byteStream.toByteArray());
+
+        // Version 1 = GZIP compression in Skytils format
+        return "<Skytils-Waypoint-Data>(V1):" + base64;
+    }
+    
+    public static String exportWaypointsSkytilsFormat(Map<String, WaypointGroup> givenWaypoints) throws IOException {
+        // Build a Skytils-like JSON structure from your waypoints
+        JsonArray categories = new JsonArray();
+
+        for (Map.Entry<String, WaypointGroup> entry : givenWaypoints.entrySet()) {
+            WaypointGroup group = entry.getValue();
+
+            JsonObject category = new JsonObject();
+            String categoryName = entry.getKey().substring(0, entry.getKey().lastIndexOf(" %" + group.world));
+            category.addProperty("name", categoryName);
+
+            JsonArray waypoints = new JsonArray();
+            for (Waypoint wp : group.list) {
+                JsonObject jsonWp = new JsonObject();
+                jsonWp.addProperty("name", wp.name);
+                jsonWp.addProperty("x", (int) wp.coords[0]);
+                jsonWp.addProperty("y", (int) wp.coords[1]);
+                jsonWp.addProperty("z", (int) wp.coords[2]);
+                jsonWp.addProperty("color", "#" + wp.color);
+                waypoints.add(jsonWp);
+            }
+            category.add("waypoints", waypoints);
+            category.addProperty("island", (HypixelCheck.isOnHypixel())?group.world.toLowerCase().replace(" ", "_"):group.world); // skytils style
+
+            categories.add(category);
+        }
+
+        JsonObject root = new JsonObject();
+        root.add("categories", categories);
+
+        String jsonString = root.toString();
+
+        // Compress with GZIP
+        ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+        try (GZIPOutputStream gzipStream = new GZIPOutputStream(byteStream)) {
+            gzipStream.write(jsonString.getBytes("UTF-8"));
+        }
+
+        // Base64 encode
+        String base64 = Base64.getEncoder().encodeToString(byteStream.toByteArray());
+
+        // Version 1 = GZIP compression in Skytils format
+        return "<Skytils-Waypoint-Data>(V1):" + base64;
     }
 	
     @SubscribeEvent

@@ -16,6 +16,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -44,6 +46,7 @@ import com.google.common.collect.Lists;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockSkull;
 import net.minecraft.block.BlockSnow;
+import net.minecraft.block.material.MapColor;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityOtherPlayerMP;
@@ -56,10 +59,12 @@ import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.item.EntityItemFrame;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemMap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
@@ -78,6 +83,8 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StringUtils;
 import net.minecraft.util.Vec3;
+import net.minecraft.world.World;
+import net.minecraft.world.storage.MapData;
 import treemek.mesky.Mesky;
 import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.handlers.gui.waypoints.WaypointsGui;
@@ -190,7 +197,7 @@ public class Utils {
     }
 	
 	
-	// Taken from SkyblockAddons
+	// from SkyblockAddons
 	public static List<String> getItemLore(ItemStack itemStack) {
 		final int NBT_INTEGER = 3;
 		final int NBT_STRING = 8;
@@ -388,6 +395,34 @@ public class Utils {
         return "unknown";
     }
 	 
+	 public static String convertSkytilsRegionToLocation(String skytilsRegion) {
+		    if (skytilsRegion == null || skytilsRegion.isEmpty()) return skytilsRegion;
+
+		    switch (skytilsRegion.toLowerCase()) {
+		        case "outside_hypixel": return Locations.Location.OUTSIDEHYPIXEL.text;
+		        case "crimson_isle": return Locations.Location.CRIMSON_ISLE.text;
+		        case "crystal_hollows": return Locations.Location.CRYSTAL_HOLLOWS.text;
+		        case "deep_caverns": return Locations.Location.DEEP_CAVERNS.text;
+		        case "catacombs": return Locations.Location.CATACOMBS.text;
+		        case "dungeon_hub": return Locations.Location.DUNGEON_HUB.text;
+		        case "dwarven_mines": return Locations.Location.DWARVEN_MINES.text;
+		        case "the_end": return Locations.Location.END.text;
+		        case "farming_islands": return Locations.Location.FARMING_ISLANDS.text;
+		        case "gold_mine": return Locations.Location.GOLD_MINE.text;
+		        case "hub": return Locations.Location.HUB.text;
+		        case "instanced": return Locations.Location.INSTANCED.text;
+		        case "jerrys_workshop": return Locations.Location.JERRY_WORKSHOP.text;
+		        case "private_island": return Locations.Location.PRIVATE_ISLAND.text;
+		        case "the_park": return Locations.Location.PARK.text;
+		        case "spiders_den": return Locations.Location.SPIDERS_DEN.text;
+		        case "garden": return Locations.Location.GARDEN.text;
+		        case "kuudra": return Locations.Location.KUUDRA.text;
+		        case "rift": return Locations.Location.RIFT.text;
+		        default: return skytilsRegion; // no match, return as-is
+		    }
+		}
+
+	 
  	// Smooth transition from 1 to 0 as angle moves away from A to B
     public static double influenceBasedOnDistanceFromAToB(double number, double A, double B) {
     	number = Math.abs(number);
@@ -510,17 +545,15 @@ public class Utils {
 	    if (itemStack.hasTagCompound()) {
 	        NBTTagCompound tagCompound = itemStack.getTagCompound();
 	        
-	        // Check for the "ExtraAttributes" compound tag
-	        if (tagCompound.hasKey("ExtraAttributes", 10)) { // 10 represents an NBT compound tag
+	        if (tagCompound.hasKey("ExtraAttributes", 10)) {
 	            NBTTagCompound extraAttributes = tagCompound.getCompoundTag("ExtraAttributes");
 
-	            // Get the item ID from the "id" tag within "ExtraAttributes"
-	            if (extraAttributes.hasKey("id", 8)) { // 8 represents an NBT string
+	            if (extraAttributes.hasKey("id", 8)) { // NBT string
 	                return extraAttributes.getString("id");
 	            }
 	        }
 	    }
-	    return null; // Return null if the item ID is not found
+	    return null;
 	}
 	
 	public static boolean isNPC(Entity entity) {
@@ -620,22 +653,16 @@ public class Utils {
 	private static boolean raycastToBlock(Vec3 eyePosition, double X, double Y, double Z, BlockPos targetPos) {
 	    Minecraft mc = Minecraft.getMinecraft();
 
-	    // Convert target block position to Vec3 (with offsets)
 	    Vec3 targetVec = new Vec3(X, Y, Z);
 
-	    // Calculate direction vector from the player's eyes to the target point
 	    Vec3 direction = targetVec.subtract(eyePosition).normalize();
 
-	    // Calculate the maximum distance from the player's eyes to the target point
 	    double maxDistance = eyePosition.distanceTo(targetVec);
 
-	    // Scale the direction vector to the maximum distance
 	    Vec3 scaledDirection = new Vec3(direction.xCoord * maxDistance, direction.yCoord * maxDistance, direction.zCoord * maxDistance);
 
-	    // Perform the raycast
 	    MovingObjectPosition result = mc.theWorld.rayTraceBlocks(eyePosition, eyePosition.addVector(scaledDirection.xCoord, scaledDirection.yCoord, scaledDirection.zCoord), false, false, false);
 
-	    // Check if the ray hit the target block
 	    return result != null && result.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && result.getBlockPos().equals(targetPos);
 	}
 	
@@ -903,6 +930,70 @@ public class Utils {
 		addMinecraftMessageWithPrefix(a);
 	}
 	
+	public static void saveNearbyMaps(EntityPlayer player) {
+	    World world = player.worldObj;
+	    BlockPos pos = player.getPosition();
+	    int radius = 10;
+
+	    List<Entity> entities = world.getEntitiesWithinAABB(EntityItemFrame.class,
+	        new AxisAlignedBB(
+	            pos.getX() - radius, pos.getY() - radius, pos.getZ() - radius,
+	            pos.getX() + radius, pos.getY() + radius, pos.getZ() + radius
+	        )
+	    );
+
+	    int saved = 0;
+
+	    for (Entity entity : entities) {
+	        EntityItemFrame frame = (EntityItemFrame) entity;
+	        ItemStack stack = frame.getDisplayedItem();
+	        if (stack != null && stack.getItem() instanceof ItemMap) {
+	        	int mapId = stack.getItemDamage();
+	            MapData data = ((ItemMap) stack.getItem()).getMapData(stack, world);
+	            if (data != null) {
+	                BufferedImage img = new BufferedImage(128, 128, BufferedImage.TYPE_INT_RGB);
+
+	                for (int x = 0; x < 128; x++) {
+	                    for (int y = 0; y < 128; y++) {
+	                        int i = y * 128 + x;
+	                        int colorIndex = data.colors[i] & 0xFF;
+	                        int rgb = MapColor.mapColorArray[colorIndex / 4].colorValue;
+	                        img.setRGB(x, y, rgb);
+	                    }
+	                }
+
+	                try {
+	                    File dir = new File(Mesky.configDirectory, "/mesky/map_dumps");
+	                    if (!dir.exists()) dir.mkdirs();
+	                    File out = new File(dir, "map_" + mapId + ".png");
+	                    ImageIO.write(img, "png", out);
+	                    saved++;
+	                } catch (IOException e) {
+	                    e.printStackTrace();
+	                }
+	            }
+	        }
+	    }
+
+	    Utils.addMinecraftMessageWithPrefix("Saved " + saved + " maps to /map_dumps/");
+	}
+	
+	public static boolean isVersionAtLeast(String requiredVersion) {
+	    String[] current = Minecraft.getMinecraft().getVersion().split("\\.");
+	    String[] required = requiredVersion.split("\\.");
+
+	    int length = Math.max(current.length, required.length);
+	    for (int i = 0; i < length; i++) {
+	        int cur = i < current.length ? Integer.parseInt(current[i]) : 0;
+	        int req = i < required.length ? Integer.parseInt(required[i]) : 0;
+
+	        if (cur < req) return false;
+	        if (cur > req) return true;
+	    }
+	    
+	    return true;
+	}
+	
 	public static void debug(String a) {
 		if(Mesky.debug) {
 		    StackTraceElement caller = Thread.currentThread().getStackTrace()[2];
@@ -934,7 +1025,9 @@ public class Utils {
 	public static void addMinecraftMessage(String a) {
 		if(Minecraft.getMinecraft().thePlayer != null) {
 			if(a == null) a = "";
-			Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(a));
+			
+			String s = a;
+			Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(s));
 		}
 	}
 	
@@ -962,7 +1055,7 @@ public class Utils {
 	public static void writeToPartyMinecraft(String a) {
 		if(Minecraft.getMinecraft().thePlayer != null) {
 			if(a == null) a = "";
-			if(!PartyManager.isInParty) {
+			if(!PartyManager.isInParty()) {
 				debug("Can't write to party, because you aren't in one");
 				return;
 			}
@@ -1029,6 +1122,15 @@ public class Utils {
 	            e.printStackTrace();
 	        }
 	    }).start();
+	}
+
+
+	public static String formatNumber(float number) {
+	    DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+	    symbols.setGroupingSeparator(','); // Use apostrophe as separator
+
+	    DecimalFormat formatter = new DecimalFormat("#,###", symbols);
+	    return formatter.format(number);
 	}
 }
 

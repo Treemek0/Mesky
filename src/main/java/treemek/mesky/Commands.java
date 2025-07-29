@@ -73,7 +73,13 @@ import treemek.mesky.handlers.gui.GUI;
 import treemek.mesky.handlers.gui.GuiLocations;
 import treemek.mesky.handlers.gui.TestGui;
 import treemek.mesky.handlers.gui.sounds.SoundGui;
+import treemek.mesky.handlers.gui.warp.fasttravel.WarpGui;
+import treemek.mesky.handlers.gui.warp.rift.RiftWarpGui;
+import treemek.mesky.handlers.gui.warp.rift.RiftWarpGui.RiftStack;
 import treemek.mesky.handlers.soundHandler.SoundsHandler;
+import treemek.mesky.listeners.GuiOpenListener.FastTravel;
+import treemek.mesky.listeners.GuiOpenListener.PadLock;
+import treemek.mesky.listeners.GuiOpenListener.RiftTravel;
 import treemek.mesky.utils.Alerts;
 import treemek.mesky.utils.ColorUtils;
 import treemek.mesky.utils.FriendsLocations;
@@ -197,6 +203,15 @@ public class Commands extends CommandBase{
     			
     			return;
     		}
+    		if(command.equals("warp")) {
+    			Map<FastTravel, PadLock> map = new HashMap<>();
+    			
+    			for (FastTravel string : FastTravel.values()) {
+					map.put(string, PadLock.UNLOCKED);
+				}
+    			
+    			GuiHandler.GuiType = new WarpGui(map);
+    		}
     		if(command.equals("itemcraftprofit")) {
     			if(args.length > 4) {
     				try {
@@ -265,6 +280,10 @@ public class Commands extends CommandBase{
     				Utils.addMinecraftMessageWithPrefix("Correct way of using this command /mesky craftprofit <item ID> <bazaar tax> <buy \"insta\"/\"order\"> <sell \"insta\"/\"order\">");
     			}
     			
+    			return;
+    		}
+    		if(command.equals("map")) {
+    			Utils.saveNearbyMaps(Minecraft.getMinecraft().thePlayer);
     			return;
     		}
     		if(command.equals("loop")) {

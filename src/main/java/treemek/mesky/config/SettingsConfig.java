@@ -41,6 +41,14 @@ public class SettingsConfig {
 			this.scale = scale;
 		}
 	}
+
+	public static Setting CustomWarpMenu = new Setting(true, null, null);
+	public static Setting CustomWarpMenuLockableIslands = new Setting(true, null, null);
+	public static Setting CustomWarpMenuScaling = new Setting(1, null, null);
+	
+	public static Setting CustomRiftWarpMenu = new Setting(true, null, null);
+	public static Setting CustomRiftWarpMenuHoverScaling = new Setting(true, null, null);
+	public static Setting CustomRiftWarpMenuScaling = new Setting(1, null, null);
 	
 	public static Setting GhostPickaxe = new Setting(false, null, null);
 	

@@ -134,7 +134,16 @@ public class SettingsGUI extends GuiScreen {
 	private void utilityCategory(int checkSize) {
 	    List<Object> generalSub = new ArrayList<>();
 	    generalSub.add(new SettingButton(6, checkSize, "Hide Players", SettingsConfig.HidePlayers));
-	    generalSub.add(new SettingSlider(41849, 2 * checkSize, checkSize, "Holding items size", SettingsConfig.HoldingItemSize, 0.1, 0.5, 3));
+	    List<Object> customWarp = new ArrayList<>();
+	    customWarp.add(new SettingSlider(41849, 2 * checkSize, checkSize, "Hover island scaling multiplier", SettingsConfig.CustomWarpMenuScaling, 0.1, 0.1, 5));
+	    customWarp.add(new SettingButton(6, checkSize, "Lock islands unable to teleport", SettingsConfig.CustomWarpMenuLockableIslands));
+	    generalSub.add(new FoldableSettingButton(6, checkSize, "Custom warp menu", SettingsConfig.CustomWarpMenu, customWarp));
+	    List<Object> customRiftWarp = new ArrayList<>();
+	    List<Object> customRiftWarpScaling = new ArrayList<>();
+	    customRiftWarpScaling.add(new SettingSlider(41849, 2 * checkSize, checkSize, "Hover island scaling multiplier", SettingsConfig.CustomRiftWarpMenuScaling, 0.1, 0.1, 5));
+	    customRiftWarp.add(new FoldableSettingButton(6, checkSize, "Should islands scale up when hovered", SettingsConfig.CustomRiftWarpMenuHoverScaling, customRiftWarpScaling));
+	    generalSub.add(new FoldableSettingButton(6, checkSize, "Custom rift teleport menu", SettingsConfig.CustomRiftWarpMenu, customRiftWarp));
+//	    generalSub.add(new SettingSlider(41849, 2 * checkSize, checkSize, "Holding items size", SettingsConfig.HoldingItemSize, 0.1, 0.5, 3));
 	    List<Object> nickDetectionFoldable = new ArrayList<>();
 	    nickDetectionFoldable.add(new SettingListBox(2, 4*checkSize, checkSize, "Detection color", ColorUtils.ColoredEnumColorsOptionList, SettingsConfig.NickMentionDetectionColor));
 	    generalSub.add(new FoldableSettingButton(6, checkSize, "Nick detection", SettingsConfig.NickMentionDetection, nickDetectionFoldable));

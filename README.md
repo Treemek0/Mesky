@@ -34,8 +34,9 @@ The fix for it is just using computer and cable connected to phone to move file 
 - [x] Freelook [**!Illegal!**]
 - [x] Mining macro (/mesky miningmacro) [**!Illegal!**]
 - [x] Locking slots:
-      ↪ white lock (1) -> cancel item drop 
-      ↪ red lock (2) -> cancel item drop & gui item moving
-      ↪ red frame (long key hold) -> connects two slots for quick item swapping (only hotbar with inventory)
+
+      ▸ white lock (1) -> cancel item drop 
+      ▸ red lock (2) -> cancel item drop & gui item moving
+      ▸ red frame (long key hold) -> connects two slots for quick item swapping (only hotbar with inventory)
 - [x] Changable size of holding item (Offsets soon)
 - [ ] Utils for Kuudra (standing spots, pearl spots, etc) *but i have to learn them first*

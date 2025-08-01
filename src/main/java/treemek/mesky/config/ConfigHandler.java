@@ -25,6 +25,7 @@ import scala.util.parsing.input.Reader;
 import treemek.mesky.Mesky;
 import treemek.mesky.config.SettingsConfig.Setting;
 import treemek.mesky.cosmetics.CosmeticHandler;
+import treemek.mesky.features.LockSlot;
 import treemek.mesky.handlers.ItemsHandler;
 import treemek.mesky.handlers.RecipeHandler;
 import treemek.mesky.handlers.gui.cosmetics.CustomCapeGui;
@@ -44,6 +45,7 @@ import treemek.mesky.utils.ChatFunctions.ChatFunction;
 import treemek.mesky.utils.FriendsLocations;
 import treemek.mesky.utils.Waypoints.Waypoint;
 import treemek.mesky.utils.Waypoints.WaypointGroup;
+import java.io.Writer;
 
 public class ConfigHandler {
 	
@@ -113,6 +115,12 @@ public class ConfigHandler {
             Utils.writeError("There was a problem with reloading miningPaths: " + e.getMessage());
         }
 
+        try {
+            reloadSlotLocks();
+            Utils.addMinecraftMessageWithPrefix(EnumChatFormatting.DARK_GREEN + "Reloaded slotLocks " + EnumChatFormatting.GREEN + '\u2713');
+        } catch (IOException e) {
+            Utils.writeError("There was a problem with reloading slotLocks: " + e.getMessage());
+        }
 
 		RecipeHandler.reloadRecipes();
 		ItemsHandler.reloadItemIdMapping();
@@ -152,7 +160,44 @@ public class ConfigHandler {
             }
         }
     }
-    
+
+    public static void reloadSlotLocks() throws IOException {
+        File file = new File(directory + "/mesky/utils/meskySlotLocks.json");
+        if (file.exists()) {
+            Map<String, Object> data = new Gson().fromJson(
+                new FileReader(file),
+                new TypeToken<Map<String, Object>>() {}.getType()
+            );
+
+            LockSlot.lockedSlots.clear();
+            LockSlot.connectedSlots.clear();
+
+            if (data.containsKey("lockedSlots")) {
+                Map<String, Boolean> locked = new Gson().fromJson(
+                    new Gson().toJson(data.get("lockedSlots")),
+                    new TypeToken<Map<String, Boolean>>() {}.getType()
+                );
+                for (Map.Entry<String, Boolean> entry : locked.entrySet()) {
+                    try {
+                        LockSlot.lockedSlots.put(Integer.parseInt(entry.getKey()), entry.getValue());
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
+
+            if (data.containsKey("connectedSlots")) {
+                Map<String, String> connected = new Gson().fromJson(
+                    new Gson().toJson(data.get("connectedSlots")),
+                    new TypeToken<Map<String, String>>() {}.getType()
+                );
+                for (Map.Entry<String, String> entry : connected.entrySet()) {
+                    try {
+                        LockSlot.connectedSlots.put(Integer.parseInt(entry.getKey()), Integer.parseInt(entry.getValue()));
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
+        }
+    }
+
 
     
     public static void reloadWaypoints() throws JsonIOException, JsonSyntaxException, FileNotFoundException {
@@ -289,6 +334,33 @@ public class ConfigHandler {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+    }
+	
+    public static void saveSlotLocks(Map<Integer, Boolean> lockedSlots, Map<Integer, Integer> connectedSlots) {
+    	new File(Mesky.configDirectory + "/mesky/utils/").mkdirs();
+        File file = new File(directory + "/mesky/utils/meskySlotLocks.json");
+        Map<String, Object> data = new LinkedHashMap<>();
+
+        // Convert lockedSlots keys to String for JSON compatibility
+        Map<String, Boolean> lockedSlotsStrKey = new LinkedHashMap<>();
+        for (Map.Entry<Integer, Boolean> entry : lockedSlots.entrySet()) {
+            lockedSlotsStrKey.put(entry.getKey().toString(), entry.getValue());
+        }
+
+        // Convert connectedSlots keys and values to String
+        Map<String, String> connectedSlotsStrKey = new LinkedHashMap<>();
+        for (Map.Entry<Integer, Integer> entry : connectedSlots.entrySet()) {
+            connectedSlotsStrKey.put(entry.getKey().toString(), entry.getValue().toString());
+        }
+
+        data.put("lockedSlots", lockedSlotsStrKey);
+        data.put("connectedSlots", connectedSlotsStrKey);
+
+        try (Writer writer = new FileWriter(file)) {
+            new Gson().toJson(data, writer);
+        } catch (IOException e) {
+			e.printStackTrace();
+		}
     }
     
 	public static void SaveChatFunction(List<ChatFunctions.ChatFunction> chatFunctions) {

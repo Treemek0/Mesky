@@ -42,6 +42,8 @@ public class SettingsConfig {
 		}
 	}
 
+	public static final Setting LockSlots = new Setting(true, null, null);
+
 	public static Setting CustomWarpMenu = new Setting(true, null, null);
 	public static Setting CustomWarpMenuLockableIslands = new Setting(true, null, null);
 	public static Setting CustomWarpMenuScaling = new Setting(1, null, null);

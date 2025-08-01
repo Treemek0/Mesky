@@ -7,6 +7,9 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Enumeration;
 
+import org.spongepowered.asm.launch.MixinBootstrap;
+import org.spongepowered.asm.mixin.Mixins;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiIngame;
 import net.minecraft.client.gui.GuiIngameMenu;
@@ -34,6 +37,7 @@ import treemek.mesky.features.AntyGhostBlocks;
 import treemek.mesky.features.BlockFlowerPlacing;
 import treemek.mesky.features.FishingTimer;
 import treemek.mesky.features.HidePlayers;
+import treemek.mesky.features.LockSlot;
 import treemek.mesky.features.MaskTimer;
 import treemek.mesky.features.SeaCreaturesDetection;
 import treemek.mesky.features.illegal.AutoFish;
@@ -44,6 +48,7 @@ import treemek.mesky.features.illegal.GhostPickaxe;
 import treemek.mesky.features.illegal.JawbusDetector;
 import treemek.mesky.handlers.GuiHandler;
 import treemek.mesky.handlers.RenderHandler;
+import treemek.mesky.listeners.GuiOpenListener;
 import treemek.mesky.proxy.IProxy;
 import treemek.mesky.proxy.ClientProxy;
 import treemek.mesky.utils.Alerts;
@@ -61,6 +66,7 @@ import treemek.mesky.utils.chat.CoordsDetector;
 import treemek.mesky.utils.chat.NickMentionDetector;
 import treemek.mesky.utils.manager.AntyGhostBlock;
 import treemek.mesky.utils.manager.CameraManager;
+import treemek.mesky.utils.manager.CommandLoop;
 import treemek.mesky.utils.manager.PartyManager;
 import treemek.mesky.utils.manager.RecordHeadMovement;
 
@@ -73,6 +79,9 @@ public class Mesky {
 	
 	@Mod.EventHandler
 	public static void preInit(FMLPreInitializationEvent event) {
+		MixinBootstrap.init();
+        Mixins.addConfiguration("mixins.mesky.json");
+		
 		configDirectory = event.getModConfigurationDirectory().toString();
 		
 		//proxy = new ClientProxy();
@@ -83,6 +92,8 @@ public class Mesky {
 		ClientCommandHandler.instance.registerCommand(new Commands());
 		ConfigHandler.reloadConfig();
 
+		MinecraftForge.EVENT_BUS.register(new GuiOpenListener());
+		
 		MinecraftForge.EVENT_BUS.register(new HypixelCheck());
 		MinecraftForge.EVENT_BUS.register(new PartyManager());
 		MinecraftForge.EVENT_BUS.register(new CameraManager());
@@ -121,9 +132,12 @@ public class Mesky {
 		MinecraftForge.EVENT_BUS.register(new MovementUtils());
 		MinecraftForge.EVENT_BUS.register(new MiningUtils());
 		MinecraftForge.EVENT_BUS.register(new AntyGhostBlock());
+		MinecraftForge.EVENT_BUS.register(new CommandLoop());
+		MinecraftForge.EVENT_BUS.register(new LockSlot());
 		
 		ClientRegistry.registerKeyBinding(GhostBlock.GKEY);
 		ClientRegistry.registerKeyBinding(Freelook.KEY);
+		ClientRegistry.registerKeyBinding(LockSlot.KEY);
 		//ClientRegistry.registerKeyBinding(RecordHeadMovement.HeadRecorder);
 		//ClientRegistry.registerKeyBinding(RecordHeadMovement.HeadPlayer);
 	}

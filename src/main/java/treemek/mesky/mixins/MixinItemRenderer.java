@@ -14,7 +14,16 @@ import treemek.mesky.config.SettingsConfig;
 
 @Mixin(ItemRenderer.class)
 public class MixinItemRenderer {
-
+	
+	@Inject(method = "transformFirstPersonItem", at = @At("TAIL"))
+	private void afterTransformFirstPersonItem(float equipProgress, float swingProgress, CallbackInfo ci) {
+	    GlStateManager.translate(
+	        0,
+	        SettingsConfig.HoldingItemOffsetY.number / 10f,
+	        0.0f
+	    );
+	}
+	
 	@Inject(method = "renderItem", at = @At("HEAD"))
     private void onRenderItem(EntityLivingBase entity, ItemStack stack, ItemCameraTransforms.TransformType transform, CallbackInfo ci) {
         if (transform == ItemCameraTransforms.TransformType.FIRST_PERSON) {

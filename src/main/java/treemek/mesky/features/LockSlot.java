@@ -138,28 +138,32 @@ public class LockSlot {
 	}
 	
 	private static void removeConnectedSlot(int slotIndex) {
-		if(connectedSlots.containsKey(slotIndex)) {
-			connectedSlots.remove(slotIndex);
-			
-			List<Integer> removed = new ArrayList<>();
-			Iterator<Map.Entry<Integer, Integer>> it = connectedSlots.entrySet().iterator();
-			while (it.hasNext()) {
-			    Map.Entry<Integer, Integer> entry = it.next();
-			    if (entry.getValue() == slotIndex) {
-			        it.remove();
-			        removed.add(entry.getKey());
-			    }
-			}
-			
-			for (Entry<Integer, Integer> entry : connectedSlots.entrySet()) {
-				if(removed.contains(entry.getValue())){
-					Integer f = removed.get(removed.indexOf(entry.getValue()));
-					connectedSlots.put(f, entry.getKey());
-					removed.remove(removed.indexOf(entry.getValue()));
-				}
-			}
-		}
+	    if (connectedSlots.containsKey(slotIndex)) {
+	        connectedSlots.remove(slotIndex);
+
+
+	        List<Integer> toRemove = new ArrayList<>();
+	        for (Map.Entry<Integer, Integer> entry : connectedSlots.entrySet()) {
+	            if (entry.getValue() == slotIndex) {
+	                toRemove.add(entry.getKey());
+	            }
+	        }
+
+	        for (Integer key : toRemove) {
+	            connectedSlots.remove(key);
+	        }
+
+	        for (Map.Entry<Integer, Integer> entry : new HashMap<>(connectedSlots).entrySet()) {
+	            if (toRemove.contains(entry.getValue())) {
+	                Integer from = entry.getValue();
+	                Integer to = entry.getKey();
+	                connectedSlots.put(from, to);
+	                toRemove.remove(from);
+	            }
+	        }
+	    }
 	}
+
 	
 	public static ResourceLocation getLockTexture(Boolean b) {
 		if(!b) {

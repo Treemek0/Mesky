@@ -54,7 +54,7 @@ public class AlertsGui extends GuiScreen {
 	
 	ScrollBar scrollbar = new ScrollBar();
 	AlertElement holdingElement;
-	CloseWarning closeWarning = new CloseWarning();
+	CloseWarning closeWarning = new CloseWarning(() -> { return SaveAlerts(); });
 	
 	int inputMargin = 0;
 	int inputHeight = 0;
@@ -218,7 +218,7 @@ public class AlertsGui extends GuiScreen {
 	public void initGui() {
 	    super.initGui();
 	    buttonList.clear();
-	    closeWarning = new CloseWarning();
+	    closeWarning = new CloseWarning(() -> { return SaveAlerts(); });
 	    
 		inputHeight = ((height / 25) < 12)?12:(height / 25);
 		inputMargin = ((height / 40) < 5)?5:(height / 40);
@@ -375,11 +375,11 @@ public class AlertsGui extends GuiScreen {
 			snapToAlertsY();
 			int spaceBetween = width/60;
 			
-			int positionY = height / 3;
+	        int positionY = height / 3;
 	        int trigger_X = width / 6;
 	    	int display_X = trigger_X + (width / 4) + spaceBetween;
 	    	int time_X = display_X + (width / 4);
-	    	int editX = (int) (time_X + width/12 + spaceBetween*1.5f);
+	    	int editX = (int) (time_X + width/12 + spaceBetween + 10);
 	    	
 	    	int topOfWaypoints = height/3 - inputHeight*2 - inputMargin;
 			
@@ -650,13 +650,15 @@ public class AlertsGui extends GuiScreen {
 		return false;
 	}
 	
-	private void SaveAlerts() {
+	private boolean SaveAlerts() {
 		List<Alert> alertsList = new ArrayList<Alert>();
 		// idk why i did it like this with alertsFields.size(), but because of it we have to do "i +=3" since we have 3 input fields per alert
+		boolean isError = false;
+		
 	    for (int i = 0; i < alerts.size(); i++) {
 	    	AlertElement alert = alerts.get(i);
 	    	
-	    	alert.time.setTextColor(14737632);
+	    	alert.time.setColor(null);
 	    	
 	        String trigger = alert.trigger.getText();
 	        String display = alert.display.getText();
@@ -671,9 +673,8 @@ public class AlertsGui extends GuiScreen {
 	            time = Float.parseFloat(alert.time.getText()) * 1000;
 	        } catch (NumberFormatException e) {
 	            System.out.println(e);
-	            alert.time.setTextColor(11217193);
-	            saveButton.packedFGColour = 14258834;
-	            return;
+	            alert.time.setColor(-5560023);
+	            isError = true;
 	        }
 	        boolean onlyParty = ((CheckButton)alert.onlyParty).isFull();
 	        boolean ignorePlayers = ((CheckButton)alert.ignorePlayers).isFull();
@@ -682,10 +683,16 @@ public class AlertsGui extends GuiScreen {
 	        alertsList.add(new Alert(trigger, display, time, onlyParty, ignorePlayers, isEqual, position, scale, sound, (float)volume, (float)pitch, enabled));
 	    }
 	    
+	    if(isError) {
+	    	saveButton.packedFGColour = 14258834;
+	    	return false;
+	    }
+	    
 	    saveButton.packedFGColour = 11131282;
 	    Alerts.alertsList = alertsList;
 	    Alerts.putAllImagesToCache();
 	    ConfigHandler.SaveAlert(alertsList);
+	    return true;
 	}
 	
 	public void updateAlertsY() {
@@ -741,46 +748,48 @@ public class AlertsGui extends GuiScreen {
 	}
 	
 	private void CloseGui() {
-		if(closeWarning.showElement == true) return;
-		
-		Location.checkTabLocation();
-		// its to prevent removing waypoints from other regions, so i just remove waypoints from my region and add them updated
-		List<Alert> alertsList = Alerts.alertsList;
-		boolean isntEqual = false;
-		
-		if(alerts.size() != alertsList.size()) {
-			 isntEqual = true;
+		if(closeWarning.showElement) {
+			closeWarning.changeElementActive(false);
 		}else {
-			for (int i = alerts.size() - 1; i >= 0; i--) {
-				AlertElement alert = alerts.get(i);
-		    	
-		        String trigger = alert.trigger.getText();
-		        String display = alert.display.getText(); 
-		        
-		        Float[] position = alert.position;
-		        float scale = alert.scale;
-		        float time = 0;
-		        try {
-		            time = Float.parseFloat(alert.time.getText()) * 1000;
-		        } catch (NumberFormatException e) { isntEqual = true; break; }
-	
-		        if(Float.compare(alertsList.get(i).position[0], position[0]) != 0) { isntEqual = true; break; }
-		        if(Float.compare(alertsList.get(i).position[1], position[1]) != 0) { isntEqual = true; break; }
-		        if(Float.compare(alertsList.get(i).scale, scale) != 0) { isntEqual = true; break; }
-		        if(Float.compare(alertsList.get(i).getTime(), time) != 0) { isntEqual = true; break; }
-		        if(!trigger.equals(alertsList.get(i).getTrigger())) { isntEqual = true; break; }
-		        if(!display.equals(alertsList.get(i).getDisplay())) { isntEqual = true; break; }
-		        if(alert.ignorePlayers.isFull() != alertsList.get(i).ignorePlayers) { isntEqual = true; break; }
-		        if(alert.isEqual.isFull() != alertsList.get(i).isEqual) { isntEqual = true; break; }
-		        if(alert.onlyParty.isFull() != alertsList.get(i).onlyParty) { isntEqual = true; break; }
-		        if(alert.enabled.isFull() != alertsList.get(i).enabled) { isntEqual = true; break; }
+			Location.checkTabLocation();
+			// its to prevent removing waypoints from other regions, so i just remove waypoints from my region and add them updated
+			List<Alert> alertsList = Alerts.alertsList;
+			boolean isntEqual = false;
+			
+			if(alerts.size() != alertsList.size()) {
+				 isntEqual = true;
+			}else {
+				for (int i = alerts.size() - 1; i >= 0; i--) {
+					AlertElement alert = alerts.get(i);
+			    	
+			        String trigger = alert.trigger.getText();
+			        String display = alert.display.getText(); 
+			        
+			        Float[] position = alert.position;
+			        float scale = alert.scale;
+			        float time = 0;
+			        try {
+			            time = Float.parseFloat(alert.time.getText()) * 1000;
+			        } catch (NumberFormatException e) { isntEqual = true; break; }
+		
+			        if(Float.compare(alertsList.get(i).position[0], position[0]) != 0) { isntEqual = true; break; }
+			        if(Float.compare(alertsList.get(i).position[1], position[1]) != 0) { isntEqual = true; break; }
+			        if(Float.compare(alertsList.get(i).scale, scale) != 0) { isntEqual = true; break; }
+			        if(Float.compare(alertsList.get(i).getTime(), time) != 0) { isntEqual = true; break; }
+			        if(!trigger.equals(alertsList.get(i).getTrigger())) { isntEqual = true; break; }
+			        if(!display.equals(alertsList.get(i).getDisplay())) { isntEqual = true; break; }
+			        if(alert.ignorePlayers.isFull() != alertsList.get(i).ignorePlayers) { isntEqual = true; break; }
+			        if(alert.isEqual.isFull() != alertsList.get(i).isEqual) { isntEqual = true; break; }
+			        if(alert.onlyParty.isFull() != alertsList.get(i).onlyParty) { isntEqual = true; break; }
+			        if(alert.enabled.isFull() != alertsList.get(i).enabled) { isntEqual = true; break; }
+				}
 			}
-		}
-		
-		if(isntEqual) {
-			closeWarning.changeElementActive(true);
-		}else {
-			Minecraft.getMinecraft().thePlayer.closeScreen();
+			
+			if(isntEqual) {
+				closeWarning.changeElementActive(true);
+			}else {
+				Minecraft.getMinecraft().thePlayer.closeScreen();
+			}
 		}
 	}
 	

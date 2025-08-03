@@ -62,6 +62,7 @@ public class TextField
     private int selectionEnd;
     private int enabledColor = 14737632;
     private int disabledColor = 7368816;
+    private int frameColor = -6250336;
     /** True if this textbox is visible */
     private boolean visible = true;
     private boolean tabToggled = false;
@@ -586,7 +587,7 @@ public class TextField
     {
         if (this.getVisible())
         {
-            Gui.drawRect(this.xPosition, this.yPosition, this.xPosition + this.width, this.yPosition + this.height, -6250336);
+            Gui.drawRect(this.xPosition, this.yPosition, this.xPosition + this.width, this.yPosition + this.height, frameColor);
             Gui.drawRect(this.xPosition + 1, this.yPosition + 1, this.xPosition + this.width - 1, this.yPosition + this.height - 1, -16777216);
             
             int i = this.isEnabled ? this.enabledColor : this.disabledColor;
@@ -814,6 +815,17 @@ public class TextField
     public void setTextColor(int p_146193_1_)
     {
         this.enabledColor = p_146193_1_;
+    }
+    
+    public void setColor(Integer p_146193_1_)
+    {
+    	if(p_146193_1_ == null) {
+    		this.enabledColor = 14737632;
+        	this.frameColor = -6250336;
+    	}else {
+    		this.enabledColor = p_146193_1_;
+        	this.frameColor = p_146193_1_;
+    	}
     }
 
     public void setDisabledTextColour(int p_146204_1_)

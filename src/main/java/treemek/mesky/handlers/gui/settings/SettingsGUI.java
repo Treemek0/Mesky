@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 import com.google.gson.JsonSyntaxException;
@@ -24,6 +25,7 @@ import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.config.SettingsConfig.Setting;
 import treemek.mesky.features.BlockFlowerPlacing;
 import treemek.mesky.features.HidePlayers;
+import treemek.mesky.features.LockSlot;
 import treemek.mesky.features.illegal.JawbusDetector;
 import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.handlers.gui.elements.ScrollBar;
@@ -134,25 +136,14 @@ public class SettingsGUI extends GuiScreen {
 	private void utilityCategory(int checkSize) {
 	    List<Object> generalSub = new ArrayList<>();
 	    generalSub.add(new SettingButton(6, checkSize, "Hide Players", SettingsConfig.HidePlayers));
-	    List<Object> customWarp = new ArrayList<>();
-	    customWarp.add(new SettingSlider(41849, 2 * checkSize, checkSize, "Hover island scaling multiplier", SettingsConfig.CustomWarpMenuScaling, 0.1, 0.1, 5));
-	    customWarp.add(new SettingButton(6, checkSize, "Lock islands unable to teleport", SettingsConfig.CustomWarpMenuLockableIslands));
-	    generalSub.add(new FoldableSettingButton(6, checkSize, "Custom warp menu", SettingsConfig.CustomWarpMenu, customWarp));
-	    List<Object> customRiftWarp = new ArrayList<>();
-	    List<Object> customRiftWarpScaling = new ArrayList<>();
-	    customRiftWarpScaling.add(new SettingSlider(41849, 2 * checkSize, checkSize, "Hover island scaling multiplier", SettingsConfig.CustomRiftWarpMenuScaling, 0.1, 0.1, 5));
-	    customRiftWarp.add(new FoldableSettingButton(6, checkSize, "Should islands scale up when hovered", SettingsConfig.CustomRiftWarpMenuHoverScaling, customRiftWarpScaling));
-	    generalSub.add(new FoldableSettingButton(6, checkSize, "Custom rift teleport menu", SettingsConfig.CustomRiftWarpMenu, customRiftWarp));
-//	    generalSub.add(new SettingSlider(41849, 2 * checkSize, checkSize, "Holding items size", SettingsConfig.HoldingItemSize, 0.1, 0.5, 3));
-	    List<Object> nickDetectionFoldable = new ArrayList<>();
-	    nickDetectionFoldable.add(new SettingListBox(2, 4*checkSize, checkSize, "Detection color", ColorUtils.ColoredEnumColorsOptionList, SettingsConfig.NickMentionDetectionColor));
-	    generalSub.add(new FoldableSettingButton(6, checkSize, "Nick detection", SettingsConfig.NickMentionDetection, nickDetectionFoldable));
-	    
+	    generalSub.add(new SettingButton(6, checkSize, "Lock slots (" + Keyboard.getKeyName(LockSlot.KEY.getKeyCode()) + ")", SettingsConfig.LockSlots));
+	    generalSub.add(new SettingSlider(41849, 2 * checkSize, checkSize, "Holding items size", SettingsConfig.HoldingItemSize, 0.1, 0.1, 2));
+	   // generalSub.add(new SettingSlider(41849, 2 * checkSize, checkSize, "Holding items X offset", SettingsConfig.HoldingItemOffsetX, 1, -15, 15));
+	    generalSub.add(new SettingSlider(41849, 2 * checkSize, checkSize, "Holding items Y offset", SettingsConfig.HoldingItemOffsetY, 1, 0, 10));
 	    List<Object> freelookFoldable = new ArrayList<>();
-	    freelookFoldable.add(new SettingButton(2, checkSize, "Ignore walkable blocks collision (some mods destroys view)", SettingsConfig.FreeLookIgnoreWalkableBlocksCollision));
+	    freelookFoldable.add(new SettingButton(2, checkSize, "Toogle", SettingsConfig.FreeLookToogle));
 	    freelookFoldable.add(new SettingButton(2, checkSize, "Lock camera, unlock rotation", SettingsConfig.FreeRotate));
 	    freelookFoldable.add(new SettingButton(2, checkSize, "Block inverted angles", SettingsConfig.FreeLookClampAngles));
-	    freelookFoldable.add(new SettingButton(2, checkSize, "Toogle", SettingsConfig.FreeLookToogle));
 	    generalSub.add(new FoldableSettingButton(2, checkSize, "Freelook", SettingsConfig.FreeLook, freelookFoldable, true));
 	    generalSub.add(new SettingButton(8, checkSize, "Block flower weapons from placing", SettingsConfig.BlockFlowerPlacing));
 	   
@@ -168,6 +159,9 @@ public class SettingsGUI extends GuiScreen {
 	    List<Object> coordsDetectionFoldable = new ArrayList<>();
 	    coordsDetectionFoldable.add(new SettingButton(2, checkSize, "Auto mark coords", SettingsConfig.AutoMarkCoords));
 	    chatSub.add(new FoldableSettingButton(7, checkSize, "Coords Detection", SettingsConfig.CoordsDetection, coordsDetectionFoldable));
+	    List<Object> nickDetectionFoldable = new ArrayList<>();
+	    nickDetectionFoldable.add(new SettingListBox(2, 4*checkSize, checkSize, "Detection color", ColorUtils.ColoredEnumColorsOptionList, SettingsConfig.NickMentionDetectionColor));
+	    chatSub.add(new FoldableSettingButton(6, checkSize, "Nick detection", SettingsConfig.NickMentionDetection, nickDetectionFoldable));
 
 	    // >>>>
 	    
@@ -179,13 +173,25 @@ public class SettingsGUI extends GuiScreen {
 	    ghostpickaxeFoldable.add(new SettingSlider(41849, 2 * checkSize, checkSize, "Ghost Pickaxe slot", SettingsConfig.GhostPickaxeSlot, 1, 1, 9));
 	    advancedToolsSub.add(new FoldableSettingButton(1, checkSize, "Ghost Pickaxe keybind", SettingsConfig.GhostPickaxe, ghostpickaxeFoldable, true));
 
+	    List<Object> warpsSub = new ArrayList<>();
+	    List<Object> fastTravelWarp = new ArrayList<>();
+	    fastTravelWarp.add(new SettingSlider(41849, 2 * checkSize, checkSize, "Hover island scaling multiplier", SettingsConfig.CustomWarpMenuScaling, 0.1, 0.1, 5));
+	    fastTravelWarp.add(new SettingButton(6, checkSize, "Lock islands unable to teleport", SettingsConfig.CustomWarpMenuLockableIslands));
+	    warpsSub.add(new FoldableSettingButton(6, checkSize, "Custom fast travel menu", SettingsConfig.CustomWarpMenu, fastTravelWarp));
+	    List<Object> customRiftWarp = new ArrayList<>();
+	    List<Object> customRiftWarpScaling = new ArrayList<>();
+	    customRiftWarpScaling.add(new SettingSlider(41849, 2 * checkSize, checkSize, "Hover island scaling multiplier", SettingsConfig.CustomRiftWarpMenuScaling, 0.1, 0.1, 5));
+	    customRiftWarp.add(new FoldableSettingButton(6, checkSize, "Should islands scale up when hovered", SettingsConfig.CustomRiftWarpMenuHoverScaling, customRiftWarpScaling));
+	    warpsSub.add(new FoldableSettingButton(6, checkSize, "Custom rift teleport menu", SettingsConfig.CustomRiftWarpMenu, customRiftWarp));
+	    
 	    List<SubCategory> utility = new ArrayList<>();
 
 	    utility.add(new SubCategory("General", generalSub));
 	    utility.add(new SubCategory("Timers", timerSub));
 	    utility.add(new SubCategory("Chat detection", chatSub)); 
 	    utility.add(new SubCategory("Advanced Tools", advancedToolsSub));
-
+	    utility.add(new SubCategory("Custom warps", warpsSub));
+	    
 	    categories.add(new Category("Utility", utility));
 	}
 

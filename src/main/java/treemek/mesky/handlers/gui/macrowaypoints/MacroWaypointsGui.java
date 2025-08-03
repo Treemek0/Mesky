@@ -75,7 +75,7 @@ public class MacroWaypointsGui extends GuiScreen {
 	
 	public static List<MacroWaypointGroupElement> waypoints = new ArrayList<>();
 	
-	CloseWarning closeWarning = new CloseWarning();
+	CloseWarning closeWarning = new CloseWarning(() -> { return SaveWaypoints(); });
 	ScrollBar scrollbar = new ScrollBar();
 	
 	int inputMargin;
@@ -270,7 +270,7 @@ public class MacroWaypointsGui extends GuiScreen {
 	public void initGui() {
 	    super.initGui();
 	    buttonList.clear();
-	    closeWarning = new CloseWarning();
+	    closeWarning = new CloseWarning(() -> { return SaveWaypoints(); });
 	    
         int checkX = (int)(width / 4);
         int buttonWidth = 20;
@@ -1040,7 +1040,7 @@ public class MacroWaypointsGui extends GuiScreen {
 	        .anyMatch(g -> g != currentGroup && g.name.equals(name));
 	}
 	
-	private void SaveWaypoints() {
+	private boolean SaveWaypoints() {
 	    Location.checkTabLocation();
 	    Map<String, MacroWaypointGroup> waypointsList = MacroWaypoints.GetWaypointsWithoutLocation();
 	    boolean isError = false;
@@ -1063,9 +1063,10 @@ public class MacroWaypointsGui extends GuiScreen {
 	            MacroWaypointElement waypoint = group.list.get(j);
 
 	            waypoint.color.setTextColor(14737632);
-	            waypoint.x.setTextColor(14737632);
-	            waypoint.y.setTextColor(14737632);
-	            waypoint.z.setTextColor(14737632);
+	            waypoint.x.setColor(null);
+	            waypoint.y.setColor(null);
+	            waypoint.z.setColor(null);
+	            waypoint.noiseLevel.setColor(null);
 
 	            String name = waypoint.name.getText();
 	            String function = waypoint.function.getText();
@@ -1083,13 +1084,13 @@ public class MacroWaypointsGui extends GuiScreen {
 	            Float yaw = 0f, pitch = 0f;
 
 	            try { x = Float.parseFloat(waypoint.x.getText()); }
-	            catch (NumberFormatException e) { waypoint.x.setTextColor(11217193); isError = true; }
+	            catch (NumberFormatException e) { waypoint.x.setColor(-5560023); isError = true; }
 
 	            try { y = Float.parseFloat(waypoint.y.getText()); }
-	            catch (NumberFormatException e) { waypoint.y.setTextColor(11217193); isError = true; }
+	            catch (NumberFormatException e) { waypoint.y.setColor(-5560023); isError = true; }
 
 	            try { z = Float.parseFloat(waypoint.z.getText()); }
-	            catch (NumberFormatException e) { waypoint.z.setTextColor(11217193); isError = true; }
+	            catch (NumberFormatException e) { waypoint.z.setColor(-5560023); isError = true; }
 
 	            try { yaw = Float.parseFloat(waypoint.yaw.getText()); }
 	            catch (NumberFormatException e) { yaw = null; }
@@ -1098,7 +1099,7 @@ public class MacroWaypointsGui extends GuiScreen {
 	            catch (NumberFormatException e) { pitch = null; }
 
 	            try { noiseLevel = Float.parseFloat(waypoint.noiseLevel.getText()); }
-	            catch (NumberFormatException e) { waypoint.noiseLevel.setTextColor(11217193); isError = true; }
+	            catch (NumberFormatException e) { waypoint.noiseLevel.setColor(-5560023); isError = true; }
 
 	            boolean leftClick = waypoint.leftClick.isFull;
 	            boolean rightClick = waypoint.rightClick.isFull;
@@ -1107,11 +1108,6 @@ public class MacroWaypointsGui extends GuiScreen {
 	            boolean back = waypoint.back.isFull;
 	            boolean forward = waypoint.forward.isFull;
 	            boolean sneak = waypoint.sneak.isFull;
-
-	            if (isError) {
-	                saveButton.packedFGColour = 14258834;
-	                return;
-	            }
 
 	            groupList.add(0, new MacroWaypoint(
 	                new Waypoint(name, color, x, y, z,
@@ -1123,6 +1119,11 @@ public class MacroWaypointsGui extends GuiScreen {
 	            k -> new MacroWaypointGroup(new ArrayList<>(), group.world, group.enabled.isFull(), group.opened.isOpened()))
 	            .list.addAll(0, groupList);
 	    }
+	    
+        if (isError) {
+            saveButton.packedFGColour = 14258834;
+            return false;
+        }
 
 	    saveButton.packedFGColour = 11131282;
 	    MacroWaypoints.waypointsList = waypointsList;
@@ -1131,14 +1132,15 @@ public class MacroWaypointsGui extends GuiScreen {
 	        .collect(Collectors.toCollection(ArrayList::new));
 
 	    ConfigHandler.SaveMacroWaypoint(waypointsList);
+	    return true;
 	}
 
 
 	
 	private void CloseGui() {
-		if(closeWarning.showElement == true) return;
-
-		if(isChanged()) {
+		if(closeWarning.showElement) {
+			closeWarning.changeElementActive(false);
+		}else if(isChanged()) {
 			closeWarning.changeElementActive(true);
 		}else {
 			Minecraft.getMinecraft().thePlayer.closeScreen();

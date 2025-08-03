@@ -49,7 +49,7 @@ public class ChatFunctionsGui extends GuiScreen {
 	
 	List<ChatFunctionElement> chatFunctions = new ArrayList<>();
 	
-	CloseWarning closeWarning = new CloseWarning();
+	CloseWarning closeWarning = new CloseWarning(() -> { return SaveChatFunctions(); });
 	ScrollBar scrollbar = new ScrollBar();
 
 	int inputMargin;
@@ -183,7 +183,7 @@ public class ChatFunctionsGui extends GuiScreen {
 	@Override
 	public void initGui() {
 	    super.initGui();
-	    closeWarning = new CloseWarning();
+	    closeWarning = new CloseWarning(() -> { return SaveChatFunctions(); });
 	    buttonList.clear();
 	    
 	    inputHeight = ((height / 25) < 12)?12:(height / 25);
@@ -505,7 +505,7 @@ public class ChatFunctionsGui extends GuiScreen {
 		return false;
 	}
 	
-	private void SaveChatFunctions() {
+	private boolean SaveChatFunctions() {
 		// Saving chat functions to file
 		List<ChatFunction> chatFunctionsList = new ArrayList<ChatFunction>();
 		// idk why i did it like this with chatFunctionFields.size(), but because of it we have to do "i +=2" since we have 2 input fields per ChatFunction
@@ -525,38 +525,41 @@ public class ChatFunctionsGui extends GuiScreen {
 	    saveButton.packedFGColour = 11131282;
 	    ChatFunctions.chatFunctionsList = chatFunctionsList;
 	    ConfigHandler.SaveChatFunction(chatFunctionsList);
+	    return true;
 	}
 	
 	private void CloseGui() {
-		if(closeWarning.showElement == true) return;
-		
-		Location.checkTabLocation();
-		// its to prevent removing waypoints from other regions, so i just remove waypoints from my region and add them updated
-		List<ChatFunction> functionsList = ChatFunctions.chatFunctionsList;
-		boolean isntEqual = false;
-		
-		if(chatFunctions.size() != functionsList.size()) {
-			 isntEqual = true;
+		if(closeWarning.showElement) {
+			closeWarning.changeElementActive(false);
 		}else {
-			for (int i = chatFunctions.size() - 1; i >= 0; i--) {
-				ChatFunctionElement chatFunction = chatFunctions.get(i);
-		    	
-		        String trigger = chatFunction.trigger.getText();
-		        String function = chatFunction.function.getText(); 
-	
-		        if(!trigger.equals(functionsList.get(i).getTrigger())) { isntEqual = true; break; }
-		        if(!function.equals(functionsList.get(i).getFunction())) { isntEqual = true; break; }
-		        if(chatFunction.ignorePlayers.isFull() != functionsList.get(i).ignorePlayers) { isntEqual = true; break; }
-		        if(chatFunction.isEqual.isFull() != functionsList.get(i).isEqual) { isntEqual = true; break; }
-		        if(chatFunction.onlyParty.isFull() != functionsList.get(i).onlyParty) { isntEqual = true; break; }
-		        if(chatFunction.enabled.isFull() != functionsList.get(i).enabled) { isntEqual = true; break; }
+			Location.checkTabLocation();
+			// its to prevent removing waypoints from other regions, so i just remove waypoints from my region and add them updated
+			List<ChatFunction> functionsList = ChatFunctions.chatFunctionsList;
+			boolean isntEqual = false;
+			
+			if(chatFunctions.size() != functionsList.size()) {
+				 isntEqual = true;
+			}else {
+				for (int i = chatFunctions.size() - 1; i >= 0; i--) {
+					ChatFunctionElement chatFunction = chatFunctions.get(i);
+			    	
+			        String trigger = chatFunction.trigger.getText();
+			        String function = chatFunction.function.getText(); 
+		
+			        if(!trigger.equals(functionsList.get(i).getTrigger())) { isntEqual = true; break; }
+			        if(!function.equals(functionsList.get(i).getFunction())) { isntEqual = true; break; }
+			        if(chatFunction.ignorePlayers.isFull() != functionsList.get(i).ignorePlayers) { isntEqual = true; break; }
+			        if(chatFunction.isEqual.isFull() != functionsList.get(i).isEqual) { isntEqual = true; break; }
+			        if(chatFunction.onlyParty.isFull() != functionsList.get(i).onlyParty) { isntEqual = true; break; }
+			        if(chatFunction.enabled.isFull() != functionsList.get(i).enabled) { isntEqual = true; break; }
+				}
 			}
-		}
-		
-		if(isntEqual) {
-			closeWarning.changeElementActive(true);
-		}else {
-			Minecraft.getMinecraft().thePlayer.closeScreen();
+			
+			if(isntEqual) {
+				closeWarning.changeElementActive(true);
+			}else {
+				Minecraft.getMinecraft().thePlayer.closeScreen();
+			}
 		}
 	}
 	

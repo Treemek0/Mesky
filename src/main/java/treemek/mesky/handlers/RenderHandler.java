@@ -124,6 +124,35 @@ public class RenderHandler {
         GlStateManager.popMatrix();
     }
 	
+	public static void drawLine2D(float x1, float y1, float x2, float y2, int color) {
+	    GlStateManager.pushMatrix();
+	    GlStateManager.disableTexture2D();
+	    GlStateManager.enableBlend();
+	    GlStateManager.disableDepth();
+	    GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
+
+	    Color c = new Color(color);
+	    float r = c.getRed() / 255f;
+	    float g = c.getGreen() / 255f;
+	    float b = c.getBlue() / 255f;
+	    float a = c.getAlpha() / 255f;
+
+	    GL11.glColor4f(r, g, b, a);
+
+	    Tessellator tess = Tessellator.getInstance();
+	    WorldRenderer buffer = tess.getWorldRenderer();
+	    buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION);
+	    buffer.pos(x1, y1, 0).endVertex();
+	    buffer.pos(x2, y2, 0).endVertex();
+	    tess.draw();
+
+	    GlStateManager.enableTexture2D();
+	    GlStateManager.enableDepth();
+	    GlStateManager.disableBlend();
+	    GlStateManager.popMatrix();
+	}
+
+	
 	// https://github.com/bowser0000/SkyblockMod/blob/master/src/main/java/me/Danker/utils/RenderUtils.java
 	public static void drawText(String text, double x, double y, double scale, boolean outline, int defaultColor) {
 		if (text == null) return;

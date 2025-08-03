@@ -74,7 +74,7 @@ public class WaypointsGui extends GuiScreen {
 	public static List<WaypointGroupElement> waypoints = new ArrayList<>();
 	
 	public ScrollBar scrollbar = new ScrollBar();
-	CloseWarning closeWarning = new CloseWarning();
+	CloseWarning closeWarning = new CloseWarning(() -> {	return SaveWaypoints();	});
 	ChangingRegionWarning changingRegionWarning = new ChangingRegionWarning();
 	
 	WaypointElement holdingElement;
@@ -286,7 +286,7 @@ public class WaypointsGui extends GuiScreen {
 	public void initGui() {
 	    super.initGui();
 	    buttonList.clear();
-	    closeWarning = new CloseWarning();
+	    closeWarning = new CloseWarning(() -> {	return SaveWaypoints();	});
 	    changingRegionWarning = new ChangingRegionWarning();
 	    
 	    popup = new Popup(1500);
@@ -549,9 +549,9 @@ public class WaypointsGui extends GuiScreen {
 						WaypointElement waypoint = group.list.get(j);
 			
 				    	waypoint.color.setTextColor(14737632);
-				    	waypoint.x.setTextColor(14737632);
-				    	waypoint.y.setTextColor(14737632);
-				    	waypoint.z.setTextColor(14737632);
+				    	waypoint.x.setColor(14737632);
+				    	waypoint.y.setColor(14737632);
+				    	waypoint.z.setColor(14737632);
 				    	
 				        String name = waypoint.name.getText();
 				        String color = waypoint.color.getColorString().replace("#", ""); 
@@ -570,15 +570,15 @@ public class WaypointsGui extends GuiScreen {
 				        float x = 0, y = 0, z = 0;
 				        try {
 				            x = Float.parseFloat(waypoint.x.getText());
-				        } catch (NumberFormatException e) { waypoint.x.setTextColor(11217193); isError = true; }
+				        } catch (NumberFormatException e) { waypoint.x.setColor(11217193); isError = true; }
 				        
 				        try {
 				            y = Float.parseFloat(waypoint.y.getText());
-				        } catch (NumberFormatException e) { waypoint.y.setTextColor(11217193); isError = true; }
+				        } catch (NumberFormatException e) { waypoint.y.setColor(11217193); isError = true; }
 				        
 				        try {
 				        	z = Float.parseFloat(waypoint.z.getText()); 
-				        } catch (NumberFormatException e) { waypoint.z.setTextColor(11217193); isError = true; }
+				        } catch (NumberFormatException e) { waypoint.z.setColor(11217193); isError = true; }
 				        
 				        if(isError) {
 				        	popup.showPopup("There's error with some waypoints, can't import");
@@ -1131,7 +1131,7 @@ public class WaypointsGui extends GuiScreen {
 	        .anyMatch(g -> g != currentGroup && g.name.equals(name));
 	}
 	
-	private void SaveWaypoints() {
+	private boolean SaveWaypoints() {
 		Location.checkTabLocation();
 		// its to prevent removing waypoints from other regions, so i just remove waypoints from my region and add them updated
 		Map<String, WaypointGroup> waypointsList = Waypoints.GetWaypointsWithoutLocation();
@@ -1154,9 +1154,9 @@ public class WaypointsGui extends GuiScreen {
 				WaypointElement waypoint = group.list.get(j);
 	
 		    	waypoint.color.setTextColor(14737632);
-		    	waypoint.x.setTextColor(14737632);
-		    	waypoint.y.setTextColor(14737632);
-		    	waypoint.z.setTextColor(14737632);
+		    	waypoint.x.setColor(null);
+		    	waypoint.y.setColor(null);
+		    	waypoint.z.setColor(null);
 		    	
 		        String name = waypoint.name.getText();
 		        String color = waypoint.color.getColorString().replace("#", ""); 
@@ -1175,35 +1175,37 @@ public class WaypointsGui extends GuiScreen {
 		        float x = 0, y = 0, z = 0;
 		        try {
 		            x = Float.parseFloat(waypoint.x.getText());
-		        } catch (NumberFormatException e) { waypoint.x.setTextColor(11217193); isError = true; }
+		        } catch (NumberFormatException e) { waypoint.x.setColor(-5560023); isError = true; }
 		        
 		        try {
 		            y = Float.parseFloat(waypoint.y.getText());
-		        } catch (NumberFormatException e) { waypoint.y.setTextColor(11217193); isError = true; }
+		        } catch (NumberFormatException e) { waypoint.y.setColor(-5560023); isError = true; }
 		        
 		        try {
-		        	z = Float.parseFloat(waypoint.z.getText()); 
-		        } catch (NumberFormatException e) { waypoint.z.setTextColor(11217193); isError = true; }
-		        
-		        if(isError) {
-		        	saveButton.packedFGColour = 14258834;
-		        	return; // skip
-		        }
-		        
+		        	z = Float.parseFloat(waypoint.z.getText());
+		        } catch (NumberFormatException e) { waypoint.z.setColor(-5560023); isError = true; }
+
 		    	groupList.add(0, new Waypoint(name, color, x, y, z, Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld), (float) scale, enabled));
 			}
 			
 			waypointsList.computeIfAbsent(finalName + " %" + group.world, k -> new WaypointGroup(new ArrayList<>(), group.world, group.enabled.isFull(), group.opened.isOpened())).list.addAll(0, groupList);
 	    }
+		
+		if(isError) {
+        	saveButton.packedFGColour = 14258834;
+        	return false; // skip
+        }
+		
 	    saveButton.packedFGColour = 11131282;
 	    Waypoints.waypointsList = waypointsList;
 	    ConfigHandler.SaveWaypoint(waypointsList);
+	    return true;
 	}
 	
 	private void CloseGui() {
-		if(closeWarning.showElement == true) return;
-
-		if(isChanged()) {
+		if(closeWarning.showElement) {
+			closeWarning.changeElementActive(false);
+		}else if(isChanged()) {
 			changingRegionWarning.changeElementActive(false);
 			closeWarning.changeElementActive(true);
 		}else {

@@ -53,7 +53,6 @@ public class SettingsConfig {
 	public static Setting CustomRiftWarpMenuScaling = new Setting(1, null, null);
 	
 	public static Setting GhostPickaxe = new Setting(false, null, null);
-	
     public static Setting GhostPickaxeSlot = new Setting(5, null, null);
 
     public static Setting BlockFlowerPlacing = new Setting(false, null, null);
@@ -79,7 +78,6 @@ public class SettingsConfig {
     public static Setting CoordsDetection = new Setting(false, null, null);
     
     public static Setting FreeLook = new Setting(false, null, null);
-    public static Setting FreeLookIgnoreWalkableBlocksCollision = new Setting(false, null, null);
     public static Setting FreeRotate = new Setting(false, null, null);
 	public static Setting FreeLookClampAngles = new Setting(true, null, null);
 	public static Setting FreeLookToogle = new Setting(false, null, null);
@@ -99,7 +97,9 @@ public class SettingsConfig {
 	public static Setting AutoFishAntyAfk = new Setting(true, null, null);
 
 	public static Setting HoldingItemSize = new Setting(2, null, null);
-
+	public static Setting HoldingItemOffsetX = new Setting(0, null, null);
+	public static Setting HoldingItemOffsetY = new Setting(0, null, null);
+	
 	public static Setting ScrollbarSpeed = new Setting(30, null, null);
 	public static Setting ScrollbarSmoothness = new Setting(0.02, null, null);
 	

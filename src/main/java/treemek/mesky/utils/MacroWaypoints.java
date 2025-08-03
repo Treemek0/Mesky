@@ -153,6 +153,8 @@ public class MacroWaypoints {
     public void onWorldRender(RenderWorldLastEvent event) {
         if (!waypointsList.isEmpty()) {
         	for (MacroWaypointGroup macroWaypointGroup : waypointsList.values()) {
+        		if(!macroWaypointGroup.enabled) continue;
+        		
 	            for (MacroWaypoint macroWaypoint : macroWaypointGroup.list) {
 	            	if(!macroWaypoint.enabled) continue;
 	            	Waypoint waypoint = macroWaypoint.waypoint;

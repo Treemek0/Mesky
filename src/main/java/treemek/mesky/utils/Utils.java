@@ -435,35 +435,39 @@ public class Utils {
         return 1.0 / (1.0 + Math.exp(10 * (x - 0.5))); // Adjust the steepness of the transition with a factor (10)
     }
     
-    public static float getPlayerRidingWithoutControlRotation(EntityLivingBase ridingEntity,  float partialTicks) {
-		// from RendererLivingEntity doRender()
-		
-		EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
-        float yawHeadRotation = interpolate360(player.prevRotationYawHead, player.rotationYawHead, partialTicks);
+    public static float getYawRotation(EntityPlayer entity, float partialTicks) {
+		float f = Utils.interpolate360(entity.prevRenderYawOffset, entity.renderYawOffset, partialTicks);
+        float f1 = Utils.interpolate360(entity.prevRotationYawHead, entity.rotationYawHead, partialTicks);
+        float f2 = f1 - f;
+
+        boolean shouldSit = entity.isRiding() && (entity.ridingEntity != null && entity.ridingEntity.shouldRiderSit());
         
-		float riddenEntityRotation = interpolate360(ridingEntity.prevRenderYawOffset, ridingEntity.renderYawOffset, partialTicks);
-        float diff = yawHeadRotation - riddenEntityRotation;
-        float f3 = MathHelper.wrapAngleTo180_float(diff);
-
-        if (f3 < -85.0F)
+        if (shouldSit && entity.ridingEntity instanceof EntityLivingBase)
         {
-            f3 = -85.0F;
-        }
+            EntityLivingBase entitylivingbase = (EntityLivingBase)entity.ridingEntity;
+            f = Utils.interpolate360(entitylivingbase.prevRenderYawOffset, entitylivingbase.renderYawOffset, partialTicks);
+            f2 = f1 - f;
+            float f3 = MathHelper.wrapAngleTo180_float(f2);
 
-        if (f3 >= 85.0F)
-        {
-            f3 = 85.0F;
-        }
+            if (f3 < -85.0F)
+            {
+                f3 = -85.0F;
+            }
 
-        riddenEntityRotation = yawHeadRotation - f3;
+            if (f3 >= 85.0F)
+            {
+                f3 = 85.0F;
+            }
 
-        if (f3 * f3 > 2500.0F)
-        {
-            riddenEntityRotation += f3 * 0.2F;
+            f = f1 - f3;
+
+            if (f3 * f3 > 2500.0F)
+            {
+                f += f3 * 0.2F;
+            }
         }
         
-        
-        return riddenEntityRotation;
+        return f;
 	}
     
     public static Entity getEntityLookedAt(double range) {

@@ -195,6 +195,8 @@ public class Waypoints {
     public void onWorldRender(RenderWorldLastEvent event) {
         if (!waypointsList.isEmpty()) {
         	for (WaypointGroup group : waypointsList.values()) {
+        		if(!group.enabled) continue;
+        		
         	    for (Waypoint waypoint : group.list) {
 	            	if(!waypoint.enabled) continue;
 	            	if(waypoint.world.equals(Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld))) {

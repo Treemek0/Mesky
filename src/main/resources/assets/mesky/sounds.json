@@ -1,0 +1,56 @@
+{
+    "alarm": {
+        "category": "master",
+        "sounds": [
+            {
+                "name": "mesky:alarm",
+                "stream": true
+            }
+        ]
+    },
+    "error": {
+        "category": "master",
+        "sounds": [
+            {
+                "name": "mesky:error",
+                "stream": true
+            }
+        ]
+    },
+    "levelup": {
+        "category": "master",
+        "sounds": [
+            {
+                "name": "mesky:levelup",
+                "stream": true
+            }
+        ]
+    },
+    "bop": {
+        "category": "master",
+        "sounds": [
+            {
+                "name": "mesky:bop",
+                "stream": true
+            }
+        ]
+    },
+    "pululu": {
+        "category": "master",
+        "sounds": [
+            {
+                "name": "mesky:pululu",
+                "stream": true
+            }
+        ]
+    },
+    "tap": {
+        "category": "master",
+        "sounds": [
+            {
+                "name": "mesky:tap",
+                "stream": true
+            }
+        ]
+    }
+}

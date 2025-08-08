@@ -1,33 +1,82 @@
 buildscript {
     repositories {
+        maven { url = 'https://plugins.gradle.org/m2/' }
+        maven { name = "forge"; url = "http://files.minecraftforge.net/maven" }
+        maven { url = 'https://repo.spongepowered.org/maven' }
+        mavenCentral()
         jcenter()
-        maven {
-            name = "forge"
-            url = "http://files.minecraftforge.net/maven"
-        }
     }
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.4'
+        classpath 'org.spongepowered:mixingradle:0.6-SNAPSHOT'
     }
 }
-apply plugin: 'net.minecraftforge.gradle.forge'
 
-version = "1.0"
+apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'org.spongepowered.mixin'
+
+import java.util.regex.Matcher
+import java.util.regex.Pattern
+
+def getVersionFromReference() {
+    def referenceFile = file('src/main/java/treemek/mesky/Reference.java')
+    def versionPattern = ~/public static final String VERSION = "(.*)";/
+    def version = '0.0.0'
+    referenceFile.eachLine { line ->
+        Matcher matcher = versionPattern.matcher(line)
+        if (matcher.find()) {
+            version = matcher.group(1)
+            return
+        }
+    }
+    return version
+}
+
+version = getVersionFromReference()
 group = "treemek.mesky"
-archivesBaseName = "mesky"
+def mod_id = "mesky"
+def mod_mixin_configs = "mixins.${mod_id}.json"
+def mod_mixin_refmap = "mixins.${mod_id}.refmap.json"
 
 minecraft {
     version = "1.8.9-11.15.1.2318-1.8.9"
     runDir = "run"
-    
-    mappings = "stable_20"
+    mappings = "stable_22"
+
+    clientRunArgs.addAll(
+        '--tweakClass', 'org.spongepowered.asm.launch.MixinTweaker',
+        '--mixin', mod_mixin_configs
+    )
+    serverRunArgs.addAll(
+        '--tweakClass', 'org.spongepowered.asm.launch.MixinTweaker',
+        '--mixin', mod_mixin_configs
+    )
 }
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+repositories {
+    jcenter()
+    mavenCentral()
+    maven { url = 'https://repo.spongepowered.org/maven' }
+}
+
+configurations {
+    embed
+    compile.extendsFrom(embed)
+}
+
 dependencies {
-    // Dependencies go here
+    compile 'org.brotli:dec:0.1.2'
+
+    embed('org.spongepowered:mixin:0.7.11-SNAPSHOT') {
+        exclude module: 'guava'
+        exclude module: 'commons-io'
+        exclude module: 'gson'
+    }
 }
 
 processResources {
@@ -36,11 +85,46 @@ processResources {
 
     from(sourceSets.main.resources.srcDirs) {
         include 'mcmod.info'
-                
+        include mod_mixin_refmap
         expand 'version': project.version, 'mcversion': project.minecraft.version
     }
-        
+
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'
+        exclude mod_mixin_refmap
     }
 }
+
+sourceSets {
+    main {
+        refMap = mod_mixin_refmap
+    }
+}
+
+jar {
+    from(configurations.embed.collect {
+        it.isDirectory() ? it : zipTree(it)
+    }) {
+        exclude 'LICENSE.txt', 'META-INF/MANIFEST.MF', 'META-INF/maven/**', 'META-INF/*.RSA', 'META-INF/*.SF'
+    }
+
+    manifest.attributes(
+        'ForceLoadAsMod': 'true',
+        'FMLCorePluginContainsFMLMod': 'true',
+        'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker',
+        'TweakOrder': '0',
+        'MixinConfigs': mod_mixin_configs
+    )
+}
+
+shadowJar {
+    relocate 'org.brotli', 'treemek.shadow.org.brotli'
+    classifier = '' // remove `-all` suffix from output JAR
+}
+
+reobf {
+    shadowJar {}
+}
+
+build.dependsOn(shadowJar)
+reobfJar.dependsOn(shadowJar)

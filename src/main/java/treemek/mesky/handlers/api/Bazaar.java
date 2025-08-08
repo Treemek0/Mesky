@@ -269,6 +269,8 @@ public class Bazaar {
 			}
         }
         
+        if(craftCost == Float.MAX_VALUE) return new float[] {0,0,0,0,0};
+        
         if(bazaarItem != null) {
         	Float s = getSellPrice(bazaarItem, sell, tax);
         	if(s != null) {
@@ -283,13 +285,13 @@ public class Bazaar {
         	Integer sV = getSellVolume(bazaarItem);
         	if(sV != null) sellVolume = sV;
         }
-        
+       
         return new float[] {sellPrice - craftCost, sellPrice, craftCost, buyVolume, sellVolume};
 	}
 	
 	private static class CraftResult {
 		float cost;
-		List<String> craftings; // will be used for better logging
+		List<String> craftings = new ArrayList<>(); // will be used for better logging
 		
 		private CraftResult(float cost, List<String> craftings) {
 			this.cost = cost;
@@ -302,7 +304,7 @@ public class Bazaar {
 		List<String> process = new ArrayList<>();
 		
 		for (int i = 1; i <= 9; i++) {
-			if(Thread.interrupted()) return new CraftResult(Float.MAX_VALUE, null);
+			if(Thread.interrupted()) return new CraftResult(Float.MAX_VALUE, process);
 			
 			String id = recipe.getItem(i);
 			if(id == null || id.equals("")) continue;
@@ -310,36 +312,7 @@ public class Bazaar {
 			
 			JsonObject bazaarItem = getBazaarItem(id, bazaar);
 			if(bazaarItem == null) { // item isnt on bazaar
-				Item item = ItemsHandler.getItemFromId(id);
-				if(item == null) { // item isnt in data for id -> name
-					ItemRecipe recipe2 = RecipeHandler.getItemRecipe(id);
-			        if (recipe2 == null || alreadyTriedCraftingRecipe.contains(id)) {
-			        	if(alreadyTriedCraftingRecipe.contains(id) && craftCostMap.containsKey(id)){
-			        		total_cost += craftCostMap.get(id) * amount;
-			        		process.add(detailedInfo + EnumChatFormatting.BLUE + "Using recipe for " + EnumChatFormatting.GOLD + id + EnumChatFormatting.DARK_GREEN + "x" + amount + EnumChatFormatting.BLUE + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(craftCostMap.get(id)*amount) + EnumChatFormatting.BLUE + ")");
-			        	}else {
-			        		process.add(detailedInfo + EnumChatFormatting.RED + "Can't find " + EnumChatFormatting.GOLD + id + EnumChatFormatting.BLUE + " in ID -> NAME mapping, so no auctions");
-			        		return new CraftResult(Float.MAX_VALUE, process);
-			        	}
-			        }else {
-			        	alreadyTriedCraftingRecipe.add(id);
-			        	CraftResult craft = calculateCraftCost(recipe2, bazaar, buy, tax, ">" + detailedInfo);
-			        	
-			        	float cost = craft.cost * amount;
-			        	craftCostMap.put(id, cost);
-			        	if (cost == Float.MAX_VALUE) {
-			        		process.addAll(craft.craftings);
-			        		return new CraftResult(Float.MAX_VALUE, process);
-			        	}
-			        	total_cost += cost;
-			        	
-			        	process.add(detailedInfo + EnumChatFormatting.BLUE + "Calculated craft cost of recipe for " + EnumChatFormatting.GOLD + id + EnumChatFormatting.DARK_GREEN + "x" + amount + EnumChatFormatting.BLUE + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(cost) + EnumChatFormatting.BLUE + "):");
-			        	process.addAll(craft.craftings);
-			        	continue;
-			        }
-				}
-				
-				Float cost = Auction.getLowestBin(item.name);
+				Float cost = Auction.getLowestBin(id);
 				if(cost == null) {
 					ItemRecipe recipe2 = RecipeHandler.getItemRecipe(id);
 			        if (recipe2 == null || alreadyTriedCraftingRecipe.contains(id)) {

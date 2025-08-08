@@ -36,22 +36,22 @@ public class AngelWings extends ModelBase
 		this.playerUsesFullHeight = Loader.isModLoaded("animations");
 
 		// Set texture offsets.
-				setTextureOffset("wing.skin", -9, 0);
-				setTextureOffset("wingtip.skin", -9, 10);
+		setTextureOffset("wing.skin", -9, 0);
+		setTextureOffset("wingtip.skin", -9, 10);
 
-				
-				// Create wing model renderer.
-				wing = new ModelRenderer(this, "wing");
-				wing.setTextureSize(22, 19); // 300px / 10px
-				wing.setRotationPoint(0, 0, 0);
-				wing.addBox("skin", -8.0F, 0.0F, 0.5F, 10, 0, 10);
+		
+		// Create wing model renderer.
+		wing = new ModelRenderer(this, "wing");
+		wing.setTextureSize(22, 19); // 300px / 10px
+		wing.setRotationPoint(0, 0, 0);
+		wing.addBox("skin", -8.0F, 0.0F, 0.5F, 10, 0, 10);
 
-				// Create wing tip model renderer.
-				wingTip = new ModelRenderer(this, "wingtip");
-				wingTip.setTextureSize(22, 19); // 300px / 10px
-				wingTip.setRotationPoint(-8.0F, 0.0F, 0.0F); 
-				wingTip.addBox("skin", -10.0F, 0.0F, 0.5F, 10, 0, 10); // x = -side, y = -depth, z = -height
-				wing.addChild(wingTip); // Make the wingtip rotate around the wing.
+		// Create wing tip model renderer.
+		wingTip = new ModelRenderer(this, "wingtip");
+		wingTip.setTextureSize(22, 19); // 300px / 10px
+		wingTip.setRotationPoint(-8.0F, 0.0F, 0.0F); 
+		wingTip.addBox("skin", -10.0F, 0.0F, 0.5F, 10, 0, 10); // x = -side, y = -depth, z = -height
+		wing.addChild(wingTip); // Make the wingtip rotate around the wing.
 	}
 
 	@SubscribeEvent
@@ -63,34 +63,18 @@ public class AngelWings extends ModelBase
 		{
 			if(CosmeticHandler.WingsType.number == 2) {
 				float scale = (event.renderer.getMainModel().isChild)?0.5f:1;
-				renderWings(player, event.partialRenderTick, scale);
+				renderWings(event, event.partialRenderTick, scale);
 			}
 		}
 	}
 
-	private void renderWings(EntityPlayer player, float partialTicks, float scaleFactor)
+	private void renderWings(RenderPlayerEvent.Post event, float partialTicks, float scaleFactor)
 	{
+		EntityPlayer player = event.entityPlayer;
+		
 		double scale = 1.2f;
 		float yRotation = 40;
-		double rotate = 0;
-		
-		if(player.isRiding() && player.ridingEntity instanceof EntityHorse) {
-			EntityHorse horse = (EntityHorse) player.ridingEntity;
-			if(horse.isHorseSaddled()) {
-				rotate = Utils.interpolate360(horse.prevRenderYawOffset, horse.renderYawOffset, partialTicks);
-			}else {
-				rotate = Utils.getPlayerRidingWithoutControlRotation((EntityLivingBase) player.ridingEntity, partialTicks);
-			}
-		}else if(player.isRiding() && player.ridingEntity instanceof EntityPig) {
-			EntityPig pig = (EntityPig) player.ridingEntity;
-			if(pig.canRiderInteract()) {
-				rotate = Utils.interpolate360(pig.prevRenderYawOffset, pig.renderYawOffset, partialTicks);
-			}else {
-				rotate = Utils.getPlayerRidingWithoutControlRotation((EntityLivingBase) player.ridingEntity, partialTicks);
-			}
-		}else {
-			rotate = Utils.interpolate360(player.prevRenderYawOffset, player.renderYawOffset, partialTicks);
-		}
+		double rotate = Utils.getYawRotation(player, partialTicks);
 		
 		GL11.glPushMatrix();
 		GlStateManager.scale(scaleFactor, scaleFactor, scaleFactor);
@@ -102,10 +86,9 @@ public class AngelWings extends ModelBase
 
 		if (player.isSneaking()){
 			GL11.glTranslated(0D, 0.125D / scale, 0D);
-			GL11.glRotated(28.6, 1, 0, 0);
 		}
 		
-
+		GL11.glRotated(event.renderer.getMainModel().bipedBody.rotateAngleX * (180F / (float)Math.PI), 1, 0, 0);
 		mc.getTextureManager().bindTexture(location);
 		
 		for (int j = 0; j < 2; ++j)
@@ -113,8 +96,8 @@ public class AngelWings extends ModelBase
 			GL11.glEnable(GL11.GL_CULL_FACE);
 			float f11 = (System.currentTimeMillis() % 1000) / 1000F * (float) Math.PI * 2.0F;
 			this.wing.rotateAngleX = (float) Math.toRadians(-92F);
-			this.wing.rotateAngleZ = (float) Math.toRadians(20F);
-			this.wing.rotateAngleY = (float) Math.toRadians(yRotation) + (((float) Math.sin(f11) * 0.15F));
+			this.wing.rotateAngleZ = event.renderer.getMainModel().bipedBody.rotateAngleZ + (float) Math.toRadians(20F);
+			this.wing.rotateAngleY = event.renderer.getMainModel().bipedBody.rotateAngleY + (float) Math.toRadians(yRotation) + (((float) Math.sin(f11) * 0.15F));
 			this.wingTip.rotateAngleZ = -((float)(Math.sin((double)(f11 + 2.0F)) + 0.5D)) * 0.1F;
 			this.wing.render(0.0625F);
 			GL11.glScalef(-1.0F, 1.0F, 1.0F);

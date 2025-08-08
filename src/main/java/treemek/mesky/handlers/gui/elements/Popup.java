@@ -15,7 +15,7 @@ public class Popup {
 	public class PopupElement {
 		String text = "";
 		long time = 0;
-				
+		
 		private PopupElement(String text, long time) {
 			this.text = text;
 			this.time = time;
@@ -58,15 +58,19 @@ public class Popup {
 				}
 			}
 			
-			RenderHandler.drawImage((int) x, 0, (int) width, (int) height, popupLocation);
+			ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
 			
-			double textScale = Math.min(RenderHandler.getTextScale(currentPopup.text, width*0.8f), RenderHandler.getTextScale(height/2));
+			double textScale = RenderHandler.getTextScale(sr.getScaledHeight()/50);
 			double textWidth = RenderHandler.getTextWidth(currentPopup.text, textScale);
 			double textHeight = RenderHandler.getTextHeight(textScale);
 			
+			width = Math.max(sr.getScaledWidth()/2, textWidth/0.8f);
+			
+			RenderHandler.drawImage((int) x, 0, (int) width, (int) height, popupLocation);
+			
 			RenderHandler.drawText(currentPopup.text, x + width/2 - textWidth/2, height/2 - textHeight/2, textScale, true, 0xFFFFFF);
 			
-			ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
+
 			
 			if(!isHiding) {
 				if(x > sr.getScaledWidth() - width) {
@@ -96,11 +100,16 @@ public class Popup {
 	
 	public void showPopup(String text) {
 		isShown = true;
+		
+		
 		popupText.add(new PopupElement(text, showTime));
 	}
 	
 	public void showPopup(String text, long time) {
 		isShown = true;
+		double textScale = RenderHandler.getTextScale(height/8);
+		double textWidth = RenderHandler.getTextWidth(text, textScale);
+		
 		popupText.add(new PopupElement(text, time));
 	}
 	

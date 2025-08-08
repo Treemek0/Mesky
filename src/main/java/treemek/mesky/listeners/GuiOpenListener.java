@@ -28,7 +28,7 @@ public class GuiOpenListener {
 	}
 	
 	public enum PadLock {
-		UNLOCKED(true), LOCKED(false), WRONG_VERSION(false);
+		UNLOCKED(true), LOCKED(false), WRONG_VERSION(false), WRONG_SEASON(false), UNDISCOVERED(false);
 		
 		private final boolean unlocked;
 		PadLock(boolean unlocked){
@@ -146,7 +146,7 @@ public class GuiOpenListener {
         IInventory inv = ((ContainerChest) gui.inventorySlots).getLowerChestInventory();
         
         boolean hasItems = false;
-        if(waitingForChest == Menu.FastTravel && inv.getStackInSlot(Math.min(inv.getSizeInventory(), 36)) != null) {
+        if(waitingForChest == Menu.FastTravel && inv.getSizeInventory() > 36 && inv.getStackInSlot(36) != null) {
             hasItems = true;
         }
         
@@ -158,22 +158,41 @@ public class GuiOpenListener {
         	if(waitingForChest == Menu.FastTravel) {
         		Map<FastTravel, PadLock> unlocked_map = new HashMap<>();
         		
-        		for (int i = 0; i < inv.getSizeInventory(); i++) {
+        		for (int i = 0; i <= 36; i++) {
 					ItemStack stack = inv.getStackInSlot(i);
 
+					if(stack == null) { // something went wrong
+						for (FastTravel island : FastTravel.values()) {
+							unlocked_map.put(island, PadLock.UNLOCKED);
+						}
+						
+						break;
+					}
+					
 					for (FastTravel island : FastTravel.values()) {
 		                if (stack.getDisplayName().contains(island.getDisplayName())) {
-		                	if((island == FastTravel.GALATEA || island == FastTravel.THE_PARK) && !Utils.isVersionAtLeast("1.21.4")) {
+		                	if((island == FastTravel.GALATEA || island == FastTravel.THE_PARK) && !Utils.isVersionAtLeast("1.21.5")) {
 		                		unlocked_map.put(island, PadLock.WRONG_VERSION);
 			                    break;
 							}else {
-			                    PadLock unlocked = PadLock.LOCKED;
+			                    PadLock unlocked = PadLock.UNDISCOVERED;
+			                    
 			                    List<String> lore = Utils.getItemLore(stack);
 			                    for (int j = lore.size() - 1; j >= 0; j--) {
 			                    	String loreLine = lore.get(j);
 			                    	
 			                        if (loreLine.contains("to warp!") || loreLine.contains("You are here!")) {
 			                            unlocked = PadLock.UNLOCKED;
+			                            break;
+			                        }
+			                        
+			                        if (loreLine.contains("not unlocked!")) {
+			                            unlocked = PadLock.LOCKED;
+			                            break;
+			                        }
+			                        
+			                        if (loreLine.contains("until Winter!")) {
+			                            unlocked = PadLock.WRONG_SEASON;
 			                            break;
 			                        }
 			                    }
@@ -192,6 +211,8 @@ public class GuiOpenListener {
         		for (int i = 0; i < inv.getSizeInventory(); i++) {
 					ItemStack stack = inv.getStackInSlot(i);
 
+					if(stack == null) continue;
+					
 					for (RiftTravel island : RiftTravel.values()) {
 		                if (stack.getDisplayName().contains(island.getDisplayName())) {
 			                    PadLock unlocked = PadLock.LOCKED;

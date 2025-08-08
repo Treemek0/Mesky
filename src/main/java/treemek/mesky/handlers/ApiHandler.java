@@ -1,13 +1,18 @@
 package treemek.mesky.handlers;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Set;
+import java.util.zip.GZIPInputStream;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -23,7 +28,8 @@ public class ApiHandler {
 		AUCTION("skyblock/auctions"),
 		BINGO("skyblock/bingo"),
 		ELECTION("skyblock/election"),
-		ITEMS("resources/skyblock/items");
+		ITEMS("resources/skyblock/items"),
+		NEU_LOWESTBIN("lowestbin.json.gz");
 		
 	    private final String code;
 		ApiType(String code) {
@@ -31,7 +37,7 @@ public class ApiHandler {
 	    }
 	}
 	
-	public static JsonObject fetchApi(ApiType type) {
+	public static JsonObject fetchHypixelApi(ApiType type) {
         try {
             URL url = new URL("https://api.hypixel.net/v2/" + type.code);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -52,4 +58,38 @@ public class ApiHandler {
             return null;
         }
     }
+	
+	public static JsonObject fetchApi(ApiType type) {
+		if(type == ApiType.NEU_LOWESTBIN) {
+			return fetchNeuApi(type);
+		}else {
+			return fetchHypixelApi(type);
+		}
+	}
+	
+	private static JsonObject fetchNeuApi(ApiType type) {
+		try {
+			URL	url = new URL("https://moulberry.codes/" + type.code);
+			
+			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+		    conn.setRequestMethod("GET");
+	    
+		    try (GZIPInputStream gzipStream = new GZIPInputStream(conn.getInputStream());
+		         InputStreamReader reader = new InputStreamReader(gzipStream);
+		         BufferedReader in = new BufferedReader(reader)) {
+	
+		        StringBuilder response = new StringBuilder();
+		        String line;
+		        while ((line = in.readLine()) != null) {
+		            response.append(line);
+		        }
+	
+		        return new JsonParser().parse(response.toString()).getAsJsonObject();
+		    }
+	    } catch (IOException e) {
+			e.printStackTrace();
+		}
+	    
+		return null;
+	}
 }

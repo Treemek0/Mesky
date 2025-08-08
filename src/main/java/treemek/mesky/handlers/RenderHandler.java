@@ -124,13 +124,14 @@ public class RenderHandler {
         GlStateManager.popMatrix();
     }
 	
-	public static void drawLine2D(float x1, float y1, float x2, float y2, int color) {
+	public static void drawLine2D(float x1, float y1, float x2, float y2, float line_width, int color) {
 	    GlStateManager.pushMatrix();
 	    GlStateManager.disableTexture2D();
 	    GlStateManager.enableBlend();
 	    GlStateManager.disableDepth();
 	    GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
-
+	    GL11.glLineWidth(line_width);
+	    
 	    Color c = new Color(color);
 	    float r = c.getRed() / 255f;
 	    float g = c.getGreen() / 255f;
@@ -146,6 +147,7 @@ public class RenderHandler {
 	    buffer.pos(x2, y2, 0).endVertex();
 	    tess.draw();
 
+	    GL11.glLineWidth(1.0f);
 	    GlStateManager.enableTexture2D();
 	    GlStateManager.enableDepth();
 	    GlStateManager.disableBlend();

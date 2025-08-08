@@ -52,7 +52,7 @@ public class WarpPortal {
 	ResourceLocation portal = new ResourceLocation(Reference.MODID, "gui/warp/portal.png");
 	ResourceLocation portal_white = new ResourceLocation(Reference.MODID, "gui/warp/portal_white.png");
 	
-	public void drawPortal(int mouseX, int mouseY, float islandX, float islandY, double islandScale) {
+	public void drawPortal(int mouseX, int mouseY, float islandX, float islandY, double islandScale, boolean blockHover) {
 		if(visible) {
 		    GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
 		    GlStateManager.enableBlend();
@@ -70,7 +70,7 @@ public class WarpPortal {
 		    float x = scaledX - w / 2;
 		    float y = scaledY - h / 2;
 	
-		    hovered = isHovered(mouseX, mouseY, x, y, w, h);
+		    hovered = isHovered(mouseX, mouseY, x, y, w, h) && !blockHover;
 		    
 		    if (hovered) {
 		        double diffW = w * scaleOnHover - w;
@@ -99,10 +99,12 @@ public class WarpPortal {
 	}
 
 
-	public void mouseReleased(int mouseX, int mouseY) {
+	public boolean mouseReleased(int mouseX, int mouseY) {
 		if(hovered) {
 			Utils.executeCommand(command);
+			return true;
 		}
 		
+		return false;
 	}
 }

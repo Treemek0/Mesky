@@ -21,6 +21,9 @@ import treemek.mesky.utils.Utils;
 
 public class Auction {
 	
+	private static JsonObject lowestBin;
+	private static long lowestBinLastUpdate = 0;
+	
 	public static List<JsonObject> getAuctionItems(String itemName) {
 	    JsonObject json = ApiHandler.fetchApi(ApiType.AUCTION);
 	    if (json == null || !json.has("auctions")) return null;
@@ -40,28 +43,38 @@ public class Auction {
 	    return matchingItems;
 	}
 	
-	public static Float getLowestBin(String itemName) {
-	    JsonObject json = ApiHandler.fetchApi(ApiType.AUCTION);
-	    if (json == null || !json.has("auctions")) return null;
-
-	    JsonArray auctions = json.getAsJsonArray("auctions");
-	    Float lowest = Float.MAX_VALUE;
-
-	    for (JsonElement element : auctions) {
-	        JsonObject auction = element.getAsJsonObject();
-
-	        if (!auction.has("bin") || !auction.get("bin").getAsBoolean()) continue;
-
-	        String name = auction.get("item_name").getAsString();
-	        if (!name.equalsIgnoreCase(itemName)) continue;
-
-	        float price = auction.get("starting_bid").getAsFloat();
-	        if (price < lowest) {
-	            lowest = price;
-	        }
+//	public static Float getLowestBin(String itemName) {
+//	    JsonObject json = ApiHandler.fetchApi(ApiType.AUCTION);
+//	    if (json == null || !json.has("auctions")) return null;
+//
+//	    JsonArray auctions = json.getAsJsonArray("auctions");
+//	    Float lowest = Float.MAX_VALUE;
+//
+//	    for (JsonElement element : auctions) {
+//	        JsonObject auction = element.getAsJsonObject();
+//
+//	        if (!auction.has("bin") || !auction.get("bin").getAsBoolean()) continue;
+//
+//	        String name = auction.get("item_name").getAsString();
+//	        if (!name.equalsIgnoreCase(itemName)) continue;
+//
+//	        float price = auction.get("starting_bid").getAsFloat();
+//	        if (price < lowest) {
+//	            lowest = price;
+//	        }
+//	    }
+//
+//	    return (lowest == Float.MAX_VALUE) ? null : lowest;
+//	}
+	
+	public static Float getLowestBin(String itemId) {
+	    if (lowestBin == null || System.currentTimeMillis() - lowestBinLastUpdate > 10 * 1000) {
+	        lowestBin = ApiHandler.fetchApi(ApiType.NEU_LOWESTBIN);
+	        lowestBinLastUpdate = System.currentTimeMillis();
 	    }
 
-	    return (lowest == Float.MAX_VALUE) ? null : lowest;
+	    if (lowestBin == null || !lowestBin.has(itemId)) return null;
+	    return lowestBin.get(itemId).getAsFloat();
 	}
 
 	public static void findProfitAuctions(float minProfit) {

@@ -70,25 +70,7 @@ public class FireWings extends ModelBase
 	private void renderWings(EntityPlayer player, float partialTicks, float scaleFactor)
 	{
 		double scale = 0.7f;
-		double rotate = 0;
-		
-		if(player.isRiding() && player.ridingEntity instanceof EntityHorse) {
-			EntityHorse horse = (EntityHorse) player.ridingEntity;
-			if(horse.isHorseSaddled()) {
-				rotate = Utils.interpolate360(horse.prevRenderYawOffset, horse.renderYawOffset, partialTicks);
-			}else {
-				rotate = Utils.getPlayerRidingWithoutControlRotation((EntityLivingBase) player.ridingEntity, partialTicks);
-			}
-		}else if(player.isRiding() && player.ridingEntity instanceof EntityPig) {
-			EntityPig pig = (EntityPig) player.ridingEntity;
-			if(pig.canRiderInteract()) {
-				rotate = Utils.interpolate360(pig.prevRenderYawOffset, pig.renderYawOffset, partialTicks);
-			}else {
-				rotate = Utils.getPlayerRidingWithoutControlRotation((EntityLivingBase) player.ridingEntity, partialTicks);
-			}
-		}else {
-			rotate = Utils.interpolate360(player.prevRenderYawOffset, player.renderYawOffset, partialTicks);
-		}
+		double rotate = Utils.getYawRotation(player, partialTicks);
 		
 		GL11.glPushMatrix();
 		GlStateManager.scale(scaleFactor, scaleFactor, scaleFactor);

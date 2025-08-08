@@ -8,6 +8,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.renderer.GlStateManager;
@@ -123,10 +124,12 @@ public class MixinGuiContainer {
     	if(!SettingsConfig.LockSlots.isOn) return;
 
     	GuiContainer gui = (GuiContainer)(Object)this;
+    
+    	float line_width = 3f;
     	
         if(LockSlot.connectingSlot_1 != null) {
         	Slot connecting_slot = LockSlot.getSlotByInventoryIndex(gui.inventorySlots, LockSlot.connectingSlot_1);
-        	RenderHandler.drawLine2D(mouseX, mouseY, connecting_slot.xDisplayPosition + guiLeft + 8, connecting_slot.yDisplayPosition + guiTop + 8, 0xef3b1a);
+        	RenderHandler.drawLine2D(mouseX, mouseY, connecting_slot.xDisplayPosition + guiLeft + 8, connecting_slot.yDisplayPosition + guiTop + 8, line_width, 0xef3b1a);
         }
     	
         Slot hovered = this.getSlotAtPosition(mouseX, mouseY);
@@ -140,30 +143,32 @@ public class MixinGuiContainer {
     		if(connected_slot.slotNumber < gui.inventorySlots.inventorySlots.size() - 40) return;
     		if(connected_slot.inventory != Minecraft.getMinecraft().thePlayer.inventory) return;
     		
-    		float x1 = hovered.xDisplayPosition + guiLeft + 8;
-    		float y1 = hovered.yDisplayPosition + guiTop + 8;
-    		float x2 = connected_slot.xDisplayPosition + guiLeft + 8;
-    		float y2 = connected_slot.yDisplayPosition + guiTop + 8;
+    		float center1X = hovered.xDisplayPosition + guiLeft + 8;
+    		float center1Y = hovered.yDisplayPosition + guiTop + 8;
+    		float center2X = connected_slot.xDisplayPosition + guiLeft + 8;
+    		float center2Y = connected_slot.yDisplayPosition + guiTop + 8;
+    		float halfSize = 8f;
 
-    		// Compute direction vector
-    		float dx = x2 - x1;
-    		float dy = y2 - y1;
-    		float len = (float) Math.sqrt(dx * dx + dy * dy);
+    		float[] start = clipLineToRect(center1X, center1Y, center2X, center2Y, halfSize);
+    		float[] end = clipLineToRect(center2X, center2Y, center1X, center1Y, halfSize);
 
-    		// Normalize and scale
-    		float offsetX = (dx / len) * 8f;
-    		float offsetY = (dy / len) * 8f;
-
-    		// Adjust endpoints
-    		float startX = x1 + offsetX;
-    		float startY = y1 + offsetY;
-    		float endX = x2 - offsetX;
-    		float endY = y2 - offsetY;
-
-    		// Draw line from edge to edge
-    		RenderHandler.drawLine2D(startX, startY, endX, endY, 0xef3b1a);
+    		RenderHandler.drawLine2D(start[0], start[1], end[0], end[1], line_width, 0xef3b1a);
         }
     }
+    
+    private static float[] clipLineToRect(float x1, float y1, float x2, float y2, float halfSize) {
+        float dx = x2 - x1;
+        float dy = y2 - y1;
+
+        float absDX = Math.abs(dx);
+        float absDY = Math.abs(dy);
+
+        float scale = (absDX > absDY) ? (halfSize / absDX) : (halfSize / absDY);
+
+        return new float[] {x1 + dx * scale, y1 + dy * scale};
+    }
+
+
     
     @Inject(method = "onGuiClosed", at = @At("HEAD"))
     private void onCloseGui(CallbackInfo ci) {

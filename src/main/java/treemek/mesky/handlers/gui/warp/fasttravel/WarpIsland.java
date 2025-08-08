@@ -29,7 +29,7 @@ public class WarpIsland {
 	ResourceLocation imgLocation;
 	private List<WarpPortal> portals = new ArrayList<>();
 	
-	double scaleOnHover = 1.2;
+	float scaleOnHover = 1.2f;
 	private boolean hovered = false;
 	private BufferedImage buffered_img;
 
@@ -42,6 +42,18 @@ public class WarpIsland {
 	public double scaleOnTick = 0.1f;
 	float final_scale = 1;
 	float scale = 1;
+	
+	public void setInstantHoveredState(boolean state) {
+		hovered = state;
+		
+		if(state) {
+			final_scale = 1;
+			scale = 1;
+		}else {
+			final_scale = scaleOnHover;
+			scale = scaleOnHover;
+		}
+	}
 	
 	public WarpIsland(double x, double y, double width, double height, String name, ResourceLocation imgLocation, List<WarpPortal> portals) {
 		this.xPosition = x;
@@ -109,7 +121,7 @@ public class WarpIsland {
     	double diffH = 0;
 	    
 	    if(hovered && enabled.isUnlocked()) {
-	    	final_scale = (float) scaleOnHover;
+	    	final_scale = scaleOnHover;
 	    }else {
 	    	final_scale = 1;
 	    }
@@ -128,34 +140,62 @@ public class WarpIsland {
 	    Minecraft.getMinecraft().renderEngine.bindTexture(imgLocation);
  		RenderHandler.drawModalRectWithCustomSizedTexture(x, y, 0, 0, w, h, w, h);
  		
+ 		boolean isPortalHovered = false;
+ 		
  		for (WarpPortal warpPortal : portals) {
  			warpPortal.enabled = hovered && enabled.isUnlocked();
- 			warpPortal.drawPortal(mouseX, mouseY, x + w / 2, y + h / 2, scale);
+ 			warpPortal.drawPortal(mouseX, mouseY, x + w / 2, y + h / 2, scale, isPortalHovered);
+ 			if(!isPortalHovered) isPortalHovered = warpPortal.hovered;
 		}
  		
  		GL11.glColor3f(1, 1, 1);
  		
- 		if(hovered && enabled == PadLock.LOCKED) {
- 			double p = (double)Minecraft.getMinecraft().displayHeight / 960;
- 			
-    		double textScale = RenderHandler.getTextScale(p*10);
-    		double isTextWidth = RenderHandler.getTextWidth(islandToWarp, textScale);
-    		double textWidth = RenderHandler.getTextWidth("LOCKED", textScale);
-    		double textHeight = RenderHandler.getTextHeight(textScale);
-    		RenderHandler.drawText(islandToWarp, x + width/2 - isTextWidth/2, y + height/2 - textHeight/2, textScale, true, 0xFFFFFF);
-	        RenderHandler.drawText("LOCKED", x + width/2 - textWidth/4, y + height/2 + textHeight/2, textScale/2, true, 0xFFFFFF);
+ 		if(hovered) {
+	 		if(enabled == PadLock.LOCKED) {
+	 			double p = (double)Minecraft.getMinecraft().displayHeight / 960;
+	 			
+	    		double textScale = RenderHandler.getTextScale(p*10);
+	    		double isTextWidth = RenderHandler.getTextWidth(islandToWarp, textScale);
+	    		double textWidth = RenderHandler.getTextWidth("LOCKED", textScale);
+	    		double textHeight = RenderHandler.getTextHeight(textScale);
+	    		RenderHandler.drawText(islandToWarp, x + width/2 - isTextWidth/2, y + height/2 - textHeight/2, textScale, true, 0xFFFFFF);
+		        RenderHandler.drawText("LOCKED", x + width/2 - textWidth/4, y + height/2 + textHeight/2, textScale/2, true, 0xFFFFFF);
+	 		}
+	 		
+	 		if(enabled == PadLock.WRONG_VERSION) {
+	 			double p = (double)Minecraft.getMinecraft().displayHeight / 960;
+	 			
+	    		double textScale = RenderHandler.getTextScale(p*10);
+	    		double isTextWidth = RenderHandler.getTextWidth(islandToWarp, textScale);
+	    		double textWidth = RenderHandler.getTextWidth("REQUIRED 1.21.5+", textScale);
+	    		double textHeight = RenderHandler.getTextHeight(textScale);
+	    		RenderHandler.drawText(islandToWarp, x + width/2 - isTextWidth/2, y + height/2 - textHeight/2, textScale, true, 0xFFFFFF);
+		        RenderHandler.drawText("REQUIRED 1.21.5+", x + width/2 - textWidth/4, y + height/2 + textHeight/2, textScale/2, true, 0xFFFFFF);
+	 		}
+	 		
+	 		if(enabled == PadLock.WRONG_SEASON) {
+	 			double p = (double)Minecraft.getMinecraft().displayHeight / 960;
+	 			
+	    		double textScale = RenderHandler.getTextScale(p*10);
+	    		double isTextWidth = RenderHandler.getTextWidth(islandToWarp, textScale);
+	    		double textWidth = RenderHandler.getTextWidth("WRONG SEASON", textScale);
+	    		double textHeight = RenderHandler.getTextHeight(textScale);
+	    		RenderHandler.drawText(islandToWarp, x + width/2 - isTextWidth/2, y + height/2 - textHeight/2, textScale, true, 0xFFFFFF);
+		        RenderHandler.drawText("WRONG SEASON", x + width/2 - textWidth/4, y + height/2 + textHeight/2, textScale/2, true, 0xFFFFFF);
+	 		}
+	 		
+	 		if(enabled == PadLock.UNDISCOVERED) {
+	 			double p = (double)Minecraft.getMinecraft().displayHeight / 960;
+	 			
+	    		double textScale = RenderHandler.getTextScale(p*10);
+	    		double isTextWidth = RenderHandler.getTextWidth(islandToWarp, textScale);
+	    		double textWidth = RenderHandler.getTextWidth("UNDISCOVERED", textScale);
+	    		double textHeight = RenderHandler.getTextHeight(textScale);
+	    		RenderHandler.drawText(islandToWarp, x + width/2 - isTextWidth/2, y + height/2 - textHeight/2, textScale, true, 0xFFFFFF);
+		        RenderHandler.drawText("UNDISCOVERED", x + width/2 - textWidth/4, y + height/2 + textHeight/2, textScale/2, true, 0xFFFFFF);
+	 		}
  		}
  		
- 		if(hovered && enabled == PadLock.WRONG_VERSION) {
- 			double p = (double)Minecraft.getMinecraft().displayHeight / 960;
- 			
-    		double textScale = RenderHandler.getTextScale(p*10);
-    		double isTextWidth = RenderHandler.getTextWidth(islandToWarp, textScale);
-    		double textWidth = RenderHandler.getTextWidth("WRONG VERSION", textScale);
-    		double textHeight = RenderHandler.getTextHeight(textScale);
-    		RenderHandler.drawText(islandToWarp, x + width/2 - isTextWidth/2, y + height/2 - textHeight/2, textScale, true, 0xFFFFFF);
-	        RenderHandler.drawText("WRONG VERSION", x + width/2 - textWidth/4, y + height/2 + textHeight/2, textScale/2, true, 0xFFFFFF);
- 		}
 	}
 
 	public boolean isHovered(int mouseX, int mouseY) {
@@ -182,15 +222,20 @@ public class WarpIsland {
 	    return hovered;
 	}
 
-	public void mouseReleased(int mouseX, int mouseY) {
-		if(!enabled.isUnlocked()) return;
+	public boolean mouseReleased(int mouseX, int mouseY) {
+		if(!enabled.isUnlocked()) return false;
 		
 		for (WarpPortal warpPortal : portals) {
-			warpPortal.mouseReleased(mouseX, mouseY);
+			if(warpPortal.mouseReleased(mouseX, mouseY)) {
+				return true;
+			};
 		}
 		
 		if(command != null && hovered) {
 			Utils.executeCommand(command);
+			return true;
 		}
+		
+		return false;
 	}
 }

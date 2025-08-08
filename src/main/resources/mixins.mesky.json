@@ -1,0 +1,15 @@
+{
+  "minVersion": "0.7.11",
+  "required": true,
+  "compatibilityLevel": "JAVA_8",
+  "verbose": true,
+  "package": "treemek.mesky.mixins",
+  "refmap": "mixins.mesky.refmap.json",
+  "mixins": [
+    "MixinEntityPlayerSP",
+    "MixinGuiContainer",
+    "MixinGuiIngame",
+    "MixinItemRenderer",
+    "MixinEntityRenderer"
+  ]
+}

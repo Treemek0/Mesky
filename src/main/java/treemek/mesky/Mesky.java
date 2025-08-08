@@ -48,7 +48,9 @@ import treemek.mesky.features.illegal.GhostPickaxe;
 import treemek.mesky.features.illegal.JawbusDetector;
 import treemek.mesky.handlers.GuiHandler;
 import treemek.mesky.handlers.RenderHandler;
+import treemek.mesky.handlers.gui.warp.fasttravel.WarpGui;
 import treemek.mesky.listeners.GuiOpenListener;
+import treemek.mesky.listeners.WarpErrorListener;
 import treemek.mesky.proxy.IProxy;
 import treemek.mesky.proxy.ClientProxy;
 import treemek.mesky.utils.Alerts;
@@ -134,6 +136,7 @@ public class Mesky {
 		MinecraftForge.EVENT_BUS.register(new AntyGhostBlock());
 		MinecraftForge.EVENT_BUS.register(new CommandLoop());
 		MinecraftForge.EVENT_BUS.register(new LockSlot());
+		MinecraftForge.EVENT_BUS.register(new WarpErrorListener());
 		
 		ClientRegistry.registerKeyBinding(GhostBlock.GKEY);
 		ClientRegistry.registerKeyBinding(Freelook.KEY);

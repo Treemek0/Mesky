@@ -1129,7 +1129,8 @@ public class Utils {
 	}
 
 
-	public static String formatNumber(float number) {
+	public static String formatNumber(Float number) {
+		if(number == null) return "null";
 	    DecimalFormatSymbols symbols = new DecimalFormatSymbols();
 	    symbols.setGroupingSeparator(','); // Use apostrophe as separator
 

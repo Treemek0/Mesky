@@ -186,7 +186,7 @@ public class Commands extends CommandBase{
 	    					craftProfitThread.interrupt();
 	    				}
 	    				
-	    				Utils.addMinecraftMessageWithPrefix("Looking for best crafting offers with: Tax: " + tax + ", Buying: " + buy.code + ", Selling: " + sell.code + ", Min Profit: " + Utils.formatNumber(minProfitFinal));
+	    				Utils.addMinecraftMessageWithPrefix("Looking for best crafting offers with: Tax: " + tax + ", Buying: " + buy.code + ", Selling: " + sell.code + ", Min Profit: " + Utils.formatNumber(minProfitFinal.floatValue()));
 	    				
 	    				craftProfitThread = new Thread(() -> {
 	    					Bazaar.getHighestProfitCrafts(tax, buyType, sellType, minProfitFinal);
@@ -256,7 +256,7 @@ public class Commands extends CommandBase{
 	    						float[] craft = Bazaar.getCraftProfit(id, bazaar, tax, buyType, sellType, true);
 	    						
 	    						if(craft[0] == 0 && craft[1] == 0 && craft[2] == 0 && craft[3] == 0 && craft[4] == 0) {
-	    							Utils.addMinecraftMessage(EnumChatFormatting.RED + "There's no recipe for " + id);
+	    							Utils.addMinecraftMessage(EnumChatFormatting.RED + "There's was a problem with finding craft cost of " + id);
 	    						}else {
 		    						String message = EnumChatFormatting.AQUA + id + EnumChatFormatting.GOLD + " | Craft cost: " + Utils.formatNumber(craft[2])
 		    			   			 + EnumChatFormatting.YELLOW + " | Sell price: " + Utils.formatNumber(craft[1])

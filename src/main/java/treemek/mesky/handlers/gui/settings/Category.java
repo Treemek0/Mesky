@@ -85,7 +85,7 @@ public class Category extends Gui{
 				}
 				
 				if(ob instanceof SettingListBox) {
-					((SettingListBox)ob).drawOpenedList();; // because it has to be on top and for some reason it didnt worked like everything else
+					((SettingListBox)ob).drawOpenedList(); // because it has to be on top and for some reason it didnt worked like everything else
 				}
 				
 				if(ob instanceof FoldableSettingButton) {

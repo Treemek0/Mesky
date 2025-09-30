@@ -27,6 +27,7 @@ public class SettingListBox extends GuiButton{
 	int currentOption = 0;
 	List<Option> options;
 	boolean opened = false;
+	int notSelectedWidth = 0;
 	public int endY = 0;
 	public int allHeight = 0;
 	int color = 0x3e91b5;
@@ -40,6 +41,7 @@ public class SettingListBox extends GuiButton{
 	
 	public SettingListBox(int buttonId, int widthIn, int heightIn, String buttonText, List<Option> options, Setting setting) {
 		super(buttonId, 0, 0, widthIn, heightIn, buttonText);
+		notSelectedWidth = widthIn;
 		this.options = options;
 		this.setting = setting;
 		String current = setting.text;
@@ -103,18 +105,27 @@ public class SettingListBox extends GuiButton{
 	
 	@Override
 	public void drawButton(Minecraft mc, int x, int y) {
+		int textX = x;
+		
+		if(opened) {
+			width = (int) (notSelectedWidth * 1.05f);
+			x -= 0.025f * notSelectedWidth;
+		}else {
+			width = notSelectedWidth;
+		}
+		
 		this.xPosition = x;
 		this.yPosition = y;
 		if(this.customField != null) {
 			this.customField.xPosition = x+1;
 			this.customField.yPosition = y+1;
 		}
-
+		
 		ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
 		int mouseX = Mouse.getX() * sr.getScaledWidth() / Minecraft.getMinecraft().displayWidth;
 		int mouseY = sr.getScaledHeight() - Mouse.getY() * sr.getScaledHeight() / Minecraft.getMinecraft().displayHeight - 1;
 		
-		if(mouseX >= this.xPosition && mouseY >= yPosition && mouseX < this.xPosition + this.width && mouseY < yPosition + height) {
+		if(opened || mouseX >= this.xPosition && mouseY >= yPosition && mouseX < this.xPosition + this.width && mouseY < yPosition + height) {
 			GL11.glColor3f(0.6f, 0.6f, 0.6f);
 			drawButtonForegroundLayer(xPosition, yPosition);
 			GL11.glColor3f(1f, 1f, 1f);
@@ -163,7 +174,7 @@ public class SettingListBox extends GuiButton{
 		String text = RenderHandler.trimWordsToWidth(displayString, (int) (sr.getScaledWidth()*0.9f - x - (width*1.30) - (sr.getScaledHeight() / 10) - 10), false, scaleFactor);
 		
 		if(text.equals(displayString)) {
-			RenderHandler.drawText(displayString, x + (width*1.2), displayedTextY, scaleFactor, true, color);
+			RenderHandler.drawText(displayString, textX + (notSelectedWidth*1.2), displayedTextY, scaleFactor, true, color);
 		}else {
 			String oldText = displayString;
 			int newHeight = allHeight;
@@ -307,6 +318,8 @@ public class SettingListBox extends GuiButton{
 		
 		if(!opened) {
 			if(super.mousePressed(mc, mouseX, mouseY)) {
+				playPressSound(Minecraft.getMinecraft().getSoundHandler());
+				
 				if(!isCurrentCustomOption()) {
 					opened = true;
 				}else {
@@ -337,12 +350,14 @@ public class SettingListBox extends GuiButton{
 			return false;
 		}else {
 			if(super.mousePressed(mc, mouseX, mouseY)) {
+				playPressSound(Minecraft.getMinecraft().getSoundHandler());
 				opened = false;
 				return true;
 			}
 			
 			int optionsTabHeight = (custom == null)? (options.size() - 1) * height : options.size() * height;
 			if(this.enabled && this.visible && mouseX >= this.xPosition && mouseY >= this.yPosition + height && mouseX < this.xPosition + this.width && mouseY < this.yPosition + height + optionsTabHeight) {
+				playPressSound(Minecraft.getMinecraft().getSoundHandler());
 				int optionIndex = (mouseY - this.yPosition + height) / height - 1;
 				
 				if(currentOption >= optionIndex) {

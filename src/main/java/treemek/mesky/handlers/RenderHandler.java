@@ -3,6 +3,10 @@ package treemek.mesky.handlers;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Vector3f;
@@ -25,7 +29,10 @@ import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.ChatStyle;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.IChatComponent;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StringUtils;
@@ -165,20 +172,29 @@ public class RenderHandler {
 		GlStateManager.scale(scale, scale, 1);
 		GL11.glTranslated(0, 0, 0);
 		
+		int alpha = (defaultColor >> 24) & 0xFF;
+		
+		GlStateManager.enableBlend();
+		GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+		
 		if(outline){
 		    String tempText = text.replace(EnumChatFormatting.BLACK.toString(), "§Z");
 		    tempText = ColorUtils.replaceMinecraftTextColorWith(tempText, EnumChatFormatting.BLACK);
 			String shadowText = tempText.replace("§Z", EnumChatFormatting.DARK_GRAY.toString());
 			GlStateManager.color(1, 1, 1, 1);
-			fr.drawString(shadowText, (float) (x / scale - 1), (float) (y / scale), 0x000000, false);
-			fr.drawString(shadowText, (float) (x / scale + 1), (float) (y / scale), 0x000000, false);
-			fr.drawString(shadowText, (float) (x / scale), (float) (y / scale - 1), 0x000000, false);
-			fr.drawString(shadowText, (float) (x / scale), (float) (y / scale + 1), 0x000000, false);
+			int outline_color = (alpha << 24) | 0x000000;
+			
+			fr.drawString(shadowText, (float) (x / scale - 1), (float) (y / scale), outline_color, false);
+			fr.drawString(shadowText, (float) (x / scale + 1), (float) (y / scale), outline_color, false);
+			fr.drawString(shadowText, (float) (x / scale), (float) (y / scale - 1), outline_color, false);
+			fr.drawString(shadowText, (float) (x / scale), (float) (y / scale + 1), outline_color, false);
 			fr.drawString(text, (float) (x / scale), (float) (y / scale), defaultColor, false);
 		}else{
+			GlStateManager.color(1, 1, 1, 1);
 			fr.drawString(text, (float) (x / scale), (float) (y / scale), defaultColor, true);
 		}
 
+		GlStateManager.disableBlend();
 		GlStateManager.popMatrix();
 		GlStateManager.color(1, 1, 1, 1);
 	}
@@ -872,6 +888,86 @@ public class RenderHandler {
         return stringbuilder.toString();
     }
     
+    public static List<String> splitWordsToWidth(String text, int width, boolean reverse, float scale) {
+        List<String> splitStrings = new ArrayList<>();
+
+        StringBuilder stringbuilder = new StringBuilder();
+        float currentWidth = 0;
+        int index = reverse ? text.length() - 1 : 0;
+        int increment = reverse ? -1 : 1;
+        boolean inFormattingCode = false;
+        boolean boldFlag = false;
+        int lastSpaceIndex = -1;
+
+        // Last active formatting so next lines inherit colors
+        EnumChatFormatting activeFormat = null;
+        for (int i = index; i >= 0 && i < text.length(); i += increment) {
+            char c = text.charAt(i);
+            float charWidth = (float) Minecraft.getMinecraft().fontRendererObj.getCharWidth(c) * scale;
+
+            if (inFormattingCode) {
+                inFormattingCode = false;
+                stringbuilder.append(c);
+
+                // track format
+                if (c == 'l' || c == 'L') {
+                    boldFlag = true;
+                    activeFormat = EnumChatFormatting.BOLD;
+                } else if (c == 'r' || c == 'R') {
+                    boldFlag = false;
+                    activeFormat = null;
+                } else if ("0123456789AaBbCcDdEeFfKkMmNnOo".indexOf(c) != -1) {
+                    activeFormat = ColorUtils.getColorFromCode(c + ""); // overwrite with last color
+                }
+                continue;
+            }
+
+            if(charWidth < 0) {
+                inFormattingCode = true;
+                stringbuilder.append(c);
+                continue;
+            }
+
+            // normal char
+            currentWidth += charWidth;
+            if (boldFlag) currentWidth += 1;
+
+            if (c == ' ') {
+                lastSpaceIndex = stringbuilder.length();
+            }
+
+            if (currentWidth >= width) {
+            	stringbuilder.append(text.substring(i));
+                break;
+            }
+
+            if (reverse) {
+                stringbuilder.insert(0, c);
+            } else {
+                stringbuilder.append(c);
+            }
+        }
+
+        if (currentWidth > width && lastSpaceIndex != -1) {
+            String a = stringbuilder.substring(0, lastSpaceIndex);
+            String b = stringbuilder.substring(lastSpaceIndex + 1);
+            
+            if (reverse) {
+                splitStrings.add(b);
+                if(activeFormat != null) a = activeFormat + a;
+                splitStrings.addAll(splitWordsToWidth(a, width, reverse, scale));
+            } else {
+                splitStrings.add(a);
+                if(activeFormat != null) b = activeFormat + b;
+                splitStrings.addAll(splitWordsToWidth(b, width, reverse, scale));
+            }
+        } else {
+            splitStrings.add(stringbuilder.toString());
+        }
+
+        return splitStrings;
+    }
+
     public static double getResolutionScale() {
     	Toolkit toolkit = Toolkit.getDefaultToolkit();
         Dimension screenSize = toolkit.getScreenSize();

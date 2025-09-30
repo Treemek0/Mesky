@@ -152,9 +152,13 @@ public class CoordsDetector {
         
         detectionMessage.appendSibling(clickableCopy);
         
-        Utils.addMinecraftMessage(EnumChatFormatting.YELLOW + "@# Detected coords: " + EnumChatFormatting.GOLD + x + ", " + y + ", " + z);
-        Minecraft.getMinecraft().thePlayer.addChatMessage(detectionMessage);
-		
+        if(SettingsConfig.coordsDetection_filter.text.equals("CHAT")) {
+	        Utils.addMinecraftMessage(EnumChatFormatting.YELLOW + "@# Detected coords: " + EnumChatFormatting.GOLD + x + ", " + y + ", " + z);
+	        Minecraft.getMinecraft().thePlayer.addChatMessage(detectionMessage);
+        }else if(SettingsConfig.coordsDetection_filter.text.equals("SEPARATE")) {
+	        ChatFilter.chat.addChatMessage(EnumChatFormatting.YELLOW + "@# Detected coords: " + EnumChatFormatting.GOLD + x + ", " + y + ", " + z);
+	        ChatFilter.chat.addChatMessage(detectionMessage);
+        }
 	}
     
     // napraw self message sending afjoanfibghuanf

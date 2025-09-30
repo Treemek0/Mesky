@@ -126,6 +126,7 @@ public class SettingsGUI extends GuiScreen {
     	
 	    utilityCategory(checkSize);
 	    fishingCategory(checkSize);
+	    ChatCategory(checkSize);
 	    MeskyCategory(checkSize);
 	    
 	    if(openedCategory > categories.size()-1) {
@@ -157,6 +158,8 @@ public class SettingsGUI extends GuiScreen {
 	    
 	    List<Object> chatSub = new ArrayList<>();
 	    List<Object> coordsDetectionFoldable = new ArrayList<>();
+	    coordsDetectionFoldable.add(new SettingListBox(2, 4*checkSize, checkSize, "Detection message", new ArrayList<>(Arrays.asList(
+    		    new Option("CHAT", "CHAT"), new Option("SEPARATE", "SEPARATE"), new Option("HIDDEN", "HIDDEN"))), SettingsConfig.coordsDetection_filter));
 	    coordsDetectionFoldable.add(new SettingButton(2, checkSize, "Auto mark coords", SettingsConfig.AutoMarkCoords));
 	    chatSub.add(new FoldableSettingButton(7, checkSize, "Coords Detection", SettingsConfig.CoordsDetection, coordsDetectionFoldable));
 	    List<Object> nickDetectionFoldable = new ArrayList<>();
@@ -248,6 +251,38 @@ public class SettingsGUI extends GuiScreen {
 		fishing.add(new SubCategory("Fishing Tools", fishingSub));
 		fishing.add(new SubCategory("Advanced Fishing", illegalSub));
 		categories.add(new Category("Fishing", fishing));
+	}
+	
+	private void ChatCategory(int checkSize) {
+		List<SubCategory> chat = new ArrayList<>();
+		
+		List<Object> separateChatSub = new ArrayList<>();
+		List<Object> separateChatFoldable = new ArrayList<>();
+        separateChatFoldable.add(new SettingSlider(-1, checkSize*2, checkSize, "Background opacity", SettingsConfig.customChatOpacity, 0.05, 0, 1));
+        separateChatFoldable.add(new SettingSlider(-1, checkSize*2, checkSize, "Background width", SettingsConfig.customChatWidth, 0.1, 0.5, 2));
+        separateChatFoldable.add(new SettingSlider(-1, checkSize*2, checkSize, "Background height", SettingsConfig.customChatHeight, 0.1, 0.5, 2));
+        separateChatFoldable.add(new SettingSlider(-1, checkSize*2, checkSize, "Text scale", SettingsConfig.customChatTextScale, 0.1, 0.75, 2));
+        separateChatFoldable.add(new SettingSlider(-1, checkSize*2, checkSize, "New line show time [ms]", SettingsConfig.customChatFadeStart, 200, 0, 5000));
+        separateChatFoldable.add(new SettingSlider(-1, checkSize*2, checkSize, "New line fade time [ms]", SettingsConfig.customChatFadeDuration, 100, 0, 3000));
+        separateChatFoldable.add(new SettingButton(-1, checkSize, "Text right pacing", SettingsConfig.customChatRightPacing));
+        separateChatFoldable.add(new SettingButton(-1, checkSize, "Chat open toggle", SettingsConfig.customChatToggle));
+        separateChatSub.add(new FoldableSettingButton(-1, checkSize, "Separate chat", SettingsConfig.customChat, separateChatFoldable));
+        
+        List<Object> filterChatSub = new ArrayList<>();
+        filterChatSub.add(new SettingListBox(2, 4*checkSize, checkSize, "Sending to server [x]...", new ArrayList<>(Arrays.asList(
+    		    new Option("CHAT", "CHAT"), new Option("SEPARATE", "SEPARATE"), new Option("HIDDEN", "HIDDEN"))), SettingsConfig.sendingToServer_filter));
+        filterChatSub.add(new SettingListBox(2, 4*checkSize, checkSize, "Warping... / Warping you to your SkyBlock island...", new ArrayList<>(Arrays.asList(
+    		    new Option("CHAT", "CHAT"), new Option("SEPARATE", "SEPARATE"), new Option("HIDDEN", "HIDDEN"))), SettingsConfig.warping_filter));
+        filterChatSub.add(new SettingListBox(2, 4*checkSize, checkSize, "[x] was killed by [x]", new ArrayList<>(Arrays.asList(
+    		    new Option("CHAT", "CHAT"), new Option("SEPARATE", "SEPARATE"), new Option("HIDDEN", "HIDDEN"))), SettingsConfig.wasKilledBy_filter));
+        filterChatSub.add(new SettingListBox(2, 4*checkSize, checkSize, "FireSale announcement", new ArrayList<>(Arrays.asList(
+    		    new Option("CHAT", "CHAT"), new Option("SEPARATE", "SEPARATE"), new Option("HIDDEN", "HIDDEN"))), SettingsConfig.fireSale_filter));
+        filterChatSub.add(new SettingListBox(2, 4*checkSize, checkSize, "Playing on profile: [x] / Profile ID: [x]", new ArrayList<>(Arrays.asList(
+    		    new Option("CHAT", "CHAT"), new Option("SEPARATE", "SEPARATE"), new Option("HIDDEN", "HIDDEN"))), SettingsConfig.playingOnProfile_filter));
+        
+		chat.add(new SubCategory("Separate Chat", separateChatSub));
+		chat.add(new SubCategory("Filter",filterChatSub));
+		categories.add(new Category("Chat", chat));
 	}
 	
 	private void MeskyCategory(int checkSize) {

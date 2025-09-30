@@ -1011,6 +1011,17 @@ public class Utils {
 		}
 	}
 	
+	public static void print(String a) {
+		StackTraceElement caller = Thread.currentThread().getStackTrace()[2];
+	    
+	    String className = caller.getClassName();
+	    String methodName = caller.getMethodName();
+	    int lineNumber = caller.getLineNumber();
+	    
+		writeToConsole("(" + className + ", " + methodName + "() " + "[" + lineNumber + "]" + "): " + a);
+		addMinecraftMessageWithPrefix("[PRINT] " + a);
+	}
+	
 	public static void writeToConsole(String a) {
 		logger.info("[Mesky]: " + a);
 	}

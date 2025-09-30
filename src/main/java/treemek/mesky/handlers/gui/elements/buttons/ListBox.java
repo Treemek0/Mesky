@@ -249,6 +249,8 @@ public class ListBox extends GuiButton{
 		
 		if(!opened) {
 			if(super.mousePressed(mc, mouseX, mouseY)) {
+				playPressSound(Minecraft.getMinecraft().getSoundHandler());
+				
 				if(!isCurrentCustomOption()) {
 					opened = true;
 				}else {
@@ -279,12 +281,15 @@ public class ListBox extends GuiButton{
 			return false;
 		}else {
 			if(super.mousePressed(mc, mouseX, mouseY)) {
+				playPressSound(Minecraft.getMinecraft().getSoundHandler());
 				opened = false;
 				return true;
 			}
 			
 			int optionsTabHeight = (custom == null)? (options.size() - 1) * height : options.size() * height;
 			if(this.enabled && this.visible && mouseX >= this.xPosition && mouseY >= this.yPosition + height && mouseX < this.xPosition + this.width && mouseY < this.yPosition + height + optionsTabHeight) {
+				playPressSound(Minecraft.getMinecraft().getSoundHandler());
+				
 				int optionIndex = (mouseY - this.yPosition + height) / height - 1;
 				
 				if(currentOption >= optionIndex) {

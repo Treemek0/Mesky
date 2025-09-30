@@ -127,5 +127,23 @@ public class SettingsConfig {
 	public static Setting MiningMacroPath = new Setting(1, null, null);
 	
 	public static Setting DiscordWebHook = new Setting(null, null, null);
+	
+	
+	public static Setting customChat = new Setting(false, new Float[] {50.0f, 50.0f}, 1f);
+	public static Setting customChatWidth = new Setting(1, null, null);
+	public static Setting customChatHeight = new Setting(1, null, null);
+	public static Setting customChatTextScale = new Setting(1, null, null);
+	public static Setting customChatOpacity = new Setting(0.7f, null, null);
+	public static Setting customChatFadeStart = new Setting(3000, null, null);
+	public static Setting customChatFadeDuration = new Setting(1000, null, null);
+	public static Setting customChatToggle = new Setting(false, null, null);
+	public static Setting customChatRightPacing = new Setting(false, null, null);
+	
+	public static Setting sendingToServer_filter = new Setting("CHAT", null, null);
+	public static Setting warping_filter = new Setting("CHAT", null, null);
+	public static Setting wasKilledBy_filter = new Setting("CHAT", null, null);
+	public static Setting playingOnProfile_filter = new Setting("CHAT", null, null);
+	public static Setting fireSale_filter = new Setting("CHAT", null, null);
+	public static Setting coordsDetection_filter = new Setting("CHAT", null, null);
 }
 

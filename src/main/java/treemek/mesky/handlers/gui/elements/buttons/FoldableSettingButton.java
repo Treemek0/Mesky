@@ -3,6 +3,8 @@ package treemek.mesky.handlers.gui.elements.buttons;
 import java.lang.reflect.Field;
 import java.util.List;
 
+import org.lwjgl.opengl.GL11;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
@@ -18,6 +20,8 @@ import treemek.mesky.handlers.gui.elements.SettingColorPicker;
 import treemek.mesky.handlers.gui.elements.sliders.SettingSlider;
 import treemek.mesky.handlers.gui.elements.textFields.SettingTextField;
 import treemek.mesky.handlers.gui.settings.SettingsGUI;
+import treemek.mesky.utils.Utils;
+import treemek.mesky.utils.chat.ChatFilter;
 
 public class FoldableSettingButton extends GuiButton{
 
@@ -71,6 +75,7 @@ public class FoldableSettingButton extends GuiButton{
 	ResourceLocation on = new ResourceLocation(Reference.MODID, "gui/on-switch.png");
 	
 	ResourceLocation warning = new ResourceLocation(Reference.MODID, "gui/warning.png");
+	private boolean renderChatPreview = false;
 	
 	public boolean isFull() {
 		return setting.isOn;
@@ -191,6 +196,11 @@ public class FoldableSettingButton extends GuiButton{
 				((FoldableSettingButton)object).drawElementOnTop(); // because it has to be on top and for some reason it didnt worked like everything else
 			}
 		}
+		
+		if(renderChatPreview) {
+			ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
+			ChatFilter.chat.drawPreviewChat(sr.getScaledWidth() - sr.getScaledWidth()/3, yPosition + foldHeight);
+		}
 	}
 	
 	public boolean mouseClicked(int mouseX, int mouseY, int mouseButton) {
@@ -215,7 +225,11 @@ public class FoldableSettingButton extends GuiButton{
 	        		GuiButton guiButton = (GuiButton)hiddenObjects.get(j);
 	        		
 	        		if(hiddenObjects.get(j) instanceof SettingSlider) {
-	                	((SettingSlider)hiddenObjects.get(j)).mouseClicked(mouseX, mouseY, mouseButton);
+	                	if(((SettingSlider)hiddenObjects.get(j)).mouseClicked(mouseX, mouseY, mouseButton)) {
+		                	if(setting == SettingsConfig.customChat) {
+		    					renderChatPreview = true;
+		    				}
+	                	}
 	                }else if(hiddenObjects.get(j) instanceof SettingListBox) {
 	                	((SettingListBox)hiddenObjects.get(j)).mousePressed(mouseX, mouseY, mouseButton);
         			}else {
@@ -253,6 +267,8 @@ public class FoldableSettingButton extends GuiButton{
 	
 	@Override
 	public void mouseReleased(int mouseX, int mouseY) {
+		renderChatPreview = false;
+		
 		List<Object> foldableList = hiddenObjects;
 		for (int j = 0; j < foldableList.size(); ++j){
 			if(foldableList.get(j) instanceof GuiButton) {

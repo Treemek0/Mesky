@@ -129,12 +129,11 @@ public class SettingSlider extends GuiButton{
 		textField.mouseClicked(mouseX, mouseY, mouseButton);
 		
 		if (mouseX >= xPosition && mouseX <= xPosition + width && mouseY >= yPosition && mouseY <= yPosition + height) {
-			
-			double mX = MouseInfo.getPointerInfo().getLocation().getX(); // X position on screen (more precise)
+			clicked = true;
+			int mX = Mouse.getX();
 		    ScaledResolution scaledResolution = new ScaledResolution(Minecraft.getMinecraft());
 		    float guiX = (float) mX * scaledResolution.getScaledWidth() / Minecraft.getMinecraft().displayWidth;
-
-			clicked = true;
+			
 			float percent = (float)(guiX - xPosition)/width;
 			double rawValue = Utils.getPrecentAverage((float)min, (float)max, percent);
 			double adjustedValue = Math.round(rawValue  / sliderPrecision) * sliderPrecision;

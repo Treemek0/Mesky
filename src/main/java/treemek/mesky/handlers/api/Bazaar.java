@@ -179,7 +179,7 @@ public class Bazaar {
 	    return items;
 	}
 
-	private static Map<String, Float> craftCostMap = new HashMap<>();
+	private static Map<String, CraftResult> craftCostMap = new HashMap<>();
 	private static List<String> alreadyTriedCraftingRecipe = new ArrayList<>();
 	
 	public static void clearCraftCostMap() {
@@ -253,9 +253,9 @@ public class Bazaar {
         
         alreadyTriedCraftingRecipe.clear();
         CraftResult craft = calculateCraftCost(recipe, bazaar, buy, tax, " ");
-        List<String> craftProcess = craft.craftings;
+        List<String> craftProcess = craft.craftingsLog;
         float craftCost = craft.cost;
-        craftCostMap.put(itemId, craftCost);
+        craftCostMap.put(itemId, craft);
         
         
         JsonObject bazaarItem = getBazaarItem(itemId, bazaar);
@@ -267,6 +267,44 @@ public class Bazaar {
         	for (String string : craftProcess) {
 				Utils.addMinecraftMessage(string);
 			}
+        	
+        	Utils.addMinecraftMessage("");
+        }
+        
+        if(detailedInfo && craft.craftings != null) {
+        	ChatComponentText items = new ChatComponentText("");
+        	
+        	for (Entry<String, Integer> entry : craft.craftings.entrySet()) {
+        		if(items.getUnformattedText().length() != 0) items.appendText(EnumChatFormatting.GOLD + ", ");
+        		
+        		
+        		
+        		if(entry.getKey().startsWith("%")) {
+        			String itemID = entry.getKey().substring(1);
+        			
+        			ChatComponentText item = new ChatComponentText(EnumChatFormatting.GOLD + itemID + EnumChatFormatting.BLUE + "x" + entry.getValue());
+        			
+        			ChatStyle style = new ChatStyle();
+	    	        style.setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/ahs " + itemID));
+	    	        style.setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("/ahs " + itemID)));
+	    	        item.setChatStyle(style);
+	    	        
+	    	        items.appendSibling(item);
+        		}else {
+        			ChatComponentText item = new ChatComponentText(EnumChatFormatting.GOLD + entry.getKey() + EnumChatFormatting.BLUE + "x" + entry.getValue());
+        			
+	    	        ChatStyle style = new ChatStyle();
+	    	        style.setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/mesky and /bz " + entry.getKey() + " & /mesky copy0 " + entry.getValue()));
+	    	        style.setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("/bz " + entry.getKey())));
+	    	        item.setChatStyle(style);
+	    	        
+	    	        items.appendSibling(item);
+        		}
+			}
+        	
+        	
+        	Utils.addMinecraftMessage(items);
+        	Utils.addMinecraftMessage("");
         }
         
         if(craftCost == Float.MAX_VALUE) return new float[] {0,0,0,0,0};
@@ -291,20 +329,24 @@ public class Bazaar {
 	
 	private static class CraftResult {
 		float cost;
-		List<String> craftings = new ArrayList<>(); // will be used for better logging
+		List<String> craftingsLog = new ArrayList<>();
 		
-		private CraftResult(float cost, List<String> craftings) {
+		Map<String, Integer> craftings = new HashMap<>();
+		
+		private CraftResult(float cost, List<String> logs, Map<String, Integer> craftings) {
 			this.cost = cost;
+			this.craftingsLog = logs;
 			this.craftings = craftings;
 		}
 	}
 	
 	private static CraftResult calculateCraftCost(ItemRecipe recipe, JsonObject bazaar, BuyType buy, float tax, String detailedInfo) {
 		float total_cost = 0;
-		List<String> process = new ArrayList<>();
+		List<String> logs = new ArrayList<>();
+		Map<String, Integer> craftings = new HashMap<>();
 		
 		for (int i = 1; i <= 9; i++) {
-			if(Thread.interrupted()) return new CraftResult(Float.MAX_VALUE, process);
+			if(Thread.interrupted()) return new CraftResult(Float.MAX_VALUE, logs, craftings);
 			
 			String id = recipe.getItem(i);
 			if(id == null || id.equals("")) continue;
@@ -317,31 +359,39 @@ public class Bazaar {
 					ItemRecipe recipe2 = RecipeHandler.getItemRecipe(id);
 			        if (recipe2 == null || alreadyTriedCraftingRecipe.contains(id)) {
 			        	if(alreadyTriedCraftingRecipe.contains(id) && craftCostMap.containsKey(id)){
-			        		total_cost += craftCostMap.get(id) * amount;
-			        		process.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Using recipe for " + EnumChatFormatting.GOLD + id + EnumChatFormatting.DARK_GREEN + "x" + amount + EnumChatFormatting.BLUE + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(craftCostMap.get(id)*amount) + EnumChatFormatting.BLUE + ")");
+			        		total_cost += craftCostMap.get(id).cost * amount;
+			        		for (Entry<String, Integer> entry : craftCostMap.get(id).craftings.entrySet()) {
+			        			craftings.merge(entry.getKey(), entry.getValue(), Integer::sum);
+							}
+			        		
+			        		logs.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Using recipe for " + EnumChatFormatting.GOLD + id + EnumChatFormatting.DARK_GREEN + "x" + amount + EnumChatFormatting.BLUE + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(craftCostMap.get(id).cost*amount) + EnumChatFormatting.BLUE + ")");
 			        	}else {
-			        		process.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.RED + "Can't find " + EnumChatFormatting.GOLD + id + EnumChatFormatting.BLUE + " in auction house and it doesn't have recipe");
-			        		return new CraftResult(Float.MAX_VALUE, process);
+			        		logs.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.RED + "Can't find " + EnumChatFormatting.GOLD + id + EnumChatFormatting.BLUE + " in auction house and it doesn't have recipe");
+			        		return new CraftResult(Float.MAX_VALUE, logs, craftings);
 			        	}
 			        }else {
 			        	alreadyTriedCraftingRecipe.add(id);
 			        	CraftResult craft = calculateCraftCost(recipe2, bazaar, buy, tax, ">" + detailedInfo);
 			        	
 			        	cost = craft.cost * amount;
-			        	craftCostMap.put(id, cost);
+			        	craftCostMap.put(id, craft);
 			        	if (cost == Float.MAX_VALUE) {
-			        		process.addAll(craft.craftings);
-			        		return new CraftResult(Float.MAX_VALUE, process);
+			        		logs.addAll(craft.craftingsLog);
+			        		return new CraftResult(Float.MAX_VALUE, logs, craftings);
 			        	}
-			        	total_cost += cost;
 			        	
-			        	process.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Calculated craft cost of recipe for " + EnumChatFormatting.GOLD + id + EnumChatFormatting.DARK_GREEN + "x" + amount + EnumChatFormatting.BLUE + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(cost) + EnumChatFormatting.BLUE + "):");
-			        	process.addAll(craft.craftings);
+			        	total_cost += cost;
+			        	for (Entry<String, Integer> entry : craft.craftings.entrySet()) {
+		        			craftings.merge(entry.getKey(), entry.getValue(), Integer::sum);
+						}
+			        	logs.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Calculated craft cost of recipe for " + EnumChatFormatting.GOLD + id + EnumChatFormatting.DARK_GREEN + "x" + amount + EnumChatFormatting.BLUE + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(cost) + EnumChatFormatting.BLUE + "):");
+			        	logs.addAll(craft.craftingsLog);
 			        }
 				}else {
 					total_cost += cost;
 					
-					process.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Found lowest bin for " + EnumChatFormatting.GOLD + id + EnumChatFormatting.LIGHT_PURPLE + "x" + amount + EnumChatFormatting.BLUE + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(cost) + EnumChatFormatting.BLUE + ")");
+					craftings.merge("%"+id, amount, Integer::sum);
+					logs.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Found lowest bin for " + EnumChatFormatting.GOLD + id + EnumChatFormatting.LIGHT_PURPLE + "x" + amount + EnumChatFormatting.BLUE + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(cost) + EnumChatFormatting.BLUE + ")");
 				}
 			}else { // item is in bazaar
 				Float bazaarCost = getBuyPrice(bazaarItem, buy, tax);
@@ -349,26 +399,33 @@ public class Bazaar {
 					ItemRecipe recipe2 = RecipeHandler.getItemRecipe(id);
 			        if (recipe2 == null || alreadyTriedCraftingRecipe.contains(id)) {
 			        	if(alreadyTriedCraftingRecipe.contains(id) && craftCostMap.containsKey(id)){
-			        		total_cost += craftCostMap.get(id) * amount;
-			        		process.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Using recipe for " + EnumChatFormatting.GOLD + id + EnumChatFormatting.DARK_GREEN + "x" + amount + EnumChatFormatting.BLUE + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(craftCostMap.get(id)*amount) + EnumChatFormatting.BLUE + ")");
+			        		total_cost += craftCostMap.get(id).cost * amount;
+			        		for (Entry<String, Integer> entry : craftCostMap.get(id).craftings.entrySet()) {
+			        			craftings.merge(entry.getKey(), entry.getValue(), Integer::sum);
+							}
+			        		logs.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Using recipe for " + EnumChatFormatting.GOLD + id + EnumChatFormatting.DARK_GREEN + "x" + amount + EnumChatFormatting.BLUE + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(craftCostMap.get(id).cost*amount) + EnumChatFormatting.BLUE + ")");
 			        	}else {
-			        		process.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.RED + "No buy/sell orders for " + EnumChatFormatting.GOLD + id + EnumChatFormatting.BLUE + " in bazaar and it doesn't have recipe");
-			        		return new CraftResult(Float.MAX_VALUE, process);
+			        		logs.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.RED + "No buy/sell orders for " + EnumChatFormatting.GOLD + id + EnumChatFormatting.BLUE + " in bazaar and it doesn't have recipe");
+			        		return new CraftResult(Float.MAX_VALUE, logs, craftings);
 			        	}
 			        }else {
 			        	alreadyTriedCraftingRecipe.add(id);
 			        	CraftResult craft = calculateCraftCost(recipe2, bazaar, buy, tax, ">" + detailedInfo);
 			        	
 			        	bazaarCost = craft.cost;
-			        	craftCostMap.put(id, bazaarCost);
+			        	craftCostMap.put(id, craft);
 			        	if (bazaarCost == Float.MAX_VALUE) {
-			        		process.addAll(craft.craftings);
-			        		return new CraftResult(Float.MAX_VALUE, process);
+			        		logs.addAll(craft.craftingsLog);
+			        		return new CraftResult(Float.MAX_VALUE, logs, craftings);
 			        	}
 			        	total_cost += bazaarCost * amount;
 			        	
-			        	process.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Calculated craft cost of recipe for " + EnumChatFormatting.GOLD + id + EnumChatFormatting.DARK_GREEN + "x" + amount + EnumChatFormatting.BLUE + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(bazaarCost*amount) + EnumChatFormatting.BLUE + "):");
-			        	process.addAll(craft.craftings);
+			        	for (Entry<String, Integer> entry : craft.craftings.entrySet()) {
+		        			craftings.merge(entry.getKey(), entry.getValue(), Integer::sum);
+						}
+			        	
+			        	logs.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Calculated craft cost of recipe for " + EnumChatFormatting.GOLD + id + EnumChatFormatting.DARK_GREEN + "x" + amount + EnumChatFormatting.BLUE + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(bazaarCost*amount) + EnumChatFormatting.BLUE + "):");
+			        	logs.addAll(craft.craftingsLog);
 			        	continue;
 			        }
 				}
@@ -376,11 +433,16 @@ public class Bazaar {
 				float cost = bazaarCost.floatValue() * amount;
 				
 				if(craftCostMap.get(id) != null) {
-					if(cost > craftCostMap.get(id) * amount) {
-						cost = craftCostMap.get(id) * amount;
-						process.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Using recipe for " + EnumChatFormatting.GOLD + id + EnumChatFormatting.DARK_AQUA + "x" + amount + EnumChatFormatting.BLUE + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(cost) + EnumChatFormatting.BLUE + ")");
+					if(cost > craftCostMap.get(id).cost * amount) {
+						cost = craftCostMap.get(id).cost * amount;
+						for (Entry<String, Integer> entry : craftCostMap.get(id).craftings.entrySet()) {
+		        			craftings.merge(entry.getKey(), entry.getValue(), Integer::sum);
+						}
+						
+						logs.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Using recipe for " + EnumChatFormatting.GOLD + id + EnumChatFormatting.DARK_AQUA + "x" + amount + EnumChatFormatting.BLUE + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(cost) + EnumChatFormatting.BLUE + ")");
 					}else {
-						process.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Found " + EnumChatFormatting.GOLD + id + EnumChatFormatting.DARK_AQUA + "x" + amount + EnumChatFormatting.BLUE + " in bazaar" + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(cost) + EnumChatFormatting.BLUE + ")");
+						craftings.merge(id, amount, Integer::sum);
+						logs.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Found " + EnumChatFormatting.GOLD + id + EnumChatFormatting.DARK_AQUA + "x" + amount + EnumChatFormatting.BLUE + " in bazaar" + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(cost) + EnumChatFormatting.BLUE + ")");
 					}
 		        	
 		        	total_cost += cost;
@@ -388,20 +450,27 @@ public class Bazaar {
 					ItemRecipe recipe2 = RecipeHandler.getItemRecipe(id);
 			        if (recipe2 == null || alreadyTriedCraftingRecipe.contains(id)) {
 			        	total_cost += cost;
-			        	process.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Found " + EnumChatFormatting.GOLD + id + EnumChatFormatting.GREEN + "x" + amount + EnumChatFormatting.BLUE + " in bazaar" + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(cost) + EnumChatFormatting.BLUE + ")");
+			        	craftings.merge(id, amount, Integer::sum);
+			        	logs.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Found " + EnumChatFormatting.GOLD + id + EnumChatFormatting.GREEN + "x" + amount + EnumChatFormatting.BLUE + " in bazaar" + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(cost) + EnumChatFormatting.BLUE + ")");
 			        }else {
 			        	alreadyTriedCraftingRecipe.add(id);
 			        	CraftResult craft = calculateCraftCost(recipe2, bazaar, buy, tax, ">" + detailedInfo);
 			        	
 			        	float craftCost = craft.cost;
-			        	craftCostMap.put(id, craftCost);
+			        	craftCostMap.put(id, craft);
 			        	
 			        	if(craftCost != Float.MAX_VALUE && cost > craftCost * amount) {
 			        		cost = craftCost * amount;
-			        		process.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Calculated craft cost of recipe for " + EnumChatFormatting.GOLD + id + EnumChatFormatting.AQUA + "x" + amount + EnumChatFormatting.BLUE + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(cost) + EnumChatFormatting.BLUE + "):");
-			        		process.addAll(craft.craftings);
+			        		
+			        		for (Entry<String, Integer> entry : craft.craftings.entrySet()) {
+			        			craftings.merge(entry.getKey(), entry.getValue(), Integer::sum);
+							}
+			        		
+			        		logs.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Calculated craft cost of recipe for " + EnumChatFormatting.GOLD + id + EnumChatFormatting.AQUA + "x" + amount + EnumChatFormatting.BLUE + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(cost) + EnumChatFormatting.BLUE + "):");
+			        		logs.addAll(craft.craftingsLog);
 			        	}else {
-			        		process.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Found " + EnumChatFormatting.GOLD + id + EnumChatFormatting.AQUA + "x" + amount + EnumChatFormatting.BLUE + " in bazaar" + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(cost) + EnumChatFormatting.BLUE + ")");
+			        		craftings.merge(id, amount, Integer::sum);
+			        		logs.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Found " + EnumChatFormatting.GOLD + id + EnumChatFormatting.AQUA + "x" + amount + EnumChatFormatting.BLUE + " in bazaar" + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(cost) + EnumChatFormatting.BLUE + ")");
 						}
 			        	
 			        	total_cost += cost;
@@ -411,8 +480,8 @@ public class Bazaar {
 			}
 		}
 		
-		if(total_cost == 0) return new CraftResult(Float.MAX_VALUE, null);
-		return new CraftResult(total_cost, process);
+		if(total_cost == 0) return new CraftResult(Float.MAX_VALUE, logs, craftings);
+		return new CraftResult(total_cost, logs, craftings);
 	}
 	
 	private static String fixSpaceInDetailedInfo(String di) {

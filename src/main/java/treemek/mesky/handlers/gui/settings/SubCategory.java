@@ -17,6 +17,8 @@ import treemek.mesky.handlers.gui.elements.buttons.SettingButton;
 import treemek.mesky.handlers.gui.elements.buttons.SettingListBox;
 import treemek.mesky.handlers.gui.elements.sliders.SettingSlider;
 import treemek.mesky.handlers.gui.elements.textFields.SettingTextField;
+import treemek.mesky.utils.Utils;
+import treemek.mesky.utils.chat.ChatFilter;
 
 public class SubCategory extends GuiScreen{
 	String name = null;
@@ -64,6 +66,9 @@ public class SubCategory extends GuiScreen{
 					if(list.get(i) instanceof SettingSlider) {
 						subEndY += ((SettingSlider)list.get(i)).allHeight + 2;
 					}
+					if(list.get(i) instanceof SettingListBox) {
+						subEndY += ((SettingListBox)list.get(i)).allHeight + 2;
+					}
 				}
 				
 				if(list.get(i) instanceof GuiTextField) {
@@ -105,19 +110,21 @@ public class SubCategory extends GuiScreen{
                         {
                             guiButton.playPressSound(Minecraft.getMinecraft().getSoundHandler());
                             SettingsGUI.buttonClicked(guiButton); // here is function to buttonClicked maybe for future searching XD
+                            return;
                         }
             		}else {
 		                GuiButton guibutton = (GuiButton)this.list.get(i);
 		                
 		                if(this.list.get(i) instanceof SettingSlider) {
-		                	((SettingSlider)this.list.get(i)).mouseClicked(mouseX, mouseY, mouseButton);
+		                	if(((SettingSlider)this.list.get(i)).mouseClicked(mouseX, mouseY, mouseButton)) return;
 		                }else if(this.list.get(i) instanceof SettingListBox) {
-		                	((SettingListBox)this.list.get(i)).mousePressed(mouseX, mouseY, mouseButton);
+		                	if(((SettingListBox)this.list.get(i)).mousePressed(mouseX, mouseY, mouseButton)) return;
             			}else {
 			                if (guibutton.mousePressed(this.mc, mouseX, mouseY))
 			                {
 			                    guibutton.playPressSound(Minecraft.getMinecraft().getSoundHandler());
 			                    SettingsGUI.buttonClicked(guibutton); // here is function to buttonClicked maybe for future searching XD
+			                    return;
 			                }
 		                }
             		}

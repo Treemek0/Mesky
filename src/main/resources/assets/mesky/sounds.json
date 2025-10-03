@@ -52,5 +52,14 @@
                 "stream": true
             }
         ]
+    },
+    "block": {
+        "category": "master",
+        "sounds": [
+            {
+                "name": "mesky:block",
+                "stream": true
+            }
+        ]
     }
 }

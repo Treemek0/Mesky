@@ -6,6 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.IChatComponent;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -77,11 +78,33 @@ public class ChatFilter {
 	
 	private void checkFilter(ClientChatReceivedEvent event, Setting setting) {
 		if(setting.text.equals("SEPARATE")) {
-			if(!SettingsConfig.customChat.isOn) return;
-			event.setCanceled(true);
-			chat.addChatMessage(event.message);
+			if(SettingsConfig.customChat.isOn) {
+				event.setCanceled(true);
+				chat.addChatMessage(event.message);
+			}
 		}else if(setting.text.equals("HIDDEN")) {
 			event.setCanceled(true);
+		}
+	}
+	
+	
+	public static void checkFilterAndSend(Setting setting, String comp) {
+		if(setting.text.equals("SEPARATE")) {
+			if(SettingsConfig.customChat.isOn) {
+				chat.addChatMessage(comp);
+			}
+		}else if(setting.text.equals("CHAT")) {
+			Utils.addMinecraftMessage(comp);
+		}
+	}
+	
+	public static void checkFilterAndSend(Setting setting, IChatComponent comp) {
+		if(setting.text.equals("SEPARATE")) {
+			if(SettingsConfig.customChat.isOn) {
+				chat.addChatMessage(comp);
+			}
+		}else if(setting.text.equals("CHAT")) {
+			Utils.addMinecraftMessage(comp);;
 		}
 	}
 	
@@ -111,11 +134,18 @@ public class ChatFilter {
         	}
         }
     }
-    
-    
-	
-	@SubscribeEvent
-	public void onKeyInput(InputEvent.KeyInputEvent event) {
-	    
+
+	public static void updateClamp() {
+		chat.changeSize(SettingsConfig.customChatWidth.number.floatValue(), SettingsConfig.customChatHeight.number.floatValue());
+		ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
+		chat.update(sr);
+		
+		int chatWidth = chat.getChatWidth(sr.getScaledWidth());
+		int chatHeight = chat.getVisiblePreviewChatHeight(sr.getScaledHeight());
+		
+		float x = Math.max(0, Math.min(chat.x, (float)(sr.getScaledWidth() - chatWidth))/sr.getScaledWidth() * 100);
+		float y = Math.max(chatHeight, Math.min(chat.y, sr.getScaledHeight() - chatHeight)) / (float)sr.getScaledHeight() * 100f;
+
+		SettingsConfig.customChat.position = new Float[] { x, y };
 	}
 }

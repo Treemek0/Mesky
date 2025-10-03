@@ -45,6 +45,8 @@ import treemek.mesky.utils.ChatFunctions.ChatFunction;
 import treemek.mesky.utils.FriendsLocations;
 import treemek.mesky.utils.Waypoints.Waypoint;
 import treemek.mesky.utils.Waypoints.WaypointGroup;
+import treemek.mesky.utils.chat.ChatFilter;
+
 import java.io.Writer;
 
 public class ConfigHandler {
@@ -420,6 +422,7 @@ public class ConfigHandler {
             	loadSettingsFromFileToClass(CosmeticHandler.class, settings);
                 
                 if(CosmeticHandler.CapeType.number == 5) CustomCapeGui.iterateImagesInFolder(CosmeticHandler.CustomCapeTexture.text, "CustomCape");
+                if(ChatFilter.chat != null) ChatFilter.chat.wrapMessages();
             }
         }     
     }

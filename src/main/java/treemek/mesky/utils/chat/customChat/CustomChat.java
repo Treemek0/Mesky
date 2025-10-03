@@ -250,6 +250,8 @@ public class CustomChat extends GuiScreen {
 			
 			int textX = (int) (rightPacing ? x + w - RenderHandler.getTextWidth(message.message.getFormattedText(), scale) : x + 1);
 			
+			
+			
 			RenderHandler.drawText(message.message.getFormattedText(), textX, lineY - lineHeight + 1, scale, true, (alpha << 24) | (0xFFFFFF & 0xFFFFFF));
 			
 			if(linesDrawn >= visibleMessageLines) break;
@@ -304,7 +306,12 @@ public class CustomChat extends GuiScreen {
 			int lineY = cY - (linesDrawn-1) * lineHeight;
 			
 			RenderHandler.drawRect(cX, lineY - lineHeight, cX + w, lineY, ((int)(alpha * SettingsConfig.customChatOpacity.number) << 24) | 0x000000);
-			RenderHandler.drawText(message.message.getFormattedText(), cX + 1, lineY - lineHeight + 1, scale, true, (alpha << 24) | (0xFFFFFF & 0xFFFFFF));
+			
+			int textX = (int) (rightPacing ? cX + w - RenderHandler.getTextWidth(message.message.getFormattedText(), scale) : cX + 1);
+			
+			String text = rightPacing ? swapWhitespace(message.message.getFormattedText()) : message.message.getFormattedText();
+			
+			RenderHandler.drawText(text, textX, lineY - lineHeight + 1, scale, true, (alpha << 24) | (0xFFFFFF & 0xFFFFFF));
 			
 			if(linesDrawn >= visibleMessageLines) break;
 		}
@@ -335,7 +342,7 @@ public class CustomChat extends GuiScreen {
     }
     
     public int getVisiblePreviewChatHeight(int screenHeight) {
-    	int drawnLinesCount = Math.min(preview_wrappedLines.size(), getVisibleLinesCount(getMaxChatHeight(height)));
+    	int drawnLinesCount = getVisibleLinesCount(getMaxChatHeight(height));
         int cHeight = drawnLinesCount * getLineHeight();
         
         return cHeight;
@@ -371,21 +378,8 @@ public class CustomChat extends GuiScreen {
     }
     
 	public void addChatMessage(String string) {
-		Utils.writeToConsole("[SCHAT] " + string);
 		ChatComponentText comp = new ChatComponentText(string);
-		messages.add(new ChatLine(comp));
-    	
-    	int w = getChatWidth(width);
-    	double scale = RenderHandler.getTextScale(getLineHeight()-2);
-    	List<IChatComponent> lines = splitComponentToWidth(comp, w - 2, (float) scale);
-		
-		for (IChatComponent line : lines) {
-			wrappedLines.add(0, new ChatLine(line));
-		}
-		
-		if(messages.size() > maxMessages) {
-			messages.remove(0);
-		}
+		addChatMessage(comp);
 	}
     
     public void openChat() {
@@ -412,7 +406,7 @@ public class CustomChat extends GuiScreen {
     	super.onGuiClosed();
     }
     
-    private void wrapMessages() {
+    public void wrapMessages() {
     	wrappedLines.clear();
     	preview_wrappedLines.clear();
     	scrollPos = 0;
@@ -452,17 +446,22 @@ public class CustomChat extends GuiScreen {
         if(m_x >= x && m_x <= x + cWidth && m_y <= y && m_y >= y - cHeight) {
         	int chatY = y - m_y;
         	
+        	int textStartX = x;
+        	
         	int i = drawnLinesCount - 1 - (cHeight - chatY) / lineHeight;
         	i = MathHelper.clamp_int(i, 0, drawnLinesCount-1);
         	
         	ChatLine line = wrappedLines.get(i+scrollPos);
         	
         	double scale = RenderHandler.getTextScale(lineHeight-2);
-        	int x_Position = ColorUtils.removeTextFormatting(RenderHandler.trimStringToWidth(line.message.getFormattedText(), m_x + 1 - x, false, scale)).length();
         	
-        	if(x_Position == ColorUtils.removeTextFormatting(line.message.getFormattedText()).length()) {
-        		return null;
-        	}
+        	if(rightPacing) textStartX = (int) (x + cWidth - RenderHandler.getTextWidth(swapWhitespace(line.message.getFormattedText()), scale));
+        	
+        	if(m_x < textStartX) return null;
+        	
+        	int x_Position = ColorUtils.removeTextFormatting(RenderHandler.trimStringToWidth(line.message.getFormattedText(), m_x + 1 - textStartX, false, scale)).length();
+        	
+        	if(x_Position == ColorUtils.removeTextFormatting(line.message.getFormattedText()).length()) return null;
         	
         	for (IChatComponent comp : line.message.getSiblings()) {
         		String m = ColorUtils.removeTextFormatting(comp.getUnformattedText());
@@ -578,7 +577,8 @@ public class CustomChat extends GuiScreen {
                     lineWidth = 0;
 
                     // keep formatting for next line
-                    text = lastFormatting + remainder.trim(); // skip leading spaces
+                    remainder = remainder.startsWith(" ") ? remainder.substring(1) : remainder;
+                    text = lastFormatting + remainder; // skip leading spaces
                     continue;
                 }
                 
@@ -595,7 +595,8 @@ public class CustomChat extends GuiScreen {
                     lineWidth = 0;
 
                     // keep formatting for next line
-                    text = lastFormatting + remainder.trim(); // skip leading spaces
+                    remainder = remainder.startsWith(" ") ? remainder.substring(1) : remainder;
+                    text = lastFormatting + remainder; // skip leading spaces
                 } else {
                     text = "";
                 }
@@ -640,6 +641,32 @@ public class CustomChat extends GuiScreen {
     	}
     	
         return text;
+    }
+    
+    public static String swapWhitespace(String text) {
+        if (text == null || text.isEmpty()) {
+            return text;
+        }
+
+        int start = 0;
+        int end = text.length() - 1;
+
+        // count leading whitespace
+        while (start < text.length() && Character.isWhitespace(text.charAt(start))) {
+            start++;
+        }
+
+        // count trailing whitespace
+        while (end >= 0 && Character.isWhitespace(text.charAt(end))) {
+            end--;
+        }
+
+        String leading = text.substring(0, start);          // all left spaces
+        String middle  = text.substring(start, end + 1);    // actual text
+        String trailing = text.substring(end + 1);          // all right spaces
+
+        // swap: right to left, left to right
+        return trailing + middle + leading;
     }
     
     @Override

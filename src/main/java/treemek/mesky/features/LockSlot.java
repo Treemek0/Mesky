@@ -22,9 +22,13 @@ import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.event.HoverEvent;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.ChatStyle;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -38,6 +42,7 @@ import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.handlers.soundHandler.SoundsHandler;
 import treemek.mesky.utils.Utils;
+import treemek.mesky.utils.chat.ChatFilter;
 
 public class LockSlot {
 
@@ -50,7 +55,7 @@ public class LockSlot {
 	// .CONTAINSKEY(SLOT) TO DRAW FRAME AROUND IT BECAUSE EVERY SLOT CONNECTED HAS KEY IN IT
 	// .CONTAINS & .GET(HOVERED_SLOT) FOR LINE  
 	
-	
+	public static boolean dropKeyPressed = false;
 	
 	public static Integer connectingSlot_1 = null;
 	// IF NOT NULL DRAW A LINE FROM IT TO MOUSE
@@ -64,6 +69,12 @@ public class LockSlot {
 	public void onClientTick(TickEvent.ClientTickEvent event) {
 	    if (event.phase != TickEvent.Phase.END) return;
 
+	    if(Minecraft.getMinecraft().gameSettings.keyBindDrop.isKeyDown()) {
+	    	dropKeyPressed = true;
+	    }else {
+	    	dropKeyPressed = false;
+	    }
+	    
 	    Minecraft mc = Minecraft.getMinecraft();
 	    if (!(mc.currentScreen instanceof GuiContainer)) return;
 	    
@@ -172,6 +183,8 @@ public class LockSlot {
 			return lock_red;
 		}
 	}
+
+	boolean dropPressed = false;
 	
 	@SubscribeEvent
 	public void onKeyInput(GuiScreenEvent.KeyboardInputEvent.Pre event) {
@@ -181,7 +194,7 @@ public class LockSlot {
 	    
 	    
 	    int key = Keyboard.getEventKey();
-	    if (key == Minecraft.getMinecraft().gameSettings.keyBindDrop.getKeyCode() && Keyboard.getEventKeyState()) { // dropping
+	    if (key == Minecraft.getMinecraft().gameSettings.keyBindDrop.getKeyCode() && Keyboard.getEventKeyState()) { // dropping Q in inv
 	        GuiContainer gui = (GuiContainer) mc.currentScreen;
 	        Slot hovered = gui.getSlotUnderMouse();
 	        
@@ -189,12 +202,26 @@ public class LockSlot {
 	            int slot = hovered.getSlotIndex();
 	            
 	            if (lockedSlots.containsKey(slot)) {
+	            	if(!dropPressed) {
+	            		ChatComponentText dropMessage = new ChatComponentText(EnumChatFormatting.RED + "[Mesky] \u26A0 You cannot drop this item. Unlock the slot first.");
+	            		ChatStyle style = new ChatStyle();
+	            		style.setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("Unlock slot in inventory using [KEY " + Keyboard.getKeyName(KEY.getKeyCode()) + "]")));
+	            		dropMessage.setChatStyle(style);
+	            		ChatFilter.checkFilterAndSend(SettingsConfig.dropItem_filter, dropMessage);
+	            		SoundsHandler.playSound("mesky:block", 1, 0.1f);
+	            	}
+	            	dropPressed = true;
 	                event.setCanceled(true); // block before drop happens
 	            }
 	        }
 	        
 	        return;
 	    }
+	    
+	    if (key == Minecraft.getMinecraft().gameSettings.keyBindDrop.getKeyCode() && !Keyboard.getEventKeyState()) {
+	    	dropPressed = false;
+	    }
+	    	
 	    
 	    if (key == KEY.getKeyCode() && SettingsConfig.LockSlots.isOn && !Keyboard.getEventKeyState()) { // locking
 	    	if(keyPressed < 10) {
@@ -205,14 +232,14 @@ public class LockSlot {
 		        	int slot = hovered.getSlotIndex();
 		        	changedLocks = true;
 		        	
-		            if (lockedSlots.containsKey(slot) && lockedSlots.get(slot)) {
+		            if (lockedSlots.containsKey(slot) && lockedSlots.get(slot)) { // removing (3 tap)
 		                lockedSlots.remove(slot);
 		                SoundsHandler.playSound("mesky:tap", 1, 0.3f);
 		            } else {
-		            	if(!lockedSlots.containsKey(slot)) {
+		            	if(!lockedSlots.containsKey(slot)) { // gray lock (1 tap)
 		            		lockedSlots.put(slot, false);
 		                	SoundsHandler.playSound("mesky:bop");
-		            	}else {
+		            	}else { // red lock (2 tap)
 		            		lockedSlots.put(slot, true);
 		            		SoundsHandler.playSound("mesky:bop", 1, 2);
 		            	}

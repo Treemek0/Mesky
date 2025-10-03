@@ -43,6 +43,7 @@ public class SettingsConfig {
 	}
 
 	public static final Setting LockSlots = new Setting(true, null, null);
+	public static Setting dropItem_filter = new Setting("CHAT", null, null);
 
 	public static Setting CustomWarpMenu = new Setting(true, null, null);
 	public static Setting CustomWarpMenuLockableIslands = new Setting(true, null, null);
@@ -138,6 +139,7 @@ public class SettingsConfig {
 	public static Setting customChatFadeDuration = new Setting(1000, null, null);
 	public static Setting customChatToggle = new Setting(false, null, null);
 	public static Setting customChatRightPacing = new Setting(false, null, null);
+
 	
 	public static Setting sendingToServer_filter = new Setting("CHAT", null, null);
 	public static Setting warping_filter = new Setting("CHAT", null, null);

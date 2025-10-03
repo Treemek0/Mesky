@@ -14,6 +14,7 @@ import com.google.gson.JsonSyntaxException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.shader.ShaderGroup;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
@@ -41,6 +42,7 @@ import treemek.mesky.handlers.gui.elements.textFields.SettingTextField;
 import treemek.mesky.handlers.gui.waypoints.WaypointElement;
 import treemek.mesky.utils.Alerts;
 import treemek.mesky.utils.ColorUtils;
+import treemek.mesky.utils.chat.ChatFilter;
 
 public class SettingsGUI extends GuiScreen {
 	static List<Category> categories = new ArrayList<>();
@@ -49,6 +51,10 @@ public class SettingsGUI extends GuiScreen {
 	public Integer openedCategory = 0;
 	
 	ScrollBar scrollbar = new ScrollBar();
+	
+	List<Option> chatFilterArray = new ArrayList<>(Arrays.asList(new Option("CHAT", "CHAT"), new Option("SEPARATE", "SEPARATE"), new Option("HIDDEN", "HIDDEN")));
+	
+	List<Option> chatFilterArrayNoS = new ArrayList<>(Arrays.asList(new Option("CHAT", "CHAT"), new Option("HIDDEN", "HIDDEN")));
 	
 	@Override
 	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
@@ -137,7 +143,11 @@ public class SettingsGUI extends GuiScreen {
 	private void utilityCategory(int checkSize) {
 	    List<Object> generalSub = new ArrayList<>();
 	    generalSub.add(new SettingButton(6, checkSize, "Hide Players", SettingsConfig.HidePlayers));
-	    generalSub.add(new SettingButton(6, checkSize, "Lock slots (" + Keyboard.getKeyName(LockSlot.KEY.getKeyCode()) + ")", SettingsConfig.LockSlots));
+	    
+	    List<Object> slotsSub = new ArrayList<>();
+	    slotsSub.add(new SettingListBox(2, 4*checkSize, checkSize, "Drop stopped message", new ArrayList<>(Arrays.asList(
+    		    new Option("CHAT", "CHAT"), new Option("SEPARATE", "SEPARATE"), new Option("HIDDEN", "HIDDEN"))), SettingsConfig.dropItem_filter));
+	    generalSub.add(new FoldableSettingButton(6, checkSize, "Lock slots (" + Keyboard.getKeyName(LockSlot.KEY.getKeyCode()) + ")", SettingsConfig.LockSlots, slotsSub));
 	    generalSub.add(new SettingSlider(41849, 2 * checkSize, checkSize, "Holding items size", SettingsConfig.HoldingItemSize, 0.1, 0.1, 2));
 	   // generalSub.add(new SettingSlider(41849, 2 * checkSize, checkSize, "Holding items X offset", SettingsConfig.HoldingItemOffsetX, 1, -15, 15));
 	    generalSub.add(new SettingSlider(41849, 2 * checkSize, checkSize, "Holding items Y offset", SettingsConfig.HoldingItemOffsetY, 1, 0, 10));
@@ -256,29 +266,28 @@ public class SettingsGUI extends GuiScreen {
 	private void ChatCategory(int checkSize) {
 		List<SubCategory> chat = new ArrayList<>();
 		
+		Float[] chatBG_position = SettingsConfig.customChat.position;
+		
 		List<Object> separateChatSub = new ArrayList<>();
 		List<Object> separateChatFoldable = new ArrayList<>();
         separateChatFoldable.add(new SettingSlider(-1, checkSize*2, checkSize, "Background opacity", SettingsConfig.customChatOpacity, 0.05, 0, 1));
-        separateChatFoldable.add(new SettingSlider(-1, checkSize*2, checkSize, "Background width", SettingsConfig.customChatWidth, 0.1, 0.5, 2));
-        separateChatFoldable.add(new SettingSlider(-1, checkSize*2, checkSize, "Background height", SettingsConfig.customChatHeight, 0.1, 0.5, 2));
+        separateChatFoldable.add(new SettingSlider(-1, checkSize*2, checkSize, "Background width", SettingsConfig.customChatWidth, 0.05, 0.5, 2, () -> { SettingsConfig.customChat.position[0] = chatBG_position[0]; ChatFilter.chat.changePosition(chatBG_position[0], chatBG_position[1]); ChatFilter.updateClamp(); }));
+        separateChatFoldable.add(new SettingSlider(-1, checkSize*2, checkSize, "Background height", SettingsConfig.customChatHeight, 0.05, 0.5, 4, () -> { SettingsConfig.customChat.position[1] = chatBG_position[1]; ChatFilter.chat.changePosition(chatBG_position[0], chatBG_position[1]); ChatFilter.updateClamp(); }));
         separateChatFoldable.add(new SettingSlider(-1, checkSize*2, checkSize, "Text scale", SettingsConfig.customChatTextScale, 0.1, 0.75, 2));
         separateChatFoldable.add(new SettingSlider(-1, checkSize*2, checkSize, "New line show time [ms]", SettingsConfig.customChatFadeStart, 200, 0, 5000));
         separateChatFoldable.add(new SettingSlider(-1, checkSize*2, checkSize, "New line fade time [ms]", SettingsConfig.customChatFadeDuration, 100, 0, 3000));
         separateChatFoldable.add(new SettingButton(-1, checkSize, "Text right pacing", SettingsConfig.customChatRightPacing));
         separateChatFoldable.add(new SettingButton(-1, checkSize, "Chat open toggle", SettingsConfig.customChatToggle));
-        separateChatSub.add(new FoldableSettingButton(-1, checkSize, "Separate chat", SettingsConfig.customChat, separateChatFoldable));
+        FoldableSettingButton CustomChatButton = new FoldableSettingButton(-1, checkSize, "Separate chat", SettingsConfig.customChat, separateChatFoldable);
+        CustomChatButton.set_runnable(() -> { initGui(); });
+        separateChatSub.add(CustomChatButton);
         
         List<Object> filterChatSub = new ArrayList<>();
-        filterChatSub.add(new SettingListBox(2, 4*checkSize, checkSize, "Sending to server [x]...", new ArrayList<>(Arrays.asList(
-    		    new Option("CHAT", "CHAT"), new Option("SEPARATE", "SEPARATE"), new Option("HIDDEN", "HIDDEN"))), SettingsConfig.sendingToServer_filter));
-        filterChatSub.add(new SettingListBox(2, 4*checkSize, checkSize, "Warping... / Warping you to your SkyBlock island...", new ArrayList<>(Arrays.asList(
-    		    new Option("CHAT", "CHAT"), new Option("SEPARATE", "SEPARATE"), new Option("HIDDEN", "HIDDEN"))), SettingsConfig.warping_filter));
-        filterChatSub.add(new SettingListBox(2, 4*checkSize, checkSize, "[x] was killed by [x]", new ArrayList<>(Arrays.asList(
-    		    new Option("CHAT", "CHAT"), new Option("SEPARATE", "SEPARATE"), new Option("HIDDEN", "HIDDEN"))), SettingsConfig.wasKilledBy_filter));
-        filterChatSub.add(new SettingListBox(2, 4*checkSize, checkSize, "FireSale announcement", new ArrayList<>(Arrays.asList(
-    		    new Option("CHAT", "CHAT"), new Option("SEPARATE", "SEPARATE"), new Option("HIDDEN", "HIDDEN"))), SettingsConfig.fireSale_filter));
-        filterChatSub.add(new SettingListBox(2, 4*checkSize, checkSize, "Playing on profile: [x] / Profile ID: [x]", new ArrayList<>(Arrays.asList(
-    		    new Option("CHAT", "CHAT"), new Option("SEPARATE", "SEPARATE"), new Option("HIDDEN", "HIDDEN"))), SettingsConfig.playingOnProfile_filter));
+        filterChatSub.add(new SettingListBox(2, 4*checkSize, checkSize, "Sending to server [x]...", getChatFilterArray(), SettingsConfig.sendingToServer_filter, "HIDDEN"));
+        filterChatSub.add(new SettingListBox(2, 4*checkSize, checkSize, "Warping... / Warping you to your SkyBlock island...", getChatFilterArray(), SettingsConfig.warping_filter, "HIDDEN"));
+        filterChatSub.add(new SettingListBox(2, 4*checkSize, checkSize, "[x] was killed by [x]", getChatFilterArray(), SettingsConfig.wasKilledBy_filter, "HIDDEN"));
+        filterChatSub.add(new SettingListBox(2, 4*checkSize, checkSize, "FireSale announcement", getChatFilterArray(), SettingsConfig.fireSale_filter, "HIDDEN"));
+        filterChatSub.add(new SettingListBox(2, 4*checkSize, checkSize, "Playing on profile: [x] / Profile ID: [x]", getChatFilterArray(), SettingsConfig.playingOnProfile_filter, "HIDDEN"));
         
 		chat.add(new SubCategory("Separate Chat", separateChatSub));
 		chat.add(new SubCategory("Filter",filterChatSub));
@@ -332,6 +341,13 @@ public class SettingsGUI extends GuiScreen {
 		}
     }
 	
+    private List<Option> getChatFilterArray() {
+    	if(SettingsConfig.customChat.isOn) {
+    		return chatFilterArray;
+    	}else {
+    		return chatFilterArrayNoS;
+    	}
+    }
 	
 	@Override
 	protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {

@@ -78,6 +78,7 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.IChatComponent;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.ResourceLocation;
@@ -1053,14 +1054,14 @@ public class Utils {
 		}
 	}
 	
-	public static void addMinecraftMessage(ChatComponentText comp) {
+	public static void addMinecraftMessage(IChatComponent comp) {
 		if(Minecraft.getMinecraft().thePlayer != null) {
 			if(comp == null) comp = new ChatComponentText("");
 			Minecraft.getMinecraft().thePlayer.addChatMessage(comp);
 		}
 	}
 	
-	public static void addMinecraftMessageWithPrefix(ChatComponentText comp) {
+	public static void addMinecraftMessageWithPrefix(IChatComponent comp) {
 		if(Minecraft.getMinecraft().thePlayer != null) {
 			if(comp == null) comp = new ChatComponentText("");
 			Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE).appendSibling(comp));

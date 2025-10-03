@@ -16,6 +16,7 @@ import treemek.mesky.Reference;
 import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.config.SettingsConfig.Setting;
 import treemek.mesky.handlers.RenderHandler;
+import treemek.mesky.handlers.gui.elements.GuiButtonRunnable;
 import treemek.mesky.handlers.gui.elements.SettingColorPicker;
 import treemek.mesky.handlers.gui.elements.sliders.SettingSlider;
 import treemek.mesky.handlers.gui.elements.textFields.SettingTextField;
@@ -23,7 +24,7 @@ import treemek.mesky.handlers.gui.settings.SettingsGUI;
 import treemek.mesky.utils.Utils;
 import treemek.mesky.utils.chat.ChatFilter;
 
-public class FoldableSettingButton extends GuiButton{
+public class FoldableSettingButton extends GuiButtonRunnable{
 
 	int color = 0x3e91b5;
 	String buttonText;
@@ -83,6 +84,7 @@ public class FoldableSettingButton extends GuiButton{
 	
 	public void changeFull() {
          setting.isOn = !setting.isOn;
+         run_runnable();
 	}
 	
 	@Override

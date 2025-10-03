@@ -53,6 +53,23 @@ public class SettingListBox extends GuiButton{
 		}
 	}
 	
+	public SettingListBox(int buttonId, int widthIn, int heightIn, String buttonText, List<Option> options, Setting setting, String defaultOption) {
+		super(buttonId, 0, 0, widthIn, heightIn, buttonText);
+		notSelectedWidth = widthIn;
+		this.options = options;
+		this.setting = setting;
+		String current = setting.text;
+		
+		Optional<Option> foundOption = options.stream().filter(option -> option.getArgument().equals(current)).findFirst();
+		
+		if(foundOption.isPresent()) {
+			currentOption = options.indexOf(foundOption.get());
+		}else {
+			Optional<Option> defaultO = options.stream().filter(option -> option.getArgument().equals(defaultOption)).findFirst();
+			currentOption = options.indexOf(defaultO.get());
+		}
+	}
+	
 	public SettingListBox(int buttonId, int widthIn, int heightIn, String buttonText, List<Option> options, String customText, Setting setting) {
 		super(buttonId, 0, 0, widthIn, heightIn, buttonText);
 		this.options = options;

@@ -15,11 +15,12 @@ import treemek.mesky.Reference;
 import treemek.mesky.config.ConfigHandler;
 import treemek.mesky.config.SettingsConfig.Setting;
 import treemek.mesky.handlers.RenderHandler;
+import treemek.mesky.handlers.gui.elements.GuiButtonRunnable;
 import treemek.mesky.handlers.gui.elements.textFields.SettingTextField;
 import treemek.mesky.handlers.gui.elements.textFields.TextField;
 import treemek.mesky.utils.Utils;
 
-public class SettingSlider extends GuiButton{
+public class SettingSlider extends GuiButtonRunnable{
 
 	String sliderText;
 	TextField textField;
@@ -45,6 +46,22 @@ public class SettingSlider extends GuiButton{
 		this.max = max;
 	}
 	
+	public SettingSlider(int buttonId, int width, int height, String sliderText, Setting setting, double sliderPrecision, double min, double max, Runnable runnable) {
+		super(buttonId, 0, 0, width, height, sliderText);
+		this.sliderText = sliderText;
+		this.setting = setting;
+		
+		set_runnable(runnable);
+		
+		ScaledResolution resolution = new ScaledResolution(Minecraft.getMinecraft());
+		this.textField = new TextField(0, 0, 0, resolution.getScaledHeight() / 10, height - height/4);
+		textField.setText(setting.number + "");
+		
+		this.sliderPrecision = sliderPrecision;
+		this.min = min;
+		this.max = max;
+	}
+	
 	ResourceLocation slider = new ResourceLocation(Reference.MODID, "gui/scrollbar.png");
 	
 	public double getValue() {
@@ -59,6 +76,8 @@ public class SettingSlider extends GuiButton{
 		double roundedCurrent = Math.round(value * Math.pow(10, decimalPlaces+1)) / Math.pow(10, decimalPlaces+1);
 		setting.number = Math.min(max, Math.max(min, roundedCurrent));
 		textField.setText(setting.number + "");
+		
+		run_runnable();
 	}
 
 	

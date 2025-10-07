@@ -119,7 +119,12 @@ public class CoordsDetector {
 			Float radius = SettingsConfig.MarkWaypointRadius.number.floatValue();
 			Long lifeTime = SettingsConfig.MarkWaypointTime.number.longValue();
 			Waypoints.addTouchWaypoint(sender, color, x, y, z, 2, radius, lifeTime * 1000L);
-			Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Added mark (" + radius + "m, " + lifeTime + "s): " + EnumChatFormatting.DARK_PURPLE + ColorUtils.getColoredText(sender) + " " + EnumChatFormatting.GOLD + x + " " + y + " " + z));
+			
+			if(SettingsConfig.coordsDetection_filter.text.equals("CHAT")) {
+		        Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Added mark (" + radius + "m, " + lifeTime + "s): " + EnumChatFormatting.DARK_PURPLE + ColorUtils.getColoredText(sender) + " " + EnumChatFormatting.GOLD + x + " " + y + " " + z));
+	        }else if(SettingsConfig.coordsDetection_filter.text.equals("SEPARATE")) {
+		        ChatFilter.chat.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]: " + EnumChatFormatting.WHITE + "Added mark (" + radius + "m, " + lifeTime + "s): " + EnumChatFormatting.DARK_PURPLE + ColorUtils.getColoredText(sender) + " " + EnumChatFormatting.GOLD + x + " " + y + " " + z));
+	        }
         }
         
         ChatStyle mark = new ChatStyle();

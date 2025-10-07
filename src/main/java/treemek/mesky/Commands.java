@@ -113,7 +113,7 @@ public class Commands extends CommandBase{
 	            "pathtomacrowaypoint", "clearpath", "flyingpath", "flyingpathtowaypoint",
 	            "moveto", "movetowaypoint", "stopmoving", "lookat", "id", "sharks", 
 	            "copy", "sounds", "colors", "miningmacro", " mining", "miningspeed",
-	            "setwebhook", "aotv", "rotate", "delay", "and", "loop", "importskytilsfromclipboard"
+	            "setwebhook", "aotv", "rotate", "delay", "and", "loop", "importskytilsfromclipboard", "craftprofit", "craftitemprofit"
 	        ));
 	
 	 private Thread craftProfitThread;
@@ -479,6 +479,11 @@ public class Commands extends CommandBase{
     		if(command.equals("copy")) {
     			String text = connectArgs(args, 1, args.length);
     			Utils.addMinecraftMessageWithPrefix("Copied: " + text);
+    			Utils.copyToClipboard(text);
+    	        return;
+    		}
+    		if(command.equals("copy0")) { // copy without debug info
+    			String text = connectArgs(args, 1, args.length);
     			Utils.copyToClipboard(text);
     	        return;
     		}

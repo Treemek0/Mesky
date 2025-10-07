@@ -7,6 +7,9 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Enumeration;
 
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+
 import org.spongepowered.asm.launch.MixinBootstrap;
 import org.spongepowered.asm.mixin.Mixins;
 
@@ -48,6 +51,7 @@ import treemek.mesky.features.illegal.GhostPickaxe;
 import treemek.mesky.features.illegal.JawbusDetector;
 import treemek.mesky.handlers.GuiHandler;
 import treemek.mesky.handlers.RenderHandler;
+import treemek.mesky.handlers.gui.elements.buttons.FileSelectorButton;
 import treemek.mesky.handlers.gui.warp.fasttravel.WarpGui;
 import treemek.mesky.listeners.GuiOpenListener;
 import treemek.mesky.listeners.WarpErrorListener;
@@ -64,6 +68,7 @@ import treemek.mesky.utils.MovementUtils;
 import treemek.mesky.utils.PathfinderUtils;
 import treemek.mesky.utils.RotationUtils;
 import treemek.mesky.utils.Waypoints;
+import treemek.mesky.utils.chat.ChatFilter;
 import treemek.mesky.utils.chat.CoordsDetector;
 import treemek.mesky.utils.chat.NickMentionDetector;
 import treemek.mesky.utils.manager.AntyGhostBlock;
@@ -85,6 +90,14 @@ public class Mesky {
         Mixins.addConfiguration("mixins.mesky.json");
 		
 		configDirectory = event.getModConfigurationDirectory().toString();
+		
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
+			e.printStackTrace();
+		}
+		
+		FileSelectorButton.createFileSelector();
 		
 		//proxy = new ClientProxy();
 	}
@@ -137,10 +150,12 @@ public class Mesky {
 		MinecraftForge.EVENT_BUS.register(new CommandLoop());
 		MinecraftForge.EVENT_BUS.register(new LockSlot());
 		MinecraftForge.EVENT_BUS.register(new WarpErrorListener());
+		MinecraftForge.EVENT_BUS.register(new ChatFilter());
 		
 		ClientRegistry.registerKeyBinding(GhostBlock.GKEY);
 		ClientRegistry.registerKeyBinding(Freelook.KEY);
 		ClientRegistry.registerKeyBinding(LockSlot.KEY);
+		ClientRegistry.registerKeyBinding(ChatFilter.chatOpenKey);
 		//ClientRegistry.registerKeyBinding(RecordHeadMovement.HeadRecorder);
 		//ClientRegistry.registerKeyBinding(RecordHeadMovement.HeadPlayer);
 	}

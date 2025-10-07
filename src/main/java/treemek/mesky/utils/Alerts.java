@@ -24,6 +24,7 @@ import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
@@ -186,17 +187,15 @@ public class Alerts extends GuiScreen {
 			String nickname = Minecraft.getMinecraft().thePlayer.getName();
 			String nonColorMessage = StringUtils.stripControlCodes(message);
 			String onlyNonColorMessage = nonColorMessage;
-			boolean autor = false;
 			
 			if(nonColorMessage.contains(": ")){
 				onlyNonColorMessage = nonColorMessage.substring(nonColorMessage.indexOf(":") + 1);
 				String[] beforeMessage = nonColorMessage.split(":")[0].split(" ");
 				
 				for (String string : beforeMessage) {
-					if(string.equals(nickname) || string.equals(nickname + ":")) autor = true;
+					if(string.equals(nickname) || string.equals(nickname + ":")) return;
 				}
 			}
-			
 			
 			for(int i = 0; i < alertsList.size(); i++) {
 				if(!alertsList.get(i).enabled) continue;
@@ -205,8 +204,7 @@ public class Alerts extends GuiScreen {
 					if(onlyNonColorMessage.equals(alertsList.get(i).getTrigger())) {
 						if(alertsList.get(i).getOnlyParty() && !nonColorMessage.startsWith("Party >")) return;
 						if(alertsList.get(i).getIgnorePlayers() && nonColorMessage.contains(": ")) return;
-						if(autor) return;
-	
+
 						try {
 							registerAlert(alertsList.get(i));
 						} catch (Exception e) {
@@ -217,7 +215,6 @@ public class Alerts extends GuiScreen {
 					if(message.contains(alertsList.get(i).getTrigger())) {
 						if(alertsList.get(i).getOnlyParty() && !nonColorMessage.startsWith("Party >")) return;
 						if(alertsList.get(i).getIgnorePlayers() && nonColorMessage.contains(": ")) return;
-						if(autor) return; // ignores messages written by yourself
 						
 						try {
 							registerAlert(alertsList.get(i));
@@ -271,8 +268,7 @@ public class Alerts extends GuiScreen {
 	}
 	
 	 @SubscribeEvent
-	    public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
-		 // its done this way because u cant remove element from list while its iterating
+	    public void onRenderOverlay(RenderGameOverlayEvent.Pre event) {
 		 Iterator<AlertRenderInfo> iterator = new ArrayList<>(renderingQueue).iterator();
 		 while (iterator.hasNext()) {
 			 	AlertRenderInfo info = iterator.next();
@@ -299,6 +295,7 @@ public class Alerts extends GuiScreen {
 	        int posY = (int) (resolution.getScaledHeight() * ((float)(info.position[1])/100));
 	        
 	        RenderHandler.drawAlertText(ColorUtils.getColoredText(info.message), resolution, 0xffffff, info.scale, posX, posY);
+	        Minecraft.getMinecraft().getTextureManager().bindTexture(Gui.icons);
 	    }
 	    
 	    private void renderAlertImage(ScaledResolution resolution, AlertRenderInfo info) {

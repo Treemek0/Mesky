@@ -65,6 +65,8 @@ public class LockSlot {
 	
 	public static long nothingHappeningForSave = 0;
 	
+	public static Slot hoveredSlot;
+	
 	@SubscribeEvent
 	public void onClientTick(TickEvent.ClientTickEvent event) {
 	    if (event.phase != TickEvent.Phase.END) return;

@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Vector3f;
 
@@ -128,6 +129,7 @@ public class RenderHandler {
         GlStateManager.enableLighting();
         GlStateManager.enableTexture2D();
         GlStateManager.disableBlend();
+        GlStateManager.enableDepth();
         GlStateManager.popMatrix();
     }
 	
@@ -135,8 +137,9 @@ public class RenderHandler {
 	    GlStateManager.pushMatrix();
 	    GlStateManager.disableTexture2D();
 	    GlStateManager.enableBlend();
-	    GlStateManager.disableDepth();
 	    GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
+	    GlStateManager.disableDepth();
+	    GlStateManager.depthMask(false);
 	    GL11.glLineWidth(line_width);
 	    
 	    Color c = new Color(color);
@@ -155,8 +158,10 @@ public class RenderHandler {
 	    tess.draw();
 
 	    GL11.glLineWidth(1.0f);
+	    GL11.glColor4f(1,1,1,1);
 	    GlStateManager.enableTexture2D();
 	    GlStateManager.enableDepth();
+	    GlStateManager.depthMask(true);
 	    GlStateManager.disableBlend();
 	    GlStateManager.popMatrix();
 	}
@@ -193,10 +198,12 @@ public class RenderHandler {
 			GlStateManager.color(1, 1, 1, 1);
 			fr.drawString(text, (float) (x / scale), (float) (y / scale), defaultColor, true);
 		}
-
+		
 		GlStateManager.disableBlend();
-		GlStateManager.popMatrix();
+		GlStateManager.enableAlpha();
+		GlStateManager.enableTexture2D();
 		GlStateManager.color(1, 1, 1, 1);
+		GlStateManager.popMatrix();
 	}
 	
 	// https://github.com/bowser0000/SkyblockMod/blob/master/src/main/java/me/Danker/utils/RenderUtils.java
@@ -296,7 +303,7 @@ public class RenderHandler {
 
 	            double titleX = posX - (textLength * scale / 2);
 	            double titleY = posY + (drawHeight * scale);
-	            drawHUDText(title, titleX, titleY, scale, true, Color);
+	            drawText(title, titleX, titleY, scale, true, Color);
 	            drawHeight += mc.fontRendererObj.FONT_HEIGHT;
 	        }
 	    }
@@ -698,6 +705,7 @@ public class RenderHandler {
         Tessellator tessellator = Tessellator.getInstance();
         WorldRenderer worldrenderer = tessellator.getWorldRenderer();
         GlStateManager.enableBlend();
+        GlStateManager.enableAlpha();
         GlStateManager.disableTexture2D();
         GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
         GlStateManager.color(f, f1, f2, f3);
@@ -998,5 +1006,20 @@ public class RenderHandler {
     
     public static double getTextHeight(double scale) {
     	return Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT * scale;
+    }
+    
+    public static int getMouseX() {
+    	ScaledResolution wind = new ScaledResolution(Minecraft.getMinecraft());
+    	
+    	int i = Mouse.getEventX() * wind.getScaledWidth() / Minecraft.getMinecraft().displayWidth;
+        
+        return i;
+    }
+    
+    public static int getMouseY() {
+    	ScaledResolution wind = new ScaledResolution(Minecraft.getMinecraft());
+        int j = wind.getScaledHeight() - Mouse.getEventY() * wind.getScaledHeight() / Minecraft.getMinecraft().displayHeight - 1;
+        
+        return j;
     }
 }

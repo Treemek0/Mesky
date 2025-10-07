@@ -38,21 +38,18 @@ public class Cape extends ModelBase{
 	}
 	
 	static int currentAnimation = 0;
-	static int renderTick = 0;
+	static long lastCapeAnimationTime = 0;
 	
 	// TODO custom cape and test with high res texture
 	
 	public static ResourceLocation getCapeTexture() {
-		renderTick++;
-		float ticksInSeconds = Minecraft.getMinecraft().getDebugFPS();
-		
 		switch (CosmeticHandler.CapeType.number.intValue()) {
 			case 1: {
-				float animationFrequency = 0.2f;
+				float animationFrequency = 100; // [ms]
 				float amountOfAnimations = 5;
 				
-				if(renderTick > animationFrequency * ticksInSeconds) {
-					renderTick = 0;
+				if(animationFrequency < System.currentTimeMillis() - lastCapeAnimationTime) {
+					lastCapeAnimationTime = System.currentTimeMillis();
 					currentAnimation++;
 				}
 				
@@ -68,8 +65,8 @@ public class Cape extends ModelBase{
 				float animationFrequency = 0f;
 				float amountOfAnimations = 0;
 				
-				if(renderTick > animationFrequency * ticksInSeconds) {
-					renderTick = 0;
+				if(animationFrequency < System.currentTimeMillis() - lastCapeAnimationTime) {
+					lastCapeAnimationTime = System.currentTimeMillis();
 					currentAnimation++;
 				}
 				
@@ -85,8 +82,8 @@ public class Cape extends ModelBase{
 				float animationFrequency = 0f;
 				float amountOfAnimations = 0;
 				
-				if(renderTick > animationFrequency * ticksInSeconds) {
-					renderTick = 0;
+				if(animationFrequency < System.currentTimeMillis() - lastCapeAnimationTime) {
+					lastCapeAnimationTime = System.currentTimeMillis();
 					currentAnimation++;
 				}
 				
@@ -99,11 +96,11 @@ public class Cape extends ModelBase{
 				return location;
 			}
 			case 4: {
-				float animationFrequency = 5f;
+				float animationFrequency = 5000f;
 				float amountOfAnimations = 1;
 				
-				if(renderTick > animationFrequency * ticksInSeconds) {
-					renderTick = 0;
+				if(animationFrequency < System.currentTimeMillis() - lastCapeAnimationTime) {
+					lastCapeAnimationTime = System.currentTimeMillis();
 					currentAnimation++;
 				}
 				
@@ -119,8 +116,8 @@ public class Cape extends ModelBase{
 				float animationFrequency = CosmeticHandler.CustomCapeFrequency.number.floatValue();
 				float amountOfAnimations = CosmeticHandler.CustomCapeTexture.number.intValue() - 1;
 				
-				if(renderTick > animationFrequency * ticksInSeconds) {
-					renderTick = 0;
+				if(animationFrequency < System.currentTimeMillis() - lastCapeAnimationTime) {
+					lastCapeAnimationTime = System.currentTimeMillis();
 					currentAnimation++;
 				}
 				

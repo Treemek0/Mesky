@@ -10,6 +10,6 @@ public class CosmeticHandler {
 	public static Setting CapeType = new Setting(0, null, null);
 	
 	public static Setting CustomCapeTexture = new Setting("", 0D, null, null);
-	public static Setting CustomCapeFrequency = new Setting(0.5, null, null);
+	public static Setting CustomCapeFrequency = new Setting(500, null, null);
 	public static Setting AllowCatFallingAnimation = new Setting(false, null, null);
 }

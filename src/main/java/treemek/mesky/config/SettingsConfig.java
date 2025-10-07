@@ -140,7 +140,6 @@ public class SettingsConfig {
 	public static Setting customChatToggle = new Setting(false, null, null);
 	public static Setting customChatRightPacing = new Setting(false, null, null);
 
-	
 	public static Setting sendingToServer_filter = new Setting("CHAT", null, null);
 	public static Setting warping_filter = new Setting("CHAT", null, null);
 	public static Setting wasKilledBy_filter = new Setting("CHAT", null, null);

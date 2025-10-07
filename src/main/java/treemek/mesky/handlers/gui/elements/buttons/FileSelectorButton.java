@@ -1,5 +1,6 @@
 package treemek.mesky.handlers.gui.elements.buttons;
 
+import java.awt.Color;
 import java.awt.FileDialog;
 import java.awt.Frame;
 import java.awt.Window;
@@ -12,6 +13,8 @@ import java.util.List;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 
 import org.lwjgl.opengl.GL11;
 
@@ -31,7 +34,8 @@ public class FileSelectorButton extends GuiButton{
 	List<String> filter = new ArrayList<>();
 	String buttonText;
 	boolean saveDirectory = false;
-	Task task;
+	
+	private static JFileChooser chooser;
 	
 	public FileSelectorButton(int buttonId, int x, int y, int size, TextField pathField) {
 		super(buttonId, x, y, size, size, "");
@@ -42,6 +46,12 @@ public class FileSelectorButton extends GuiButton{
 		super(buttonId, x, y, width,  Math.max(10, height), "");
 		resultField = pathField;
 		this.buttonText = buttonText;
+	}
+	
+	public static void createFileSelector() {
+		SwingUtilities.invokeLater(() -> {
+			chooser = new JFileChooser();
+		});
 	}
 	
 	public void setFilter(List<String> ex) {
@@ -64,6 +74,8 @@ public class FileSelectorButton extends GuiButton{
 	@Override
 	public void drawButton(Minecraft mc, int mouseX, int mouseY) {
 		GL11.glColor3f(1, 1, 1);
+		
+		if(chooser == null) return;
 		
 		if(buttonText == null) {
 			if(super.mousePressed(mc, mouseX, mouseY)) {
@@ -99,40 +111,38 @@ public class FileSelectorButton extends GuiButton{
 	}
 	
 	private void openFileChooser() {
+		if (chooser == null) return;
+		
 	    SwingUtilities.invokeLater(() -> {
-	        FileDialog fileDialog = new FileDialog((Frame) null, "Select File", FileDialog.LOAD);
-	        fileDialog.setDirectory(resultField.getText());
-	        
-	        // Create a filter string for file types
-            StringBuilder filterString = new StringBuilder();
-            if (!filter.isEmpty()) {
-                for (String ext : filter) {
-                    if (filterString.length() > 0) {
-                        filterString.append(";");
-                    }
-                    filterString.append("*").append(ext);
-                }
-            } else {
-                filterString.append("*.*"); // Allow all files if the list is empty
-            }
+	        // Set initial directory
+	        String currentPath = resultField.getText();
+	        if (currentPath != null && !currentPath.isEmpty()) {
+	            chooser.setCurrentDirectory(new File(currentPath));
+	        }else {
+	        	chooser.setCurrentDirectory(null);
+	        }
 
-            fileDialog.setFile(filterString.toString()); // Apply the filter
-	        
-	        fileDialog.setVisible(true);
+	        // Set selection mode
+	        if (saveDirectory) {
+	            chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+	        } else {
+	            chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+	        }
 
-	        String directory = fileDialog.getDirectory();
-	        String fileName = fileDialog.getFile();
+	        // Apply filters
+	        if (!filter.isEmpty()) {
+	            chooser.resetChoosableFileFilters();
+	            for (String ext : filter) {
+	                chooser.addChoosableFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(ext.toUpperCase() + " files", ext.replace("*.", "")));
+	            }
+	        }
 
-	        if (directory != null && fileName != null) {
-	            Path fullPath = Paths.get(directory, fileName);
-
-	            if (saveDirectory) {
-	                Path parentDirectory = fullPath.getParent();
-	                if (parentDirectory != null) {
-	                    setPath(parentDirectory.toString());
-	                }
-	            } else {
-	                setPath(fullPath.toString());
+	        // Show dialog
+	        int result = chooser.showOpenDialog(null);
+	        if (result == JFileChooser.APPROVE_OPTION) {
+	            File selected = chooser.getSelectedFile();
+	            if (selected != null) {
+	                setPath(selected.getAbsolutePath());
 	            }
 	        }
 	    });

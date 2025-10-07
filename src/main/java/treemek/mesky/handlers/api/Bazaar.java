@@ -428,55 +428,54 @@ public class Bazaar {
 			        	logs.addAll(craft.craftingsLog);
 			        	continue;
 			        }
-				}
-				
-				float cost = bazaarCost.floatValue() * amount;
-				
-				if(craftCostMap.get(id) != null) {
-					if(cost > craftCostMap.get(id).cost * amount) {
-						cost = craftCostMap.get(id).cost * amount;
-						for (Entry<String, Integer> entry : craftCostMap.get(id).craftings.entrySet()) {
-		        			craftings.merge(entry.getKey(), entry.getValue(), Integer::sum);
-						}
-						
-						logs.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Using recipe for " + EnumChatFormatting.GOLD + id + EnumChatFormatting.DARK_AQUA + "x" + amount + EnumChatFormatting.BLUE + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(cost) + EnumChatFormatting.BLUE + ")");
-					}else {
-						craftings.merge(id, amount, Integer::sum);
-						logs.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Found " + EnumChatFormatting.GOLD + id + EnumChatFormatting.DARK_AQUA + "x" + amount + EnumChatFormatting.BLUE + " in bazaar" + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(cost) + EnumChatFormatting.BLUE + ")");
-					}
-		        	
-		        	total_cost += cost;
 				}else {
-					ItemRecipe recipe2 = RecipeHandler.getItemRecipe(id);
-			        if (recipe2 == null || alreadyTriedCraftingRecipe.contains(id)) {
-			        	total_cost += cost;
-			        	craftings.merge(id, amount, Integer::sum);
-			        	logs.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Found " + EnumChatFormatting.GOLD + id + EnumChatFormatting.GREEN + "x" + amount + EnumChatFormatting.BLUE + " in bazaar" + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(cost) + EnumChatFormatting.BLUE + ")");
-			        }else {
-			        	alreadyTriedCraftingRecipe.add(id);
-			        	CraftResult craft = calculateCraftCost(recipe2, bazaar, buy, tax, ">" + detailedInfo);
-			        	
-			        	float craftCost = craft.cost;
-			        	craftCostMap.put(id, craft);
-			        	
-			        	if(craftCost != Float.MAX_VALUE && cost > craftCost * amount) {
-			        		cost = craftCost * amount;
-			        		
-			        		for (Entry<String, Integer> entry : craft.craftings.entrySet()) {
+					float cost = bazaarCost.floatValue() * amount;
+					
+					if(craftCostMap.get(id) != null) {
+						if(cost > craftCostMap.get(id).cost * amount) {
+							cost = craftCostMap.get(id).cost * amount;
+							for (Entry<String, Integer> entry : craftCostMap.get(id).craftings.entrySet()) {
 			        			craftings.merge(entry.getKey(), entry.getValue(), Integer::sum);
 							}
-			        		
-			        		logs.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Calculated craft cost of recipe for " + EnumChatFormatting.GOLD + id + EnumChatFormatting.AQUA + "x" + amount + EnumChatFormatting.BLUE + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(cost) + EnumChatFormatting.BLUE + "):");
-			        		logs.addAll(craft.craftingsLog);
-			        	}else {
-			        		craftings.merge(id, amount, Integer::sum);
-			        		logs.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Found " + EnumChatFormatting.GOLD + id + EnumChatFormatting.AQUA + "x" + amount + EnumChatFormatting.BLUE + " in bazaar" + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(cost) + EnumChatFormatting.BLUE + ")");
+							
+							logs.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Using recipe for " + EnumChatFormatting.GOLD + id + EnumChatFormatting.DARK_AQUA + "x" + amount + EnumChatFormatting.BLUE + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(cost) + EnumChatFormatting.BLUE + ")");
+						}else {
+							craftings.merge(id, amount, Integer::sum);
+							logs.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Found " + EnumChatFormatting.GOLD + id + EnumChatFormatting.DARK_AQUA + "x" + amount + EnumChatFormatting.BLUE + " in bazaar" + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(cost) + EnumChatFormatting.BLUE + ")");
 						}
 			        	
 			        	total_cost += cost;
-			        }
+					}else {
+						ItemRecipe recipe2 = RecipeHandler.getItemRecipe(id);
+				        if (recipe2 == null || alreadyTriedCraftingRecipe.contains(id)) {
+				        	total_cost += cost;
+				        	craftings.merge(id, amount, Integer::sum);
+				        	logs.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Found " + EnumChatFormatting.GOLD + id + EnumChatFormatting.GREEN + "x" + amount + EnumChatFormatting.BLUE + " in bazaar" + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(cost) + EnumChatFormatting.BLUE + ")");
+				        }else {
+				        	alreadyTriedCraftingRecipe.add(id);
+				        	CraftResult craft = calculateCraftCost(recipe2, bazaar, buy, tax, ">" + detailedInfo);
+				        	
+				        	float craftCost = craft.cost;
+				        	craftCostMap.put(id, craft);
+				        	
+				        	if(craftCost != Float.MAX_VALUE && cost > craftCost * amount) {
+				        		cost = craftCost * amount;
+				        		
+				        		for (Entry<String, Integer> entry : craft.craftings.entrySet()) {
+				        			craftings.merge(entry.getKey(), entry.getValue(), Integer::sum);
+								}
+				        		
+				        		logs.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Calculated craft cost of recipe for " + EnumChatFormatting.GOLD + id + EnumChatFormatting.AQUA + "x" + amount + EnumChatFormatting.BLUE + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(cost) + EnumChatFormatting.BLUE + "):");
+				        		logs.addAll(craft.craftingsLog);
+				        	}else {
+				        		craftings.merge(id, amount, Integer::sum);
+				        		logs.add(fixSpaceInDetailedInfo(detailedInfo) + EnumChatFormatting.BLUE + "Found " + EnumChatFormatting.GOLD + id + EnumChatFormatting.AQUA + "x" + amount + EnumChatFormatting.BLUE + " in bazaar" + " (" + EnumChatFormatting.WHITE + Utils.formatNumber(cost) + EnumChatFormatting.BLUE + ")");
+							}
+				        	
+				        	total_cost += cost;
+				        }
+					}
 				}
-				
 			}
 		}
 		

@@ -69,7 +69,7 @@ public class CustomCapeGui  extends GuiScreen{
 		folderPathField.drawTextBox();
 		
 		if(amounthOfAnimations > 1) {
-			RenderHandler.drawText("Animation frequency [Every" + EnumChatFormatting.AQUA + " X " + EnumChatFormatting.WHITE + "render ticks]" + EnumChatFormatting.GRAY + " (Found " + amounthOfAnimations + " animations)", 2, (int) (height/4 + fontHeight + inputHeight * 2f) - fontHeight - 1, scaleForTexts, true, 0xFFFFFFFF);
+			RenderHandler.drawText("Animation frequency [Every" + EnumChatFormatting.AQUA + " X " + EnumChatFormatting.WHITE + "ms]" + EnumChatFormatting.GRAY + " (Found " + amounthOfAnimations + " animations)", 2, (int) (height/4 + fontHeight + inputHeight * 2f) - fontHeight - 1, scaleForTexts, true, 0xFFFFFFFF);
 			animationFreqField.drawTextField(1, (int) (height/4 + fontHeight + inputHeight * 2f));
 		}else {
 			RenderHandler.drawText(EnumChatFormatting.GRAY + " (Found " + amounthOfAnimations + " animations)", 2, (int) (height/4 + fontHeight + inputHeight * 2f) - fontHeight - 1, scaleForTexts, true, 0xFFFFFFFF);

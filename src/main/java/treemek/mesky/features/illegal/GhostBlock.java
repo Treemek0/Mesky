@@ -14,6 +14,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import treemek.mesky.config.SettingsConfig;
+import treemek.mesky.utils.Utils;
 
 public class GhostBlock {
 

@@ -30,6 +30,7 @@ public class MixinGuiContainer {
     @Shadow private int guiLeft;
     @Shadow private int guiTop;
     @Shadow public Container inventorySlots;
+	@Shadow private int xSize;
     
     @Inject(method = "drawSlot", at = @At("RETURN"))
     private void afterDrawSlot(Slot slot, CallbackInfo ci) {
@@ -147,7 +148,7 @@ public class MixinGuiContainer {
         }
     }
     
-    @Inject(method = "drawScreen", at = @At(value = "INVOKE",target = "Lnet/minecraft/client/renderer/GlStateManager;popMatrix()V",shift = At.Shift.AFTER))
+    @Inject(method = "drawScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/inventory/GuiContainer;drawGuiContainerForegroundLayer(II)V", shift = At.Shift.AFTER))
     private void onDrawBeforeTooltip(int mouseX, int mouseY, float partialTicks, CallbackInfo ci) {
     	if(!SettingsConfig.LockSlots.isOn) return;
 
@@ -167,12 +168,12 @@ public class MixinGuiContainer {
     		if(connected_slot.slotNumber < gui.inventorySlots.inventorySlots.size() - 40) return;
     		if(connected_slot.inventory != Minecraft.getMinecraft().thePlayer.inventory) return;
     		
-    		float center1X = hovered.xDisplayPosition + guiLeft + 8;
-    		float center1Y = hovered.yDisplayPosition + guiTop + 8;
-    		float center2X = connected_slot.xDisplayPosition + guiLeft + 8;
-    		float center2Y = connected_slot.yDisplayPosition + guiTop + 8;
+    		float center1X = hovered.xDisplayPosition + + 8;
+    		float center1Y = hovered.yDisplayPosition + + 8;
+    		float center2X = connected_slot.xDisplayPosition + 8;
+    		float center2Y = connected_slot.yDisplayPosition + + 8;
     		float halfSize = 8f;
-
+    		
     		float[] start = clipLineToRect(center1X, center1Y, center2X, center2Y, halfSize);
     		float[] end = clipLineToRect(center2X, center2Y, center1X, center1Y, halfSize);
 

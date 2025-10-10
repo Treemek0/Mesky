@@ -37,6 +37,7 @@ import treemek.mesky.cosmetics.pets.Parrot;
 import treemek.mesky.cosmetics.wings.AngelWings;
 import treemek.mesky.cosmetics.wings.FireWings;
 import treemek.mesky.features.AntyGhostBlocks;
+import treemek.mesky.features.AotvOverlay;
 import treemek.mesky.features.BlockFlowerPlacing;
 import treemek.mesky.features.FishingTimer;
 import treemek.mesky.features.HidePlayers;
@@ -151,6 +152,7 @@ public class Mesky {
 		MinecraftForge.EVENT_BUS.register(new LockSlot());
 		MinecraftForge.EVENT_BUS.register(new WarpErrorListener());
 		MinecraftForge.EVENT_BUS.register(new ChatFilter());
+		MinecraftForge.EVENT_BUS.register(new AotvOverlay());
 		
 		ClientRegistry.registerKeyBinding(GhostBlock.GKEY);
 		ClientRegistry.registerKeyBinding(Freelook.KEY);

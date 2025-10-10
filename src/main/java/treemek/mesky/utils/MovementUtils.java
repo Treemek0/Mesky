@@ -24,6 +24,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.MathHelper;
+import net.minecraft.util.Vec3;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
@@ -380,7 +381,7 @@ public class MovementUtils {
         float[] rotation = RotationUtils.getPlayerRotationToLookAtVector(targetPos.getX()+0.5, targetPos.getY() + lookAtY, targetPos.getZ()+0.5f);
         
         float targetYaw = rotation[0];
-
+        
         // Normalize yaw difference to -180 to 180
         float yawDiff = MathHelper.wrapAngleTo180_float(targetYaw - player.rotationYaw);
         float yawStep = yawDiff * 0.3f;
@@ -388,34 +389,34 @@ public class MovementUtils {
 	    double yaw = Math.toRadians(player.rotationYaw + yawStep);
 	    double sinYaw = Math.sin(yaw);
 	    double cosYaw = Math.cos(yaw);
-
+	    
 	    // Rotate the difference to get the local direction
 	    double localX = diffX * cosYaw + diffZ * sinYaw;
 	    double localZ = diffZ * cosYaw - diffX * sinYaw;
-
+	    
 	    // Estimate horizontal speed (including Speed effect, sprinting, etc.)
 	    double velocity = Math.sqrt(player.motionX * player.motionX + player.motionZ * player.motionZ);
-
+	    
 	    // Add a small constant to cover deceleration time
 	    double stoppingDistance = velocity * 4.0 + 0.1; // tweak multiplier as needed
-
+	    
 	    // Dead zones adapt to current speed (higher speed = earlier key release)
 	    double forwardDeadZone = Math.max(0.03, stoppingDistance);  // normal: ~0.1
 	    double lateralDeadZone = Math.max(0.02, stoppingDistance * 0.6); // normal: ~0.05
-
+	    
 	    // Initialize movement flags
 	    boolean moveForward = false;
 	    boolean moveBackward = false;
 	    boolean moveLeft = false;
 	    boolean moveRight = false;
-
+	    
 	    // Prioritize forward/backward movement towards the center of the block
 	    if (localZ > forwardDeadZone) {
 	        moveForward = true;
 	    } else if (localZ < -forwardDeadZone) {
 	        moveBackward = true;
 	    }
-
+	    
 	    // Only move laterally if the difference is significant
 	    if (Math.abs(localZ) < Math.abs(localX)) {
 	        if (localX > lateralDeadZone) {
@@ -435,16 +436,19 @@ public class MovementUtils {
 	    		moveForward = true;
 	    	}
 	    }
-
-	    boolean isGap = isAirGapBetween(oldPos, targetPos);
 	    
+	    boolean isGap = isAirGapBetween(oldPos, targetPos);
+    	
 	    double deltaX = player.posX - player.lastTickPosX;
 	    double deltaZ = player.posZ - player.lastTickPosZ;
 	    
 	    double speed = Math.sqrt(deltaX * deltaX + deltaZ * deltaZ);
 	    if(player.isSneaking()) speed /= 0.33;
-	    Utils.debug(speed + " speed");
 	    KeyBinding.setKeyBindState(shift, (speed > 0.45));
+	    
+	    int moveS = moveLeft ? -1 : moveRight ? 1 : 0;
+	    int moveF = moveForward ? 1 : moveBackward ? -1 : 0;
+	    Vec3 nextTickPos = Utils.predictNextTick(player, moveS, moveF, isGap, false, false);
 	    
 	    KeyBinding.setKeyBindState(forward, false);
         KeyBinding.setKeyBindState(back, false);
@@ -473,7 +477,6 @@ public class MovementUtils {
 		        KeyBinding.setKeyBindState(right, moveRight);
 		    }
 	    }
-
 	    
 	    // Ensure lateral movement is disabled if not needed
 	    if (!moveLeft && !moveRight) {

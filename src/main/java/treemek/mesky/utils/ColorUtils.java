@@ -159,7 +159,6 @@ public class ColorUtils {
 	}
     
     private static float getBrightnessAdjustmentFactor(int originalColor, int adjustedColor) {
-        // Extract RGB components
         int rOrig = (originalColor >> 16) & 0xFF;
         int gOrig = (originalColor >> 8) & 0xFF;
         int bOrig = originalColor & 0xFF;
@@ -168,24 +167,20 @@ public class ColorUtils {
         int gAdj = (adjustedColor >> 8) & 0xFF;
         int bAdj = adjustedColor & 0xFF;
 
-        // Calculate the brightness factor for each component
-        float brightnessR = (rOrig != 0)?(float) rAdj / rOrig:rAdj;
-        float brightnessG = (gOrig != 0)?(float) gAdj / gOrig:gAdj;
-        float brightnessB = (bOrig != 0)?(float) bAdj / bOrig:bAdj;
-        
-        // Return the average brightness factor
-        return (brightnessR + brightnessG + brightnessB) / 3.0f;
+        float lumOrig = 0.2126f * rOrig + 0.7152f * gOrig + 0.0722f * bOrig;
+        float lumAdj  = 0.2126f * rAdj + 0.7152f * gAdj + 0.0722f * bAdj;
+
+        if (lumAdj == 0) return 1f;
+        return lumOrig / lumAdj;
     }
 
     public static float findBrightnessAdjustmentFactor(int targetColor, int mouseX, int mouseY, BufferedImage image) {
-        // Get the original color from the image at the specified coordinates
-        int imageColor = image.getRGB(mouseX, mouseY) & 0x00FFFFFF; // Mask out alpha
-        
-        // Get the full brightness version of the image color
-        int fullBrightnessImageColor = getFullBrightnessColor(imageColor);
-        
-        // Calculate the brightness adjustment factor
-        return getBrightnessAdjustmentFactor(fullBrightnessImageColor, targetColor);
+        int imageColor = image.getRGB(mouseX, mouseY) & 0x00FFFFFF;
+		
+        targetColor = targetColor &= 0xFFFFFF;
+        imageColor = imageColor &= 0xFFFFFF;
+
+        return getBrightnessAdjustmentFactor(targetColor, imageColor);
     }
     
     public static int getColorInt(String color) {

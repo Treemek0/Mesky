@@ -494,6 +494,7 @@ public class MacroWaypointsGui extends GuiScreen {
 			// Add group button
 			MacroWaypointGroupElement group = new MacroWaypointGroupElement("default", new ArrayList<>(), Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld));
 			group.xPosition = width / 20 + inputHeight*2 + 5;
+			getUniqueNameForGroup(group, MacroWaypoints.GetLocationWaypoints());
             waypoints.add(0, group);
             return;
 		}
@@ -1046,17 +1047,7 @@ public class MacroWaypointsGui extends GuiScreen {
 	    boolean isError = false;
 
 	    for (MacroWaypointGroupElement group : waypoints) {
-	    	String originalName = group.name;
-	    	String finalName = originalName;
-	    	int suffix = 1;
-
-	    	while (nameExists(finalName, group, waypointsList)) {
-	    	    finalName = originalName + suffix;
-	    	    suffix++;
-	    	}
-	    	
-	    	group.changeName(finalName);
-
+	    	getUniqueNameForGroup(group, waypointsList);
 
 	        List<MacroWaypoint> groupList = new ArrayList<>();
 	        for (int j = group.list.size() - 1; j >= 0; j--) {
@@ -1115,7 +1106,7 @@ public class MacroWaypointsGui extends GuiScreen {
 	                yaw, pitch, left, right, back, forward, leftClick, rightClick, sneak, noiseLevel, function, enabled));
 	        }
 
-	        waypointsList.computeIfAbsent(finalName + " %" + group.world,
+	        waypointsList.computeIfAbsent(group.name + " %" + group.world,
 	            k -> new MacroWaypointGroup(new ArrayList<>(), group.world, group.enabled.isFull(), group.opened.isOpened()))
 	            .list.addAll(0, groupList);
 	    }
@@ -1135,7 +1126,18 @@ public class MacroWaypointsGui extends GuiScreen {
 	    return true;
 	}
 
+	private void getUniqueNameForGroup(MacroWaypointGroupElement group, Map<String, MacroWaypointGroup> waypointsList) {
+		String originalName = group.name;
+    	String finalName = originalName;
+    	int suffix = 1;
 
+    	while (nameExists(finalName, group, waypointsList)) {
+    	    finalName = originalName + suffix;
+    	    suffix++;
+    	}
+    	
+    	group.changeName(finalName);
+	}
 	
 	private void CloseGui() {
 		if(closeWarning.showElement) {

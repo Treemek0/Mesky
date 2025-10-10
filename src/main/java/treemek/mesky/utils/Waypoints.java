@@ -152,7 +152,7 @@ public class Waypoints {
     	String world = Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld);
     	Waypoint waypoint;
 		waypoint = new Waypoint(name, color, x, y, z, world, scale, true);
-		waypointsList.computeIfAbsent(null, k -> new WaypointGroup(new ArrayList<>(), world, true, true)).list.add(0, waypoint);
+		waypointsList.computeIfAbsent("default", k -> new WaypointGroup(new ArrayList<>(), world, true, true)).list.add(0, waypoint);
 		ConfigHandler.SaveWaypoint(waypointsList);
 		return waypoint;
     }
@@ -363,6 +363,66 @@ public class Waypoints {
             JsonArray wps = cat.getAsJsonArray("waypoints");
             String worldRaw = cat.has("island") ? cat.get("island").getAsString() : "Unknown";
             String world = Utils.convertSkytilsRegionToLocation(worldRaw);
+
+            List<Waypoint> list = new ArrayList<>();
+
+            for (JsonElement wpEl : wps) {
+                JsonObject wp = wpEl.getAsJsonObject();
+                String name = wp.has("name") ? wp.get("name").getAsString() : "Unnamed";
+                int x = wp.get("x").getAsInt();
+                int y = wp.get("y").getAsInt();
+                int z = wp.get("z").getAsInt();
+                String color = wp.has("color") ? wp.get("color").getAsString().replace("#", "") : "ffffff";
+
+                list.add(new Waypoint(name, color, x, y, z, world, 1f, true));
+            }
+
+            String key = (categoryName != null ? categoryName : "skytils") + " %" + world;
+            groups.put(key, new WaypointGroup(list, world, true, true));
+        }
+
+        return groups;
+    }
+    
+    public static LinkedHashMap<String, WaypointGroup> importSkytilsWaypoints(String input, String island) throws IOException {
+        if (!input.startsWith("<Skytils-Waypoint-Data>(V")) {
+        	Utils.writeError("Invalid Skytils format");
+        	return null;
+        }
+           
+
+        int version = Integer.parseInt(input.substring(input.indexOf('V') + 1, input.indexOf(')')));
+        String base64 = input.substring(input.indexOf(':') + 1);
+        byte[] decoded = Base64.getDecoder().decode(base64);
+
+        InputStream decompressed;
+        if (version == 1) {
+            decompressed = new GZIPInputStream(new ByteArrayInputStream(decoded));
+        } else if (version == 2) {
+        	decompressed = new BrotliInputStream(new ByteArrayInputStream(decoded));
+        } else {
+        	Utils.writeError("Unknown Skytils waypoint version: " + version);
+            return null;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        byte[] buffer = new byte[1024];
+        int len;
+        while ((len = decompressed.read(buffer)) != -1) {
+            sb.append(new String(buffer, 0, len, StandardCharsets.UTF_8));
+        }
+
+        String json = sb.toString();
+        JsonObject root = new Gson().fromJson(json, JsonObject.class);
+        JsonArray categories = root.getAsJsonArray("categories");
+
+        LinkedHashMap<String, WaypointGroup> groups = new LinkedHashMap<>();
+
+        for (JsonElement catEl : categories) {
+            JsonObject cat = catEl.getAsJsonObject();
+            String categoryName = cat.has("name") ? cat.get("name").getAsString() : null;
+            JsonArray wps = cat.getAsJsonArray("waypoints");
+            String world = island;
 
             List<Waypoint> list = new ArrayList<>();
 

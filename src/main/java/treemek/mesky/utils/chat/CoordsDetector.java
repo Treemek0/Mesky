@@ -29,7 +29,7 @@ public class CoordsDetector {
 	        
 	        String sender = getSender(event.message.getFormattedText());
 	        
-	        if(sender != null) {
+	        if(sender != null && SettingsConfig.CoordsDetectionIgnoreSelf.isOn) {
 	        	if(getNameOfSender(sender).equals(Minecraft.getMinecraft().thePlayer.getName())) return;
 	        }
 

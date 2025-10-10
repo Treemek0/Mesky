@@ -145,8 +145,7 @@ public class SettingsGUI extends GuiScreen {
 	    generalSub.add(new SettingButton(6, checkSize, "Hide Players", SettingsConfig.HidePlayers));
 	    
 	    List<Object> slotsSub = new ArrayList<>();
-	    slotsSub.add(new SettingListBox(2, 4*checkSize, checkSize, "Drop stopped message", new ArrayList<>(Arrays.asList(
-    		    new Option("CHAT", "CHAT"), new Option("SEPARATE", "SEPARATE"), new Option("HIDDEN", "HIDDEN"))), SettingsConfig.dropItem_filter));
+	    slotsSub.add(new SettingListBox(2, 4*checkSize, checkSize, "Drop stopped message", getChatFilterArray(), SettingsConfig.dropItem_filter, "HIDDEN"));
 	    generalSub.add(new FoldableSettingButton(6, checkSize, "Lock slots (" + Keyboard.getKeyName(LockSlot.KEY.getKeyCode()) + ")", SettingsConfig.LockSlots, slotsSub));
 	    generalSub.add(new SettingSlider(41849, 2 * checkSize, checkSize, "Holding items size", SettingsConfig.HoldingItemSize, 0.1, 0.1, 2));
 	   // generalSub.add(new SettingSlider(41849, 2 * checkSize, checkSize, "Holding items X offset", SettingsConfig.HoldingItemOffsetX, 1, -15, 15));
@@ -157,7 +156,14 @@ public class SettingsGUI extends GuiScreen {
 	    freelookFoldable.add(new SettingButton(2, checkSize, "Block inverted angles", SettingsConfig.FreeLookClampAngles));
 	    generalSub.add(new FoldableSettingButton(2, checkSize, "Freelook", SettingsConfig.FreeLook, freelookFoldable, true));
 	    generalSub.add(new SettingButton(8, checkSize, "Block flower weapons from placing", SettingsConfig.BlockFlowerPlacing));
-	   
+	    
+	    List<Object> aotvZoomFoldable = new ArrayList<>();
+	    aotvZoomFoldable.add(new SettingSlider(0, checkSize*2, checkSize, "Max zoom distance in blocks", SettingsConfig.AotvZoomMaxDistance, 1, 5, 57));
+	    aotvZoomFoldable.add(new SettingSlider(0, checkSize*2, checkSize, "Max zoom", SettingsConfig.AotvZoomMultiplayer, 0.05, 0.6, 0.9));
+	    aotvZoomFoldable.add(new SettingSlider(0, checkSize*2, checkSize, "Zooming smoothness", SettingsConfig.AotvZoomSmoothness, 0.05, 0.05, 1));
+	    aotvZoomFoldable.add(new SettingColorPicker(0, checkSize, "Hovered block color", SettingsConfig.AotvZoomColor));
+	    generalSub.add(new FoldableSettingButton(0, checkSize, "AOTV teleport zoom", SettingsConfig.AotvZoom, aotvZoomFoldable));
+	    
 	    // >>>>
 	    
 	    List<Object> timerSub = new ArrayList<>();
@@ -168,9 +174,9 @@ public class SettingsGUI extends GuiScreen {
 	    
 	    List<Object> chatSub = new ArrayList<>();
 	    List<Object> coordsDetectionFoldable = new ArrayList<>();
-	    coordsDetectionFoldable.add(new SettingListBox(2, 4*checkSize, checkSize, "Detection message", new ArrayList<>(Arrays.asList(
-    		    new Option("CHAT", "CHAT"), new Option("SEPARATE", "SEPARATE"), new Option("HIDDEN", "HIDDEN"))), SettingsConfig.coordsDetection_filter));
+	    coordsDetectionFoldable.add(new SettingListBox(2, 4*checkSize, checkSize, "Detection message", getChatFilterArray(), SettingsConfig.coordsDetection_filter, "HIDDEN"));
 	    coordsDetectionFoldable.add(new SettingButton(2, checkSize, "Auto mark coords", SettingsConfig.AutoMarkCoords));
+	    coordsDetectionFoldable.add(new SettingButton(2, checkSize, "Ignore your coordinate messages", SettingsConfig.CoordsDetectionIgnoreSelf));
 	    chatSub.add(new FoldableSettingButton(7, checkSize, "Coords Detection", SettingsConfig.CoordsDetection, coordsDetectionFoldable));
 	    List<Object> nickDetectionFoldable = new ArrayList<>();
 	    nickDetectionFoldable.add(new SettingListBox(2, 4*checkSize, checkSize, "Detection color", ColorUtils.ColoredEnumColorsOptionList, SettingsConfig.NickMentionDetectionColor));
@@ -309,8 +315,12 @@ public class SettingsGUI extends GuiScreen {
         waypointsSub.add(new SettingSlider(2,  5*checkSize, checkSize, "Time for EntityDetector waypoint to disappear [s]", SettingsConfig.EntityDetectorWaypointLifeTime, 1, 5, 600));
         waypointsSub.add(new SettingSlider(2,  5*checkSize, checkSize, "Touch radius of EntityDetector waypoint", SettingsConfig.EntityDetectorWaypointTouchRadius, 1, 1, 30));
         
+        List<Object> alertSub = new ArrayList<>();
+        alertSub.add(new SettingButton(2, checkSize, "Ignore alert triggers from yourself", SettingsConfig.AlertsIgnoreSelf));
+        
 		mesky.add(new SubCategory("Scrollbar", scrollbarSub));
 		mesky.add(new SubCategory("Waypoints", waypointsSub));
+		mesky.add(new SubCategory("Alerts", alertSub));
 		categories.add(new Category("Mesky", mesky));
 	}
 	

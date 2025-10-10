@@ -30,7 +30,7 @@ import treemek.mesky.handlers.gui.elements.buttons.MeskyButton;
 import treemek.mesky.handlers.gui.elements.buttons.SettingButton;
 
 public class CosmeticsGui extends GuiScreen {
-	 
+	
 	ScrollBar scrollbar = new ScrollBar();
 	private SettingButton allowFallingAnimation;
 	private MeskyButton customizeCustomCape;
@@ -42,11 +42,11 @@ public class CosmeticsGui extends GuiScreen {
 		drawRect(0, 0, width, height, new Color(33, 33, 33,255).getRGB());
 		
 		float scale = (float) ((height*0.1f) / mc.fontRendererObj.FONT_HEIGHT) / 2;
-
+		
         int textLength = mc.fontRendererObj.getStringWidth("Cosmetics");
         int titleX = (int) ((width / 2) - (textLength * scale / 2));
         int titleY = (int) (height * 0.05f);
-
+        
         RenderHandler.drawText("Cosmetics", titleX, titleY, scale, true, 0x3e91b5);
         
         int previewX = (int)(width / 4);
@@ -87,7 +87,6 @@ public class CosmeticsGui extends GuiScreen {
         int hatY = wingsY + previewSize + 20;
         int petsY = hatY + previewSize + 20;
         int capesY = petsY + previewSize + 20;
-        
         
         this.buttonList.add(new CosmeticCheckButton(0, checkX, wingsY, previewSize, previewSize, "Dragon Wings", CosmeticHandler.WingsType, 1, new ResourceLocation(Reference.MODID, "textures/fireWings_preview.png"), checkSize));
         this.buttonList.add(new CosmeticCheckButton(1, checkX + ((previewSize+5)), wingsY, previewSize, previewSize, "Angel Wings", CosmeticHandler.WingsType, 2, new ResourceLocation(Reference.MODID, "textures/angelWings_preview.png"), checkSize));

@@ -477,8 +477,9 @@ public class WaypointsGui extends GuiScreen {
 		
 		if(button.id == -2) {
 			// Add group button
-			WaypointGroupElement group = new WaypointGroupElement("default", new ArrayList<>(), Utils.getWorldIdentifier(Minecraft.getMinecraft().theWorld));
+			WaypointGroupElement group = new WaypointGroupElement("default", new ArrayList<>(), Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld));
 			group.xPosition = width / 20 + inputHeight + 10 + width / 8 + 5;
+			getUniqueNameForGroup(group, Waypoints.GetLocationWaypoints());
             waypoints.add(0, group);
             return;
 		}
@@ -486,7 +487,7 @@ public class WaypointsGui extends GuiScreen {
 		if(button.id == -3) {
 			// Import waypoints button
 			try {
-				LinkedHashMap<String, WaypointGroup> waypoints = Waypoints.importSkytilsWaypoints(getClipboardString());
+				LinkedHashMap<String, WaypointGroup> waypoints = Waypoints.importSkytilsWaypoints(getClipboardString(), Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld));
 				
 		        if(waypoints != null && !waypoints.isEmpty()) {
 		        	for (Map.Entry<String, WaypointGroup> entry : waypoints.entrySet()) {
@@ -1138,16 +1139,7 @@ public class WaypointsGui extends GuiScreen {
 		boolean isError = false;
 		
 		for (WaypointGroupElement group : waypoints) {
-			String originalName = group.name;
-	    	String finalName = originalName;
-	    	int suffix = 1;
-
-	    	while (nameExists(finalName, group, waypointsList)) {
-	    	    finalName = originalName + suffix;
-	    	    suffix++;
-	    	}
-	    	
-	    	group.changeName(finalName);
+			getUniqueNameForGroup(group, waypointsList);
 			
 			List<Waypoint> groupList = new ArrayList<>();
 			for (int j = group.list.size() - 1; j >= 0; j--) {
@@ -1188,7 +1180,7 @@ public class WaypointsGui extends GuiScreen {
 		    	groupList.add(0, new Waypoint(name, color, x, y, z, Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld), (float) scale, enabled));
 			}
 			
-			waypointsList.computeIfAbsent(finalName + " %" + group.world, k -> new WaypointGroup(new ArrayList<>(), group.world, group.enabled.isFull(), group.opened.isOpened())).list.addAll(0, groupList);
+			waypointsList.computeIfAbsent(group.name + " %" + group.world, k -> new WaypointGroup(new ArrayList<>(), group.world, group.enabled.isFull(), group.opened.isOpened())).list.addAll(0, groupList);
 	    }
 		
 		if(isError) {
@@ -1211,6 +1203,19 @@ public class WaypointsGui extends GuiScreen {
 		}else {
 			Minecraft.getMinecraft().thePlayer.closeScreen();
 		}
+	}
+	
+	private void getUniqueNameForGroup(WaypointGroupElement group, Map<String, WaypointGroup> waypointsList) {
+		String originalName = group.name;
+    	String finalName = originalName;
+    	int suffix = 1;
+
+    	while (nameExists(finalName, group, waypointsList)) {
+    	    finalName = originalName + suffix;
+    	    suffix++;
+    	}
+    	
+    	group.changeName(finalName);
 	}
 	
 	public void updateWaypointsY() {

@@ -39,6 +39,7 @@ import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import treemek.mesky.Reference;
 import treemek.mesky.config.ConfigHandler;
+import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.handlers.GuiHandler;
 import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.handlers.gui.alerts.AlertElement;
@@ -188,12 +189,15 @@ public class Alerts extends GuiScreen {
 			String nonColorMessage = StringUtils.stripControlCodes(message);
 			String onlyNonColorMessage = nonColorMessage;
 			
-			if(nonColorMessage.contains(": ")){
+			if(nonColorMessage.contains(": ") && nonColorMessage.contains("[") && nonColorMessage.contains("]")){
 				onlyNonColorMessage = nonColorMessage.substring(nonColorMessage.indexOf(":") + 1);
-				String[] beforeMessage = nonColorMessage.split(":")[0].split(" ");
 				
-				for (String string : beforeMessage) {
-					if(string.equals(nickname) || string.equals(nickname + ":")) return;
+				if(SettingsConfig.AlertsIgnoreSelf.isOn) {
+					String[] beforeMessage = nonColorMessage.split(":")[0].split(" ");
+					
+					for (String string : beforeMessage) {
+						if(string.equals(nickname) || string.equals(nickname + ":")) return;
+					}
 				}
 			}
 			

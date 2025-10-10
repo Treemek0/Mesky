@@ -88,6 +88,58 @@ public class RenderHandler {
         Gui.drawModalRectWithCustomSizedTexture(x, y, 0, 0, width, height, width, height);
 	}
 	
+	public static void drawFilledBoundingBox(AxisAlignedBB box, float red, float green, float blue, float alpha) {
+	    Tessellator tessellator = Tessellator.getInstance();
+	    WorldRenderer wr = tessellator.getWorldRenderer();
+
+	    GlStateManager.enableBlend();
+	    GlStateManager.disableTexture2D();
+	    GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
+	    GlStateManager.color(red, green, blue, alpha);
+	    wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
+
+	    // Bottom
+	    wr.pos(box.minX, box.minY, box.minZ).endVertex();
+	    wr.pos(box.maxX, box.minY, box.minZ).endVertex();
+	    wr.pos(box.maxX, box.minY, box.maxZ).endVertex();
+	    wr.pos(box.minX, box.minY, box.maxZ).endVertex();
+
+	    // Top
+	    wr.pos(box.minX, box.maxY, box.minZ).endVertex();
+	    wr.pos(box.minX, box.maxY, box.maxZ).endVertex();
+	    wr.pos(box.maxX, box.maxY, box.maxZ).endVertex();
+	    wr.pos(box.maxX, box.maxY, box.minZ).endVertex();
+
+	    // North
+	    wr.pos(box.minX, box.minY, box.minZ).endVertex();
+	    wr.pos(box.minX, box.maxY, box.minZ).endVertex();
+	    wr.pos(box.maxX, box.maxY, box.minZ).endVertex();
+	    wr.pos(box.maxX, box.minY, box.minZ).endVertex();
+
+	    // South
+	    wr.pos(box.minX, box.minY, box.maxZ).endVertex();
+	    wr.pos(box.maxX, box.minY, box.maxZ).endVertex();
+	    wr.pos(box.maxX, box.maxY, box.maxZ).endVertex();
+	    wr.pos(box.minX, box.maxY, box.maxZ).endVertex();
+
+	    // West
+	    wr.pos(box.minX, box.minY, box.minZ).endVertex();
+	    wr.pos(box.minX, box.minY, box.maxZ).endVertex();
+	    wr.pos(box.minX, box.maxY, box.maxZ).endVertex();
+	    wr.pos(box.minX, box.maxY, box.minZ).endVertex();
+
+	    // East
+	    wr.pos(box.maxX, box.minY, box.minZ).endVertex();
+	    wr.pos(box.maxX, box.maxY, box.minZ).endVertex();
+	    wr.pos(box.maxX, box.maxY, box.maxZ).endVertex();
+	    wr.pos(box.maxX, box.minY, box.maxZ).endVertex();
+
+	    tessellator.draw();
+
+	    GlStateManager.enableTexture2D();
+	    GlStateManager.disableBlend();
+	}
+	
 	public static void drawLine(double startX, double startY, double startZ, double endX, double endY, double endZ, int color, boolean depth, float partialTicks) {
         GlStateManager.pushMatrix();
         GlStateManager.disableTexture2D();

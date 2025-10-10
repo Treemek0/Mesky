@@ -33,7 +33,7 @@ public class SettingColorPicker extends ColorPicker{
 		super(buttonId, 0, 0, size);
 		this.setting = setting;
 		this.text = text;
-
+		
         setText(setting.text);
 	}
 	

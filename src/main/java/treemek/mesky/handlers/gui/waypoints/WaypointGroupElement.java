@@ -30,6 +30,7 @@ public class WaypointGroupElement {
 	public String world;
 	
 	public WaypointGroupElement(String name, List<WaypointElement> list, String world) {
+		if(name == null) name = "null";
 		if(name.endsWith(" %" + world)) name = name.substring(0, name.lastIndexOf(" %" + world));
 		this.name = name;
 		

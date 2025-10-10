@@ -130,7 +130,7 @@ public class MacroWaypoints {
 
 		
 		MacroWaypoint macroWaypoint = new MacroWaypoint(waypoint, yaw, pitch, left, right, back, forward, leftClick, rightClick, sneak, noiseLevel, "", true);
-		waypointsList.computeIfAbsent(null, k -> new MacroWaypointGroup(new ArrayList<>(), world, true, true)).list.add(0, macroWaypoint);
+		waypointsList.computeIfAbsent("default", k -> new MacroWaypointGroup(new ArrayList<>(), world, true, true)).list.add(0, macroWaypoint);
     	doneMacro.add(macroWaypoint);
 		return macroWaypoint;
     }

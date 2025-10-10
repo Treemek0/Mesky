@@ -70,6 +70,7 @@ import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.potion.Potion;
+import net.minecraft.potion.PotionEffect;
 import net.minecraft.scoreboard.Score;
 import net.minecraft.scoreboard.ScoreObjective;
 import net.minecraft.scoreboard.ScorePlayerTeam;
@@ -78,6 +79,7 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
@@ -685,7 +687,7 @@ public class Utils {
 
 	    // Perform the ray trace to find the block the player is looking at
 	    MovingObjectPosition result = mc.theWorld.rayTraceBlocks(eyePosition, targetVec, false, false, false);
-
+	    
 	    // Check if the ray hit a block
 	    if (result != null && result.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
 	        return result.getBlockPos(); // Return the position of the block
@@ -693,6 +695,204 @@ public class Utils {
 
 	    return null; // Return null if no block was hit
 	}
+	
+	public static MovingObjectPosition getMovingObjectPositionLookingAt(double maxDistance, boolean ignoreGapsInBlocks) {
+	    Minecraft mc = Minecraft.getMinecraft();
+	    EntityPlayerSP player = mc.thePlayer;
+
+	    // Get the player's eye position and look direction
+	    Vec3 eyePosition = player.getPositionEyes(1.0f);
+	    Vec3 lookVector = player.getLook(1.0f);
+
+	    // Scale the look vector to the maximum distance
+	    Vec3 targetVec = eyePosition.addVector(lookVector.xCoord * maxDistance, lookVector.yCoord * maxDistance, lookVector.zCoord * maxDistance);
+
+	    // Perform the ray trace to find the block the player is looking at
+	    MovingObjectPosition result;
+	    if(ignoreGapsInBlocks) {
+	    	result = rayTraceBlocks(eyePosition, targetVec, false, false, false);
+	    }else {
+	    	result = Minecraft.getMinecraft().theWorld.rayTraceBlocks(eyePosition, targetVec, false, false, false);
+	    }
+	    // Check if the ray hit a block
+	    if (result != null && result.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+	        return result; // Return the position of the block
+	    }
+
+	    return null; // Return null if no block was hit
+	}
+	
+	public static MovingObjectPosition rayTraceBlocks(Vec3 vec31, Vec3 vec32, boolean stopOnLiquid, boolean ignoreBlockWithoutBoundingBox, boolean returnLastUncollidableBlock)
+    {
+        if (!Double.isNaN(vec31.xCoord) && !Double.isNaN(vec31.yCoord) && !Double.isNaN(vec31.zCoord))
+        {
+            if (!Double.isNaN(vec32.xCoord) && !Double.isNaN(vec32.yCoord) && !Double.isNaN(vec32.zCoord))
+            {
+                int i = MathHelper.floor_double(vec32.xCoord);
+                int j = MathHelper.floor_double(vec32.yCoord);
+                int k = MathHelper.floor_double(vec32.zCoord);
+                int l = MathHelper.floor_double(vec31.xCoord);
+                int i1 = MathHelper.floor_double(vec31.yCoord);
+                int j1 = MathHelper.floor_double(vec31.zCoord);
+                BlockPos blockpos = new BlockPos(l, i1, j1);
+                IBlockState iblockstate = getBlockState(blockpos);
+                Block block = iblockstate.getBlock();
+
+                World world = Minecraft.getMinecraft().theWorld;
+                
+                if ((!ignoreBlockWithoutBoundingBox || block.getCollisionBoundingBox(world, blockpos, iblockstate) != null) && block.canCollideCheck(iblockstate, stopOnLiquid))
+                {
+                    MovingObjectPosition movingobjectposition = block.collisionRayTrace(world, blockpos, vec31, vec32);
+
+                    if (movingobjectposition != null)
+                    {
+                        return movingobjectposition;
+                    }
+                }
+
+                MovingObjectPosition movingobjectposition2 = null;
+                int k1 = 200;
+
+                while (k1-- >= 0)
+                {
+                    if (Double.isNaN(vec31.xCoord) || Double.isNaN(vec31.yCoord) || Double.isNaN(vec31.zCoord))
+                    {
+                        return null;
+                    }
+
+                    if (l == i && i1 == j && j1 == k)
+                    {
+                        return returnLastUncollidableBlock ? movingobjectposition2 : null;
+                    }
+
+                    boolean flag2 = true;
+                    boolean flag = true;
+                    boolean flag1 = true;
+                    double d0 = 999.0D;
+                    double d1 = 999.0D;
+                    double d2 = 999.0D;
+
+                    if (i > l)
+                    {
+                        d0 = (double)l + 1.0D;
+                    }
+                    else if (i < l)
+                    {
+                        d0 = (double)l + 0.0D;
+                    }
+                    else
+                    {
+                        flag2 = false;
+                    }
+
+                    if (j > i1)
+                    {
+                        d1 = (double)i1 + 1.0D;
+                    }
+                    else if (j < i1)
+                    {
+                        d1 = (double)i1 + 0.0D;
+                    }
+                    else
+                    {
+                        flag = false;
+                    }
+
+                    if (k > j1)
+                    {
+                        d2 = (double)j1 + 1.0D;
+                    }
+                    else if (k < j1)
+                    {
+                        d2 = (double)j1 + 0.0D;
+                    }
+                    else
+                    {
+                        flag1 = false;
+                    }
+
+                    double d3 = 999.0D;
+                    double d4 = 999.0D;
+                    double d5 = 999.0D;
+                    double d6 = vec32.xCoord - vec31.xCoord;
+                    double d7 = vec32.yCoord - vec31.yCoord;
+                    double d8 = vec32.zCoord - vec31.zCoord;
+
+                    if (flag2)
+                    {
+                        d3 = (d0 - vec31.xCoord) / d6;
+                    }
+
+                    if (flag)
+                    {
+                        d4 = (d1 - vec31.yCoord) / d7;
+                    }
+
+                    if (flag1)
+                    {
+                        d5 = (d2 - vec31.zCoord) / d8;
+                    }
+
+                    if (d3 == -0.0D)
+                    {
+                        d3 = -1.0E-4D;
+                    }
+
+                    if (d4 == -0.0D)
+                    {
+                        d4 = -1.0E-4D;
+                    }
+
+                    if (d5 == -0.0D)
+                    {
+                        d5 = -1.0E-4D;
+                    }
+
+                    EnumFacing enumfacing;
+
+                    if (d3 < d4 && d3 < d5)
+                    {
+                        enumfacing = i > l ? EnumFacing.WEST : EnumFacing.EAST;
+                        vec31 = new Vec3(d0, vec31.yCoord + d7 * d3, vec31.zCoord + d8 * d3);
+                    }
+                    else if (d4 < d5)
+                    {
+                        enumfacing = j > i1 ? EnumFacing.DOWN : EnumFacing.UP;
+                        vec31 = new Vec3(vec31.xCoord + d6 * d4, d1, vec31.zCoord + d8 * d4);
+                    }
+                    else
+                    {
+                        enumfacing = k > j1 ? EnumFacing.NORTH : EnumFacing.SOUTH;
+                        vec31 = new Vec3(vec31.xCoord + d6 * d5, vec31.yCoord + d7 * d5, d2);
+                    }
+
+                    l = MathHelper.floor_double(vec31.xCoord) - (enumfacing == EnumFacing.EAST ? 1 : 0);
+                    i1 = MathHelper.floor_double(vec31.yCoord) - (enumfacing == EnumFacing.UP ? 1 : 0);
+                    j1 = MathHelper.floor_double(vec31.zCoord) - (enumfacing == EnumFacing.SOUTH ? 1 : 0);
+                    blockpos = new BlockPos(l, i1, j1);
+                    IBlockState iblockstate1 = getBlockState(blockpos);
+                    Block block1 = iblockstate1.getBlock();
+
+                    if (block1.canCollideCheck(iblockstate1, stopOnLiquid)){
+                        MovingObjectPosition movingobjectposition1 = new MovingObjectPosition(vec31, enumfacing, blockpos);
+                        return movingobjectposition1;
+                    }else{
+                        movingobjectposition2 = new MovingObjectPosition(MovingObjectPosition.MovingObjectType.MISS, vec31, enumfacing, blockpos);
+                    }
+                }
+
+                return returnLastUncollidableBlock ? movingobjectposition2 : null;
+            }
+            else
+            {
+                return null;
+            }
+        }
+        else
+        {
+            return null;
+        }
+    }
 	
 	public static BlockPos getBlockPos(double x, double y, double z) {
 		return new BlockPos(Math.floor(x), Math.floor(y), Math.floor(z));
@@ -1077,6 +1277,78 @@ public class Utils {
 			}
 			Minecraft.getMinecraft().thePlayer.sendChatMessage("/pc " + a);
 		}
+	}
+	
+	public static Vec3 predictNextTick(EntityLivingBase entity, float moveStrafe, float moveForward, boolean jumping, boolean sprinting, boolean sneaking) {
+	    Vec3 pos = entity.getPositionVector();
+	    Vec3 motion = new Vec3(entity.motionX, entity.motionY, entity.motionZ);
+	    float yaw = entity.rotationYaw;
+	    boolean onGround = entity.onGround;
+		
+	    Collection<PotionEffect> effects = entity.getActivePotionEffects();
+	    
+		double gravity = 0.08D;
+	    float slipperiness = onGround ? 0.6F : 1.0F;
+	    
+	    // === BASE SPEED ===
+	    float baseSpeed = 0.1F; // vanilla walk speed
+	    
+	    // Speed potion
+	    for(PotionEffect eff : effects) {
+	        if(eff.getPotionID() == Potion.moveSpeed.id) {
+	            baseSpeed *= 1.0F + 0.2F * (eff.getAmplifier() + 1);
+	        }
+	        if(eff.getPotionID() == Potion.moveSlowdown.id) {
+	            baseSpeed *= 1.0F - 0.15F * (eff.getAmplifier() + 1);
+	        }
+	    }
+	    
+	    if(sprinting) baseSpeed *= 1.3F;
+	    if(sneaking) baseSpeed *= 0.3F;
+	    
+	    // === MOVE INPUT ===
+	    double dist = moveStrafe * moveStrafe + moveForward * moveForward;
+	    if(dist >= 1.0E-4F) {
+	        dist = Math.sqrt(dist);
+	        if(dist < 1.0F) dist = 1.0F;
+	        dist = baseSpeed / dist;
+	        moveStrafe *= dist;
+	        moveForward *= dist;
+	        
+	        float rad = yaw * (float)Math.PI / 180.0F;
+	        float sin = (float)Math.sin(rad);
+	        float cos = (float)Math.cos(rad);
+	        
+	        motion = new Vec3(
+	            motion.xCoord + (moveStrafe * cos - moveForward * sin),
+	            motion.yCoord,
+	            motion.zCoord + (moveForward * cos + moveStrafe * sin)
+	        );
+	    }
+	    
+	    // === JUMP ===
+	    if(jumping && onGround) {
+	        double jumpMotion = 0.42D;
+	        for(PotionEffect eff : effects) {
+	            if(eff.getPotionID() == Potion.jump.id) {
+	                jumpMotion += 0.1D * (eff.getAmplifier() + 1);
+	            }
+	        }
+	        motion = new Vec3(motion.xCoord, jumpMotion, motion.zCoord);
+	        onGround = false;
+	    }	
+	    
+	    // === GRAVITY ===
+	    motion = new Vec3(motion.xCoord, motion.yCoord - gravity, motion.zCoord);
+	    
+	    // === FRICTION ===
+	    float friction = onGround ? 0.91F * slipperiness : 0.91F;
+	    motion = new Vec3(motion.xCoord * friction, motion.yCoord * friction, motion.zCoord * friction);
+	    
+	    // === PREDICTED POSITION ===
+	    Vec3 nextPos = pos.add(motion);
+	    
+	    return nextPos;
 	}
 	
 	public static void sendDiscordWebhook(String webhookUrl, String content) {

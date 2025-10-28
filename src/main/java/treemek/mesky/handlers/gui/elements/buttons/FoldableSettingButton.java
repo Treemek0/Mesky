@@ -166,6 +166,9 @@ public class FoldableSettingButton extends GuiButtonRunnable{
 					if(hiddenObjects.get(i) instanceof SettingListBox) {
 						foldHeight += ((SettingListBox)hiddenObjects.get(i)).allHeight + 2;
 					}
+					if(hiddenObjects.get(i) instanceof SettingKeybindButton) {
+						foldHeight += ((SettingKeybindButton)hiddenObjects.get(i)).allHeight + 2;
+					}
 				}
 				if(hiddenObjects.get(i) instanceof GuiTextField) {
 					if(hiddenObjects.get(i) instanceof SettingTextField) {

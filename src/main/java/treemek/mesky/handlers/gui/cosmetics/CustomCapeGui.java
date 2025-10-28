@@ -104,7 +104,14 @@ public class CustomCapeGui  extends GuiScreen{
 	@Override
 	protected void keyTyped(char typedChar, int keyCode) throws IOException {
 		if(folderPathField.isFocused()) {
-			folderPathField.textboxKeyTyped(typedChar, keyCode);
+			if(GuiScreen.isKeyComboCtrlV(keyCode)) {
+				String clipboard = GuiScreen.getClipboardString();
+				
+				folderPathField.writeText(clipboard.replace("\\", "/"));
+			}else {
+				folderPathField.textboxKeyTyped(typedChar, keyCode);
+			}
+			
 			CosmeticHandler.CustomCapeTexture.text = folderPathField.getText();
 			
 			amounthOfAnimations = getAmountOfAnimationsInFolder(getCapePath());

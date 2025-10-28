@@ -1,10 +1,13 @@
 package treemek.mesky.handlers.gui.elements.buttons;
 
+import org.lwjgl.opengl.GL11;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.util.ResourceLocation;
 import treemek.mesky.Reference;
 import treemek.mesky.handlers.RenderHandler;
+import treemek.mesky.utils.Utils;
 
 public class MacroButton extends GuiButton{
 
@@ -19,25 +22,12 @@ public class MacroButton extends GuiButton{
 	}
 	
 	
-	ResourceLocation unclickedLeftClick = new ResourceLocation(Reference.MODID, "gui/unclicked_LeftClick.png");
 	ResourceLocation clickedLeftClick = new ResourceLocation(Reference.MODID, "gui/clicked_LeftClick.png");
-	
-	ResourceLocation unclickedRightClick = new ResourceLocation(Reference.MODID, "gui/unclicked_RightClick.png");
 	ResourceLocation clickedRightClick = new ResourceLocation(Reference.MODID, "gui/clicked_RightClick.png");
-	
-	ResourceLocation unclickedLeft = new ResourceLocation(Reference.MODID, "gui/unclicked_left.png");
 	ResourceLocation clickedLeft = new ResourceLocation(Reference.MODID, "gui/clicked_left.png");
-	
-	ResourceLocation unclickedRight = new ResourceLocation(Reference.MODID, "gui/unclicked_right.png");
 	ResourceLocation clickedRight = new ResourceLocation(Reference.MODID, "gui/clicked_right.png");
-	
-	ResourceLocation unclickedBack = new ResourceLocation(Reference.MODID, "gui/unclicked_back.png");
 	ResourceLocation clickedBack = new ResourceLocation(Reference.MODID, "gui/clicked_back.png");
-	
-	ResourceLocation unclickedForward = new ResourceLocation(Reference.MODID, "gui/unclicked_forward.png");
 	ResourceLocation clickedForward = new ResourceLocation(Reference.MODID, "gui/clicked_forward.png");
-	
-	ResourceLocation unclickedSneak = new ResourceLocation(Reference.MODID, "gui/unclicked_sneak.png");
 	ResourceLocation clickedSneak = new ResourceLocation(Reference.MODID, "gui/sneak.png");
 	
 	public boolean isFull() {
@@ -46,8 +36,7 @@ public class MacroButton extends GuiButton{
 	
 	@Override
 	public void drawButton(Minecraft mc, int mouseX, int mouseY) {
-		if(isFull) {
-			switch (this.id) {
+		switch (this.id) {
 			case 0:
 				mc.renderEngine.bindTexture(clickedLeftClick);
 				break;
@@ -69,41 +58,17 @@ public class MacroButton extends GuiButton{
 			case 6:
 				mc.renderEngine.bindTexture(clickedSneak);
 				break;
-			}
-			
-		}else {
-			switch (this.id) {
-			case 0:
-				mc.renderEngine.bindTexture(unclickedLeftClick);
-				break;
-			case 1:
-				mc.renderEngine.bindTexture(unclickedRightClick);
-				break;
-			case 2:
-				mc.renderEngine.bindTexture(unclickedLeft);
-				break;
-			case 3:
-				mc.renderEngine.bindTexture(unclickedRight);
-				break;
-			case 4:
-				mc.renderEngine.bindTexture(unclickedBack);
-				break;
-			case 5:
-				mc.renderEngine.bindTexture(unclickedForward);
-				break;
-			case 6:
-				mc.renderEngine.bindTexture(unclickedSneak);
-				break;
-			}
+		}
+		
+		if(!isFull()) {
+			GL11.glEnable(GL11.GL_BLEND);
+			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+			GL11.glColor4f(1, 1, 1, 0.3f);
 		}
 		
 		drawModalRectWithCustomSizedTexture(xPosition, yPosition, 0, 0, width, height, width, height);
-		
-		float defaultFontHeight = mc.fontRendererObj.FONT_HEIGHT;
-		float scaleFactor = (float) (height / defaultFontHeight) / 2;
-		
-		float textY = yPosition + ((height / 2) - ((defaultFontHeight * scaleFactor) / 2));
-		RenderHandler.drawText(buttonText, xPosition + (width*1.25), textY, scaleFactor, true, 0x3e91b5);
+		GL11.glColor4f(1, 1, 1, 1);
+		GL11.glDisable(GL11.GL_BLEND);
 	}
 
 	@Override

@@ -2,7 +2,7 @@ package treemek.mesky.handlers.gui.elements;
 
 import net.minecraft.client.gui.GuiButton;
 
-public class GuiButtonRunnable extends GuiButton{
+public class GuiButtonRunnable extends ButtonWithToolkit{
 
 	private Runnable runnable;
 	

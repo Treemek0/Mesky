@@ -561,7 +561,7 @@ public class TextField
     /**
      * Args: x, y, buttonClicked
      */
-    public void mouseClicked(int mouseX_, int mouseY_, int buttonId_)
+    public boolean mouseClicked(int mouseX_, int mouseY_, int buttonId_)
     {
         boolean flag = mouseX_ >= this.xPosition && mouseX_ < this.xPosition + this.width && mouseY_ >= this.yPosition && mouseY_ < this.yPosition + this.height;
         
@@ -577,6 +577,8 @@ public class TextField
             String s = RenderHandler.trimStringToWidth(this.text.substring(this.lineScrollOffset), this.width - 8, false, scaleFactor);
             this.setCursorPosition(RenderHandler.trimStringToWidth(s, i, false, scaleFactor).length() + this.lineScrollOffset);
         }
+        
+        return flag;
     }
 
     
@@ -817,15 +819,20 @@ public class TextField
         this.enabledColor = p_146193_1_;
     }
     
-    public void setColor(Integer p_146193_1_)
+    public void setColor(int textColor, int frameColor)
     {
-    	if(p_146193_1_ == null) {
-    		this.enabledColor = 14737632;
-        	this.frameColor = -6250336;
-    	}else {
-    		this.enabledColor = p_146193_1_;
-        	this.frameColor = p_146193_1_;
-    	}
+		this.enabledColor = textColor;
+    	this.frameColor = frameColor;
+    }
+    
+    public void setColor(int color) {
+        this.enabledColor = color & 0x00FFFFFF; // no alpha
+        this.frameColor = (color & 0x00FFFFFF) | 0xFF000000; // FF alpha
+    }
+    
+    public void resetColor() {
+    	this.enabledColor = 14737632;
+    	this.frameColor = -6250336;
     }
 
     public void setDisabledTextColour(int p_146204_1_)

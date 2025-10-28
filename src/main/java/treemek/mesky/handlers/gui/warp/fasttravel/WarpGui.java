@@ -60,7 +60,7 @@ public class WarpGui extends GuiScreen{
 			}
 		}
 		
-		popup.drawPopup();
+		popup.drawPopup(partialTicks);
 	}
 	
 	PadLock defaultLock = PadLock.UNDISCOVERED;

@@ -32,6 +32,8 @@ import treemek.mesky.utils.Locations.Location;
 
 public class GuiHandler{
 	
+	public static final int errorRed = -5560023;
+	
 	public static GuiScreen GuiType;
 	
 	@SubscribeEvent

@@ -14,6 +14,7 @@ import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.handlers.gui.elements.SettingColorPicker;
 import treemek.mesky.handlers.gui.elements.buttons.FoldableSettingButton;
 import treemek.mesky.handlers.gui.elements.buttons.SettingButton;
+import treemek.mesky.handlers.gui.elements.buttons.SettingKeybindButton;
 import treemek.mesky.handlers.gui.elements.buttons.SettingListBox;
 import treemek.mesky.handlers.gui.elements.sliders.SettingSlider;
 import treemek.mesky.handlers.gui.elements.textFields.SettingTextField;
@@ -69,6 +70,9 @@ public class SubCategory extends GuiScreen{
 					if(list.get(i) instanceof SettingListBox) {
 						subEndY += ((SettingListBox)list.get(i)).allHeight + 2;
 					}
+					if(list.get(i) instanceof SettingKeybindButton) {
+						subEndY += ((SettingKeybindButton)list.get(i)).allHeight + 2;
+					}
 				}
 				
 				if(list.get(i) instanceof GuiTextField) {
@@ -114,11 +118,10 @@ public class SubCategory extends GuiScreen{
                         }
             		}else {
 		                GuiButton guibutton = (GuiButton)this.list.get(i);
-		                
-		                if(this.list.get(i) instanceof SettingSlider) {
-		                	if(((SettingSlider)this.list.get(i)).mouseClicked(mouseX, mouseY, mouseButton)) return;
-		                }else if(this.list.get(i) instanceof SettingListBox) {
+		                if(this.list.get(i) instanceof SettingListBox) {
 		                	if(((SettingListBox)this.list.get(i)).mousePressed(mouseX, mouseY, mouseButton)) return;
+		                }else if(this.list.get(i) instanceof SettingSlider) {
+		                	if(((SettingSlider)this.list.get(i)).mouseClicked(mouseX, mouseY, mouseButton)) return;
             			}else {
 			                if (guibutton.mousePressed(this.mc, mouseX, mouseY))
 			                {

@@ -34,6 +34,7 @@ import treemek.mesky.handlers.gui.elements.SettingColorPicker;
 import treemek.mesky.handlers.gui.elements.buttons.CheckButton;
 import treemek.mesky.handlers.gui.elements.buttons.FoldableSettingButton;
 import treemek.mesky.handlers.gui.elements.buttons.SettingButton;
+import treemek.mesky.handlers.gui.elements.buttons.SettingKeybindButton;
 import treemek.mesky.handlers.gui.elements.buttons.SettingListBox;
 import treemek.mesky.handlers.gui.elements.buttons.ListBox.Option;
 import treemek.mesky.handlers.gui.elements.sliders.SettingSlider;
@@ -146,11 +147,13 @@ public class SettingsGUI extends GuiScreen {
 	    
 	    List<Object> slotsSub = new ArrayList<>();
 	    slotsSub.add(new SettingListBox(2, 4*checkSize, checkSize, "Drop stopped message", getChatFilterArray(), SettingsConfig.dropItem_filter, "HIDDEN"));
-	    generalSub.add(new FoldableSettingButton(6, checkSize, "Lock slots (" + Keyboard.getKeyName(LockSlot.KEY.getKeyCode()) + ")", SettingsConfig.LockSlots, slotsSub));
+	    slotsSub.add(new SettingKeybindButton(0, checkSize, "Lock slots keybind", SettingsConfig.LockSlotsKeybind, 3));
+	    generalSub.add(new FoldableSettingButton(6, checkSize, "Lock slots", SettingsConfig.LockSlots, slotsSub));
 	    generalSub.add(new SettingSlider(41849, 2 * checkSize, checkSize, "Holding items size", SettingsConfig.HoldingItemSize, 0.1, 0.1, 2));
 	   // generalSub.add(new SettingSlider(41849, 2 * checkSize, checkSize, "Holding items X offset", SettingsConfig.HoldingItemOffsetX, 1, -15, 15));
 	    generalSub.add(new SettingSlider(41849, 2 * checkSize, checkSize, "Holding items Y offset", SettingsConfig.HoldingItemOffsetY, 1, 0, 10));
 	    List<Object> freelookFoldable = new ArrayList<>();
+	    freelookFoldable.add(new SettingKeybindButton(0, checkSize, "Freelock keybind", SettingsConfig.FreeLookKeybind, 3));
 	    freelookFoldable.add(new SettingButton(2, checkSize, "Toogle", SettingsConfig.FreeLookToogle));
 	    freelookFoldable.add(new SettingButton(2, checkSize, "Lock camera, unlock rotation", SettingsConfig.FreeRotate));
 	    freelookFoldable.add(new SettingButton(2, checkSize, "Block inverted angles", SettingsConfig.FreeLookClampAngles));
@@ -181,13 +184,13 @@ public class SettingsGUI extends GuiScreen {
 	    List<Object> nickDetectionFoldable = new ArrayList<>();
 	    nickDetectionFoldable.add(new SettingListBox(2, 4*checkSize, checkSize, "Detection color", ColorUtils.ColoredEnumColorsOptionList, SettingsConfig.NickMentionDetectionColor));
 	    chatSub.add(new FoldableSettingButton(6, checkSize, "Nick detection", SettingsConfig.NickMentionDetection, nickDetectionFoldable));
-
+	    
 	    // >>>>
 	    
 	    List<Object> advancedToolsSub = new ArrayList<>();
 	    advancedToolsSub.add(new SettingButton(0, checkSize, "Anty Ghost Blocks", SettingsConfig.AntyGhostBlocks));
-	    advancedToolsSub.add(new SettingButton(0, checkSize, "Ghost Block keybind", SettingsConfig.GhostBlocks, true));
-
+	    advancedToolsSub.add(new SettingButton(0, checkSize, "Ghost block creator", SettingsConfig.GhostBlocks, true));
+	    advancedToolsSub.add(new SettingKeybindButton(0, checkSize, "Ghost Block/Pickaxe keybind", SettingsConfig.GhostKeybind, 3));
 	    List<Object> ghostpickaxeFoldable = new ArrayList<>();
 	    ghostpickaxeFoldable.add(new SettingSlider(41849, 2 * checkSize, checkSize, "Ghost Pickaxe slot", SettingsConfig.GhostPickaxeSlot, 1, 1, 9));
 	    advancedToolsSub.add(new FoldableSettingButton(1, checkSize, "Ghost Pickaxe keybind", SettingsConfig.GhostPickaxe, ghostpickaxeFoldable, true));
@@ -276,6 +279,7 @@ public class SettingsGUI extends GuiScreen {
 		
 		List<Object> separateChatSub = new ArrayList<>();
 		List<Object> separateChatFoldable = new ArrayList<>();
+		separateChatFoldable.add(new SettingKeybindButton(0, checkSize, "Lock slots keybind", SettingsConfig.customChatKeybind, 3));
         separateChatFoldable.add(new SettingSlider(-1, checkSize*2, checkSize, "Background opacity", SettingsConfig.customChatOpacity, 0.05, 0, 1));
         separateChatFoldable.add(new SettingSlider(-1, checkSize*2, checkSize, "Background width", SettingsConfig.customChatWidth, 0.05, 0.5, 2, () -> { SettingsConfig.customChat.position[0] = chatBG_position[0]; ChatFilter.chat.changePosition(chatBG_position[0], chatBG_position[1]); ChatFilter.updateClamp(); }));
         separateChatFoldable.add(new SettingSlider(-1, checkSize*2, checkSize, "Background height", SettingsConfig.customChatHeight, 0.05, 0.5, 4, () -> { SettingsConfig.customChat.position[1] = chatBG_position[1]; ChatFilter.chat.changePosition(chatBG_position[0], chatBG_position[1]); ChatFilter.updateClamp(); }));

@@ -8,16 +8,14 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ResourceLocation;
 import treemek.mesky.Reference;
 import treemek.mesky.handlers.RenderHandler;
+import treemek.mesky.handlers.gui.elements.GuiButtonRunnable;
 
-public class CheckButton extends GuiButton{
-
-	String buttonText;
+public class CheckButton extends GuiButtonRunnable{
 	private boolean isFull;
 	
 	
-	public CheckButton(int buttonId, int x, int y, int width, int height, String buttonText, boolean isFull) {
-		super(buttonId, x, y, width, height, buttonText);
-		this.buttonText = buttonText;
+	public CheckButton(int buttonId, int x, int y, int width, int height, String toolkitText, boolean isFull) {
+		super(buttonId, x, y, width, height, toolkitText);
 		this.isFull = isFull;
 	}
 	
@@ -45,6 +43,8 @@ public class CheckButton extends GuiButton{
 	    GlStateManager.enableBlend();
 	    GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
 		
+	    isHovered(mouseX, mouseY); // for hovered toolkit
+	    
 		if(isFull) {
 			mc.renderEngine.bindTexture(check);
 		}else {
@@ -52,19 +52,22 @@ public class CheckButton extends GuiButton{
 		}
 		drawModalRectWithCustomSizedTexture(xPosition, yPosition, 0, 0, width, height, width, height);
 		
-		float defaultFontHeight = mc.fontRendererObj.FONT_HEIGHT;
-		float scaleFactor = (float) (height / defaultFontHeight) / 2;
-		
-		float textY = yPosition + ((height / 2) - ((defaultFontHeight * scaleFactor) / 2));
-		RenderHandler.drawText(buttonText, xPosition + (width*1.25), textY, scaleFactor, true, 0x3e91b5);
+		super.drawButton(mc, mouseX, mouseY);
 	}
 
 	@Override
 	public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
-		if (mouseX >= xPosition && mouseX <= xPosition + width && mouseY >= yPosition && mouseY <= yPosition + height) {
+		
+		if (isHovered(mouseX, mouseY)) {
 			isFull = !isFull;
+			run_runnable();
 		}
 		return super.mousePressed(mc, mouseX, mouseY);
+	}
+	
+	private boolean isHovered(int mouseX, int mouseY) {
+		this.hovered = mouseX >= xPosition && mouseX <= xPosition + width && mouseY >= yPosition && mouseY <= yPosition + height;
+		return hovered;
 	}
 	
 }

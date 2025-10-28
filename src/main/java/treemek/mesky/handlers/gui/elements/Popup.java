@@ -26,12 +26,26 @@ public class Popup {
 	private long showTime = 1000;
 	private long SHOW_INTERVAL = 0;
 	
+	boolean shouldOverride = false;
+	
 	public Popup(long showTime) {
 		this.showTime = showTime;
 		
 		ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
 		width = Math.min(150, Math.max(60, sr.getScaledWidth() / 4));
 		height = width / 3;
+		
+		x = sr.getScaledWidth();
+	}
+	
+	public Popup(long showTime, boolean shouldOverride) {
+		this.showTime = showTime;
+		
+		ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
+		width = Math.min(150, Math.max(60, sr.getScaledWidth() / 4));
+		height = width / 3;
+		
+		this.shouldOverride = shouldOverride;
 		
 		x = sr.getScaledWidth();
 	}
@@ -43,10 +57,10 @@ public class Popup {
 	private double x = 0;
 	private double width = 0;
 	private double height = 0;
+
+	private int multiplier = 1;
 	
-	private ResourceLocation popupLocation = new ResourceLocation(Reference.MODID, "gui/popup.png");
-	
-	public void drawPopup() {
+	public void drawPopup(float partialTicks) {
 		if(isShown) {
 			if(currentPopup == null) {
 				currentPopup= popupText.poll();
@@ -64,17 +78,22 @@ public class Popup {
 			double textWidth = RenderHandler.getTextWidth(currentPopup.text, textScale);
 			double textHeight = RenderHandler.getTextHeight(textScale);
 			
-			width = Math.max(sr.getScaledWidth()/2, textWidth/0.8f);
+			double nwidth = Math.max(sr.getScaledWidth()/4, textWidth/0.8f);
 			
-			RenderHandler.drawImage((int) x, 0, (int) width, (int) height, popupLocation);
+			if(nwidth != width) { // resizing
+				x = sr.getScaledWidth();
+			}
 			
+			width = nwidth;
+			
+			int sidesWidth = (int) (height * 0.15);
+			
+			RenderHandler.drawRectWithFrame((int)x, 0, (int)(x + width), (int)height, 0xFF2a2f32, 1);
 			RenderHandler.drawText(currentPopup.text, x + width/2 - textWidth/2, height/2 - textHeight/2, textScale, true, 0xFFFFFF);
-			
-
 			
 			if(!isHiding) {
 				if(x > sr.getScaledWidth() - width) {
-					x -= width / 100 * (240f/Minecraft.getDebugFPS());
+					x -= Math.min(width/5, width / 50 * partialTicks);
 					SHOW_INTERVAL = System.currentTimeMillis();
 				}else {
 					if(System.currentTimeMillis() - SHOW_INTERVAL >= currentPopup.time) {
@@ -85,9 +104,10 @@ public class Popup {
 			
 			if(isHiding) {
 				if(x < sr.getScaledWidth()) {
-					x += width / 100 * (240f/Minecraft.getDebugFPS());
+					x += width / 50 * partialTicks * multiplier;
 				}else {
 					isHiding = false;
+					multiplier = 1;
 					currentPopup = popupText.poll();
 					
 					if(currentPopup == null) {
@@ -95,22 +115,39 @@ public class Popup {
 					}
 				}
 			}
+			
+			x = Math.max(x, sr.getScaledWidth() - width);
 		}
 	}
 	
 	public void showPopup(String text) {
 		isShown = true;
 		
+		if(shouldOverride) {
+			if(currentPopup != null) {
+				isHiding = true;
+				multiplier = 3;
+			}
+			popupText.clear();
+		}
 		
 		popupText.add(new PopupElement(text, showTime));
+		
 	}
 	
 	public void showPopup(String text, long time) {
 		isShown = true;
-		double textScale = RenderHandler.getTextScale(height/8);
-		double textWidth = RenderHandler.getTextWidth(text, textScale);
 		
-		popupText.add(new PopupElement(text, time));
+		if(shouldOverride) {
+			if(currentPopup != null) {
+				isHiding = true;
+				multiplier = 3;
+			}
+			
+			popupText.clear();
+		}
+		
+		popupText.add(new PopupElement(text, showTime));
 	}
 	
 	public void resetPopups() {

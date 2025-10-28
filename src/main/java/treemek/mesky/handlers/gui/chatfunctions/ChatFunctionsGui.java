@@ -175,6 +175,14 @@ public class ChatFunctionsGui extends GuiScreen {
 	    	    	RenderHandler.drawToolkit(guiButton, mouseX, mouseY);
 	    	    }
 			}
+    		
+    		for (ChatFunctionElement chatFunctionElement : chatFunctions) {
+				for (GuiButton guiButton : chatFunctionElement.getListOfButtons()) {
+					if (guiButton instanceof ButtonWithToolkit && ((ButtonWithToolkit) guiButton).shouldShowTooltip()) {
+		    	    	RenderHandler.drawToolkit(guiButton, mouseX, mouseY);
+		    	    }
+				} 
+			}
 	    }
 	    
 	    closeWarning.drawElement(mc, mouseX, mouseY);
@@ -222,16 +230,16 @@ public class ChatFunctionsGui extends GuiScreen {
 	            DeleteButton deleteButton = new DeleteButton(0, (int)(function_X + (width/4) + 10), inputFullPosition, inputHeight, inputHeight, "Delete chatFunction");
 	            deleteButton.enabled = ChatFunctions.chatFunctionsList.get(i).isEnabled();
 	            
-	            CheckButton enabled = new CheckButton(0, (int)(function_X + (width/4) + inputHeight + 20), inputFullPosition, inputHeight, inputHeight, "", ChatFunctions.chatFunctionsList.get(i).isEnabled());            
+	            CheckButton enabled = new CheckButton(0, (int)(function_X + (width/4) + inputHeight + 20), inputFullPosition, inputHeight, inputHeight, "Disabling/Enabling chatFunction", ChatFunctions.chatFunctionsList.get(i).isEnabled());            
 	            
 	        	// Only party messages check button
-	            CheckButton onlyParty = new CheckButton(1, (int) (trigger_X * 0.1), inputFullPosition, inputHeight, inputHeight, "", ChatFunctions.chatFunctionsList.get(i).getOnlyParty());
+	            CheckButton onlyParty = new CheckButton(1, (int) (trigger_X * 0.1), inputFullPosition, inputHeight, inputHeight, "Trigger only on messages from party", ChatFunctions.chatFunctionsList.get(i).getOnlyParty());
 	        	
 	        	// Ignore players check button
-	            CheckButton ignorePlayers = new CheckButton(2, (int) (trigger_X * 0.4), inputFullPosition, inputHeight, inputHeight, "", ChatFunctions.chatFunctionsList.get(i).getIgnorePlayers());
+	            CheckButton ignorePlayers = new CheckButton(2, (int) (trigger_X * 0.4), inputFullPosition, inputHeight, inputHeight, "Ignore player messages", ChatFunctions.chatFunctionsList.get(i).getIgnorePlayers());
 	        	
 	        	// If message must be equal check button
-	            CheckButton isEqual = new CheckButton(3, (int) (trigger_X * 0.7), inputFullPosition, inputHeight, inputHeight, "", ChatFunctions.chatFunctionsList.get(i).getIsEqual());
+	            CheckButton isEqual = new CheckButton(3, (int) (trigger_X * 0.7), inputFullPosition, inputHeight, inputHeight, "Should message be equal to trigger", ChatFunctions.chatFunctionsList.get(i).getIsEqual());
 	        	
 	        	// trigger text input
 	        	TextField trigger = new TextField(1, trigger_X, inputFullPosition, width / 3, inputHeight);
@@ -258,16 +266,16 @@ public class ChatFunctionsGui extends GuiScreen {
 	            DeleteButton deleteButton = new DeleteButton(0, (int)(function_X + (width/4) + 10), inputFullPosition, inputHeight, inputHeight, "Delete chatFunction");
 	            deleteButton.enabled = chatFunctions.get(i).enabled.isFull();
 	            
-	            CheckButton enabled = new CheckButton(0, (int)(function_X + (width/4) + inputHeight + 20), inputFullPosition, inputHeight, inputHeight, "", chatFunctions.get(i).enabled.isFull());
+	            CheckButton enabled = new CheckButton(0, (int)(function_X + (width/4) + inputHeight + 20), inputFullPosition, inputHeight, inputHeight, "Disabling/Enabling chatFunction", chatFunctions.get(i).enabled.isFull());
 	            
 	        	// Only party messages check button
-	            CheckButton onlyParty = new CheckButton(1, (int) (trigger_X * 0.1), inputFullPosition, inputHeight, inputHeight, "", chatFunctions.get(i).onlyParty.isFull());
+	            CheckButton onlyParty = new CheckButton(1, (int) (trigger_X * 0.1), inputFullPosition, inputHeight, inputHeight, "Trigger only on messages from party", chatFunctions.get(i).onlyParty.isFull());
 	        	
 	        	// Ignore players check button
-	            CheckButton ignorePlayers = new CheckButton(2, (int) (trigger_X * 0.4), inputFullPosition, inputHeight, inputHeight, "", chatFunctions.get(i).ignorePlayers.isFull());
+	            CheckButton ignorePlayers = new CheckButton(2, (int) (trigger_X * 0.4), inputFullPosition, inputHeight, inputHeight, "Ignore player messages", chatFunctions.get(i).ignorePlayers.isFull());
 	        	
 	        	// If message must be equal check button
-	            CheckButton isEqual = new CheckButton(3, (int) (trigger_X * 0.7), inputFullPosition, inputHeight, inputHeight, "", chatFunctions.get(i).isEqual.isFull());
+	            CheckButton isEqual = new CheckButton(3, (int) (trigger_X * 0.7), inputFullPosition, inputHeight, inputHeight, "Should message be equal to trigger", chatFunctions.get(i).isEqual.isFull());
 	        	
 	        	// trigger text input
 	        	TextField trigger = new TextField(1, trigger_X, inputFullPosition, width / 3, inputHeight);
@@ -304,16 +312,16 @@ public class ChatFunctionsGui extends GuiScreen {
 	    	
     		DeleteButton deleteButton = new DeleteButton(0, (int)(function_X + (width/4) + 10), 0, inputHeight, inputHeight, "Delete chatFunction");
     		
-    		CheckButton enabled = new CheckButton(0, (int)(function_X + (width/4) + inputHeight + 20), 0, inputHeight, inputHeight, "", true);
+    		CheckButton enabled = new CheckButton(0, (int)(function_X + (width/4) + inputHeight + 20), 0, inputHeight, inputHeight, "Disabling/Enabling chatFunction", true);
     		
         	// Only party messages check button
-            CheckButton onlyParty = new CheckButton(1, (int) (trigger_X * 0.1), 0, inputHeight, inputHeight, "", false);
+            CheckButton onlyParty = new CheckButton(1, (int) (trigger_X * 0.1), 0, inputHeight, inputHeight, "Trigger only on messages from party", false);
         	
         	// Ignore players check button
-            CheckButton ignorePlayers = new CheckButton(2, (int) (trigger_X * 0.4), 0, inputHeight, inputHeight, "", false);
+            CheckButton ignorePlayers = new CheckButton(2, (int) (trigger_X * 0.4), 0, inputHeight, inputHeight, "Ignore player messages", false);
         	
         	// If message must be equal check button
-            CheckButton isEqual = new CheckButton(3, (int) (trigger_X * 0.7), 0, inputHeight, inputHeight, "", false);
+            CheckButton isEqual = new CheckButton(3, (int) (trigger_X * 0.7), 0, inputHeight, inputHeight, "Should message be equal to trigger", false);
         	
         	
         	// trigger text input

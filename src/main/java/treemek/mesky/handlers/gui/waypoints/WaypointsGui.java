@@ -273,7 +273,7 @@ public class WaypointsGui extends GuiScreen {
 	    changingRegionWarning.drawElement(mc, mouseX, mouseY);
         closeWarning.drawElement(mc, mouseX, mouseY);
         
-        popup.drawPopup();
+        popup.drawPopup(partialTicks);
 	}
 	
 	private void resetColor() { // because drawRect destroys some logic
@@ -549,10 +549,10 @@ public class WaypointsGui extends GuiScreen {
 					for (int j = group.list.size() - 1; j >= 0; j--) {
 						WaypointElement waypoint = group.list.get(j);
 			
-				    	waypoint.color.setTextColor(14737632);
-				    	waypoint.x.setColor(14737632);
-				    	waypoint.y.setColor(14737632);
-				    	waypoint.z.setColor(14737632);
+						waypoint.color.setTextColor(14737632);
+				    	waypoint.x.resetColor();
+				    	waypoint.y.resetColor();
+				    	waypoint.z.resetColor();
 				    	
 				        String name = waypoint.name.getText();
 				        String color = waypoint.color.getColorString().replace("#", ""); 
@@ -581,16 +581,16 @@ public class WaypointsGui extends GuiScreen {
 				        	z = Float.parseFloat(waypoint.z.getText()); 
 				        } catch (NumberFormatException e) { waypoint.z.setColor(11217193); isError = true; }
 				        
-				        if(isError) {
-				        	popup.showPopup("There's error with some waypoints, can't import");
-				        	return; // skip
-				        }
-				        
 				    	groupList.add(0, new Waypoint(name, color, x, y, z, Utils.getWorldIdentifierWithRegionTextField(Minecraft.getMinecraft().theWorld), (float) scale, enabled));
 					}
 					
 					waypointsList.computeIfAbsent(finalName + " %" + group.world, k -> new WaypointGroup(new ArrayList<>(), group.world, group.enabled.isFull(), group.opened.isOpened())).list.addAll(0, groupList);
 			    }
+				
+				if(isError) {
+		        	popup.showPopup("There's error with some waypoints, can't import");
+		        	return; // skip
+		        }
 				
 				Utils.copyToClipboard(Waypoints.exportWaypointsSkytilsFormat(waypointsList));
 				popup.showPopup("Exported string to clipboard");
@@ -654,6 +654,7 @@ public class WaypointsGui extends GuiScreen {
 			    waypointZ.setText(Float.toString(z));
 			    
 			    group.list.add(0, new WaypointElement(waypointName, colorPicker, scale, waypointX, waypointY, waypointZ, deleteButton, enabled, inputMargin));
+			    group.opened.setOpened(true);
 			    return;
 			}
 			
@@ -1146,9 +1147,9 @@ public class WaypointsGui extends GuiScreen {
 				WaypointElement waypoint = group.list.get(j);
 	
 		    	waypoint.color.setTextColor(14737632);
-		    	waypoint.x.setColor(null);
-		    	waypoint.y.setColor(null);
-		    	waypoint.z.setColor(null);
+		    	waypoint.x.resetColor();
+		    	waypoint.y.resetColor();
+		    	waypoint.z.resetColor();
 		    	
 		        String name = waypoint.name.getText();
 		        String color = waypoint.color.getColorString().replace("#", ""); 
@@ -1185,6 +1186,7 @@ public class WaypointsGui extends GuiScreen {
 		
 		if(isError) {
         	saveButton.packedFGColour = 14258834;
+        	popup.showPopup("There's error with some waypoints, can't save");
         	return false; // skip
         }
 		

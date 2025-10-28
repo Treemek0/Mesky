@@ -25,6 +25,7 @@ import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.features.BlockFlowerPlacing;
 import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.handlers.gui.elements.ButtonWithToolkit;
+import treemek.mesky.handlers.gui.elements.Popup;
 import treemek.mesky.handlers.gui.elements.ScrollBar;
 import treemek.mesky.handlers.gui.elements.buttons.AddButton;
 import treemek.mesky.handlers.gui.elements.buttons.CheckButton;
@@ -62,6 +63,8 @@ public class AlertsGui extends GuiScreen {
 	private float scrollbarBg_height;
 	private float scrollbar_width;
 	private GuiButton saveButton;
+	
+	Popup popup;
 	
 	@Override
 	public void drawScreen(int mouseX, int mouseY, float partialTicks) {     
@@ -149,17 +152,6 @@ public class AlertsGui extends GuiScreen {
 	    
 		drawRect(0, 0, width, height/3 - 1, new Color(33, 33, 33,255).getRGB());
 		
-		// Toolkit
-    	if(holdingElement == null) {
-			for (AlertElement alert : alerts) {
-		    	for (GuiButton button : alert.getListOfButtons()) {
-		    	    if (button instanceof ButtonWithToolkit && ((ButtonWithToolkit) button).shouldShowTooltip()) {
-		    	    	RenderHandler.drawToolkit(button, mouseX, mouseY);
-		    	    }
-		    	}
-			}
-    	}
-		
 		float scale = (float) ((height*0.1f) / mc.fontRendererObj.FONT_HEIGHT) / 2;
 
         int textLength = mc.fontRendererObj.getStringWidth("Alerts");
@@ -203,6 +195,17 @@ public class AlertsGui extends GuiScreen {
         
 	    super.drawScreen(mouseX, mouseY, partialTicks);
 	    
+		// Toolkit
+    	if(holdingElement == null) {
+			for (AlertElement alert : alerts) {
+		    	for (GuiButton button : alert.getListOfButtons()) {
+		    	    if (button instanceof ButtonWithToolkit && ((ButtonWithToolkit) button).shouldShowTooltip()) {
+		    	    	RenderHandler.drawToolkit(button, mouseX, mouseY);
+		    	    }
+		    	}
+			}
+    	}
+	    
 	    if(holdingElement == null) {
     		for (GuiButton guiButton : buttonList) {
     			if (guiButton instanceof ButtonWithToolkit && ((ButtonWithToolkit) guiButton).shouldShowTooltip()) {
@@ -212,6 +215,8 @@ public class AlertsGui extends GuiScreen {
 	    }
 	    
 	    closeWarning.drawElement(mc, mouseX, mouseY);
+	    
+	    popup.drawPopup(partialTicks);
 	}
 	
 	@Override
@@ -219,6 +224,8 @@ public class AlertsGui extends GuiScreen {
 	    super.initGui();
 	    buttonList.clear();
 	    closeWarning = new CloseWarning(() -> { return SaveAlerts(); });
+	    
+	    popup = new Popup(1500);
 	    
 		inputHeight = ((height / 25) < 12)?12:(height / 25);
 		inputMargin = ((height / 40) < 5)?5:(height / 40);
@@ -253,7 +260,7 @@ public class AlertsGui extends GuiScreen {
 	        	// Position 0 for inputs + every input height and their bottom margin
 	        	int inputFullPosition = positionY + ((inputHeight*2 + 5 + inputMargin) * i);
 	        	
-	        	CheckButton enabled = new CheckButton(0, editX + (spaceBetween/2 + inputHeight)*2, inputFullPosition, inputHeight, inputHeight, "", Alerts.alertsList.get(i).enabled);
+	        	CheckButton enabled = new CheckButton(0, editX + (spaceBetween/2 + inputHeight)*2, inputFullPosition, inputHeight, inputHeight, "Disabling/Enabling alert", Alerts.alertsList.get(i).enabled);
 	        	
 	        	// Delete button
 	        	DeleteButton deleteButton = new DeleteButton(0, editX + spaceBetween/2 + inputHeight, inputFullPosition, inputHeight, inputHeight, "Delete alert");
@@ -263,13 +270,13 @@ public class AlertsGui extends GuiScreen {
 	        	editButton.enabled = Alerts.alertsList.get(i).enabled;
 	        	
 	        	// onlyParty button
-	        	CheckButton onlyParty = new CheckButton(2, (int) (trigger_X * 0.1), inputFullPosition, inputHeight, inputHeight, "", Alerts.alertsList.get(i).getOnlyParty());
+	        	CheckButton onlyParty = new CheckButton(2, (int) (trigger_X * 0.1), inputFullPosition, inputHeight, inputHeight, "Trigger only on messages from party", Alerts.alertsList.get(i).getOnlyParty());
 	        	
 	        	// ignorePlayers button
-	        	CheckButton ignorePlayers = new CheckButton(3, (int) (trigger_X * 0.4), inputFullPosition, inputHeight, inputHeight, "", Alerts.alertsList.get(i).getIgnorePlayers());
+	        	CheckButton ignorePlayers = new CheckButton(3, (int) (trigger_X * 0.4), inputFullPosition, inputHeight, inputHeight, "Ignore player messages", Alerts.alertsList.get(i).getIgnorePlayers());
 	        	
 	        	// isEqual button
-	        	CheckButton isEqual = new CheckButton(4, (int) (trigger_X * 0.7), inputFullPosition, inputHeight, inputHeight, "", Alerts.alertsList.get(i).getIsEqual());
+	        	CheckButton isEqual = new CheckButton(4, (int) (trigger_X * 0.7), inputFullPosition, inputHeight, inputHeight, "Should message be equal to trigger", Alerts.alertsList.get(i).getIsEqual());
 	        	
 	        	// trigger text input
 	        	TextField alertTrigger = new TextField(1, trigger_X, inputFullPosition, width / 4, inputHeight);
@@ -315,16 +322,16 @@ public class AlertsGui extends GuiScreen {
 	        	EditButton editButton = new EditButton(1, editX, inputFullPosition, inputHeight, inputHeight, "Edit position");
 	        	editButton.enabled = alerts.get(i).enabled.isFull();
 	        	
-	        	CheckButton enabled = new CheckButton(0, editX + (spaceBetween/2 + inputHeight)*2, inputFullPosition, inputHeight, inputHeight, "", alerts.get(i).enabled.isFull());
+	        	CheckButton enabled = new CheckButton(0, editX + (spaceBetween/2 + inputHeight)*2, inputFullPosition, inputHeight, inputHeight, "Disabling/Enabling alert", alerts.get(i).enabled.isFull());
 	        	
 	        	// onlyParty button
-	        	CheckButton onlyParty = new CheckButton(2, (int) (trigger_X * 0.1), inputFullPosition, inputHeight, inputHeight, "", alerts.get(i).onlyParty.isFull());
+	        	CheckButton onlyParty = new CheckButton(2, (int) (trigger_X * 0.1), inputFullPosition, inputHeight, inputHeight, "Trigger only on messages from party", alerts.get(i).onlyParty.isFull());
 	        	
 	        	// ignorePlayers button
-	        	CheckButton ignorePlayers = new CheckButton(3, (int) (trigger_X * 0.4), inputFullPosition, inputHeight, inputHeight, "", alerts.get(i).ignorePlayers.isFull());
+	        	CheckButton ignorePlayers = new CheckButton(3, (int) (trigger_X * 0.4), inputFullPosition, inputHeight, inputHeight, "Ignore player messages", alerts.get(i).ignorePlayers.isFull());
 	        	
 	        	// isEqual button
-	        	CheckButton isEqual = new CheckButton(4, (int) (trigger_X * 0.7), inputFullPosition, inputHeight, inputHeight, "", alerts.get(i).isEqual.isFull());
+	        	CheckButton isEqual = new CheckButton(4, (int) (trigger_X * 0.7), inputFullPosition, inputHeight, inputHeight, "Should message be equal to trigger", alerts.get(i).isEqual.isFull());
 	        	
 	        	// trigger text input
 	        	TextField alertTrigger = new TextField(1, trigger_X, inputFullPosition, width / 4, inputHeight);
@@ -388,13 +395,13 @@ public class AlertsGui extends GuiScreen {
 			
 			EditButton editButton = new EditButton(1, editX, 0, inputHeight, inputHeight, "Edit position");
         	
-			CheckButton enabled = new CheckButton(0, editX + (spaceBetween/2 + inputHeight)*2, 0, inputHeight, inputHeight, "", true);
+			CheckButton enabled = new CheckButton(0, editX + (spaceBetween/2 + inputHeight)*2, 0, inputHeight, inputHeight, "Disabling/Enabling alert", true);
 			
-			CheckButton onlyParty = new CheckButton(2, (int) (trigger_X * 0.1), 0, inputHeight, inputHeight, "", false);
+			CheckButton onlyParty = new CheckButton(2, (int) (trigger_X * 0.1), 0, inputHeight, inputHeight, "Trigger only on messages from party", false);
         	
-			CheckButton ignorePlayers = new CheckButton(3, (int) (trigger_X * 0.4), 0, inputHeight, inputHeight, "", false);
+			CheckButton ignorePlayers = new CheckButton(3, (int) (trigger_X * 0.4), 0, inputHeight, inputHeight, "Ignore player messages", false);
 
-			CheckButton isEqual = new CheckButton(4, (int) (trigger_X * 0.7), 0, inputHeight, inputHeight, "", false);
+			CheckButton isEqual = new CheckButton(4, (int) (trigger_X * 0.7), 0, inputHeight, inputHeight, "Should message be equal to trigger", false);
         	
         	// trigger text input
         	TextField alertTrigger = new TextField(1, trigger_X, topOfWaypoints, width / 4, inputHeight);
@@ -658,7 +665,7 @@ public class AlertsGui extends GuiScreen {
 	    for (int i = 0; i < alerts.size(); i++) {
 	    	AlertElement alert = alerts.get(i);
 	    	
-	    	alert.time.setColor(null);
+	    	alert.time.resetColor();
 	    	
 	        String trigger = alert.trigger.getText();
 	        String display = alert.display.getText();
@@ -685,6 +692,7 @@ public class AlertsGui extends GuiScreen {
 	    
 	    if(isError) {
 	    	saveButton.packedFGColour = 14258834;
+	    	popup.showPopup("There's error with some alerts, can't save");
 	    	return false;
 	    }
 	    

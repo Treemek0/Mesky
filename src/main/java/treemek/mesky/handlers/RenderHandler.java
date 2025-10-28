@@ -88,6 +88,11 @@ public class RenderHandler {
         Gui.drawModalRectWithCustomSizedTexture(x, y, 0, 0, width, height, width, height);
 	}
 	
+	public static void drawImage(int x, int y, int u, int v, int width, int height, int textureWidth, int textureHeight,  ResourceLocation location) {
+		Minecraft.getMinecraft().renderEngine.bindTexture(location);
+        Gui.drawModalRectWithCustomSizedTexture(x, y, u, v, width, height, textureWidth, textureHeight);
+	}
+	
 	public static void drawFilledBoundingBox(AxisAlignedBB box, float red, float green, float blue, float alpha) {
 	    Tessellator tessellator = Tessellator.getInstance();
 	    WorldRenderer wr = tessellator.getWorldRenderer();
@@ -773,8 +778,9 @@ public class RenderHandler {
     
     public static void drawRectWithFrame(int left, int top, int right, int bottom, int color, int frameWidth)
     {
-        Minecraft.getMinecraft().ingameGUI.drawRect(left, top, right, bottom, new Color(0, 0, 0,255).getRGB());
-        Minecraft.getMinecraft().ingameGUI.drawRect(left+frameWidth, top+frameWidth, right-frameWidth, bottom-frameWidth, color);
+        drawRect(left, top, right, bottom, new Color(0, 0, 0,255).getRGB());
+        drawRect(left+frameWidth, top+frameWidth, right-frameWidth, bottom-frameWidth, color);
+        GL11.glColor4f(1, 1, 1, 1);
     }
     
     public static void drawCircleWithBorder(int x, int y, int radius, int color) {

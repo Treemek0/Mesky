@@ -124,7 +124,7 @@ public class FileSelectorButton extends GuiButton{
 
 	        // Set selection mode
 	        if (saveDirectory) {
-	            chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+	            chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 	        } else {
 	            chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 	        }
@@ -142,6 +142,10 @@ public class FileSelectorButton extends GuiButton{
 	        if (result == JFileChooser.APPROVE_OPTION) {
 	            File selected = chooser.getSelectedFile();
 	            if (selected != null) {
+	            	if(saveDirectory && !selected.isDirectory()) {
+	            		selected = selected.getParentFile();
+	            	}
+	            	
 	                setPath(selected.getAbsolutePath());
 	            }
 	        }

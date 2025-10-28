@@ -43,6 +43,7 @@ import treemek.mesky.handlers.gui.GUI;
 import treemek.mesky.handlers.gui.chatfunctions.ChatFunctionElement;
 import treemek.mesky.handlers.gui.elements.ButtonWithToolkit;
 import treemek.mesky.handlers.gui.elements.ColorPicker;
+import treemek.mesky.handlers.gui.elements.Popup;
 import treemek.mesky.handlers.gui.elements.ScrollBar;
 import treemek.mesky.handlers.gui.elements.buttons.AddButton;
 import treemek.mesky.handlers.gui.elements.buttons.CheckButton;
@@ -86,6 +87,7 @@ public class MacroWaypointsGui extends GuiScreen {
 
 	private MacroWaypointElement holdingElement;
 
+	Popup popup;
 	
 	@Override
 	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
@@ -258,6 +260,8 @@ public class MacroWaypointsGui extends GuiScreen {
 	    }
 	    
 	    closeWarning.drawElement(mc, mouseX, mouseY);
+	    
+	    popup.drawPopup(partialTicks);
 	}
 	
 	private void resetColor() { // because drawRect destroys some logic
@@ -271,6 +275,8 @@ public class MacroWaypointsGui extends GuiScreen {
 	    super.initGui();
 	    buttonList.clear();
 	    closeWarning = new CloseWarning(() -> { return SaveWaypoints(); });
+	    
+	    popup = new Popup(1500);
 	    
         int checkX = (int)(width / 4);
         int buttonWidth = 20;
@@ -590,7 +596,8 @@ public class MacroWaypointsGui extends GuiScreen {
 	            
 			    
 	            group.list.add(0, new MacroWaypointElement(waypointName, colorPicker, waypointX, waypointY, waypointZ, yaw, pitch, left, right, back, forward, leftClick, rightClick, sneak, noiseLevel, function, deleteButton, enabled, inputMargin));
-				return;
+				group.opened.setOpened(true);
+	            return;
 			}
 			
 			
@@ -1054,10 +1061,10 @@ public class MacroWaypointsGui extends GuiScreen {
 	            MacroWaypointElement waypoint = group.list.get(j);
 
 	            waypoint.color.setTextColor(14737632);
-	            waypoint.x.setColor(null);
-	            waypoint.y.setColor(null);
-	            waypoint.z.setColor(null);
-	            waypoint.noiseLevel.setColor(null);
+	            waypoint.x.resetColor();
+	            waypoint.y.resetColor();
+	            waypoint.z.resetColor();
+	            waypoint.noiseLevel.resetColor();
 
 	            String name = waypoint.name.getText();
 	            String function = waypoint.function.getText();
@@ -1113,6 +1120,7 @@ public class MacroWaypointsGui extends GuiScreen {
 	    
         if (isError) {
             saveButton.packedFGColour = 14258834;
+            popup.showPopup("There's error with some waypoints, can't save");
             return false;
         }
 

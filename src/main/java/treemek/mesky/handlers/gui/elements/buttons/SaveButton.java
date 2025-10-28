@@ -16,6 +16,8 @@ public class SaveButton extends ButtonWithToolkit{
 	
 	public SaveButton(int buttonId, int x, int y, int width, int height, String buttonText){
 		super(buttonId, x, y, width, height, buttonText);
+		
+		packedFGColour = 0xFFFFFF;
 	}
 	
 	ResourceLocation button = new ResourceLocation(Reference.MODID, "gui/save.png");
@@ -28,7 +30,12 @@ public class SaveButton extends ButtonWithToolkit{
 	    GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
 		
 		 this.hovered = mouseX >= this.xPosition && mouseY >= this.yPosition && mouseX < this.xPosition + this.width && mouseY < this.yPosition + this.height;
-         if(enabled && this.hovered) {
+         
+		 float f = (float)(packedFGColour >> 16 & 255) / 255.0F;
+		 float f1 = (float)(packedFGColour >> 8 & 255) / 255.0F;
+		 float f2 = (float)(packedFGColour & 255) / 255.0F;
+		 GL11.glColor4f(f, f1, f2, 1);
+		 if(enabled && this.hovered) {
         	 mc.renderEngine.bindTexture(button_hovered);
      		drawModalRectWithCustomSizedTexture(xPosition, yPosition, 0, 0, width, height, width, height);
          }else {
@@ -37,6 +44,7 @@ public class SaveButton extends ButtonWithToolkit{
      		drawModalRectWithCustomSizedTexture(xPosition, yPosition, 0, 0, width, height, width, height);
          }
          
+		 GL11.glColor4f(1, 1, 1, 1);
          super.drawButton(mc, mouseX, mouseY);
 	}
 	

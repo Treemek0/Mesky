@@ -45,9 +45,6 @@ import treemek.mesky.utils.Utils;
 import treemek.mesky.utils.chat.ChatFilter;
 
 public class LockSlot {
-
-	public static final KeyBinding KEY = new KeyBinding("Lock slot", Keyboard.KEY_L, "Mesky");
-	
 	public static Map<Integer, Boolean> lockedSlots = new HashMap<>();
 	
 	public static Map<Integer, Integer> connectedSlots = new LinkedHashMap<>();
@@ -90,7 +87,7 @@ public class LockSlot {
 	    	}
 	    }
 	    
-	    if (Keyboard.isKeyDown(KEY.getKeyCode())) {
+	    if (SettingsConfig.LockSlotsKeybind.keybind.isKeybindDown()) {
     		GuiContainer gui = (GuiContainer) mc.currentScreen;
 	        Slot hovered = gui.getSlotUnderMouse();
 
@@ -147,6 +144,33 @@ public class LockSlot {
 	    	
 	    	keyPressed = 0;
 	    	keyPressed_slot = null;
+	    }
+	    
+	    if (SettingsConfig.LockSlotsKeybind.keybind.wasKeybindReleased() && SettingsConfig.LockSlots.isOn) { // locking
+	    	if(keyPressed < 10) {
+	    		GuiContainer gui = (GuiContainer) mc.currentScreen;
+		        Slot hovered = gui.getSlotUnderMouse();
+	
+		        if (hovered != null && hovered.inventory == mc.thePlayer.inventory) {
+		        	int slot = hovered.getSlotIndex();
+		        	changedLocks = true;
+		        	
+		            if (lockedSlots.containsKey(slot) && lockedSlots.get(slot)) { // removing (3 tap)
+		                lockedSlots.remove(slot);
+		                SoundsHandler.playSound("mesky:tap", 1, 0.3f);
+		            } else {
+		            	if(!lockedSlots.containsKey(slot)) { // gray lock (1 tap)
+		            		lockedSlots.put(slot, false);
+		                	SoundsHandler.playSound("mesky:bop");
+		            	}else { // red lock (2 tap)
+		            		lockedSlots.put(slot, true);
+		            		SoundsHandler.playSound("mesky:bop", 1, 2);
+		            	}
+		            }
+		        }
+	    	}
+	    	
+	    	return;
 	    }
 	}
 	
@@ -207,7 +231,7 @@ public class LockSlot {
 	            	if(!dropPressed) {
 	            		ChatComponentText dropMessage = new ChatComponentText(EnumChatFormatting.RED + "[Mesky] \u26A0 You cannot drop this item. Unlock the slot first.");
 	            		ChatStyle style = new ChatStyle();
-	            		style.setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("Unlock slot in inventory using [KEY " + Keyboard.getKeyName(KEY.getKeyCode()) + "]")));
+	            		style.setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("Unlock slot in inventory using [KEY " + SettingsConfig.LockSlotsKeybind.keybind.getKeysAsString() + "]")));
 	            		dropMessage.setChatStyle(style);
 	            		ChatFilter.checkFilterAndSend(SettingsConfig.dropItem_filter, dropMessage);
 	            		SoundsHandler.playSound("mesky:block", 1, 0.1f);
@@ -222,34 +246,6 @@ public class LockSlot {
 	    
 	    if (key == Minecraft.getMinecraft().gameSettings.keyBindDrop.getKeyCode() && !Keyboard.getEventKeyState()) {
 	    	dropPressed = false;
-	    }
-	    	
-	    
-	    if (key == KEY.getKeyCode() && SettingsConfig.LockSlots.isOn && !Keyboard.getEventKeyState()) { // locking
-	    	if(keyPressed < 10) {
-	    		GuiContainer gui = (GuiContainer) mc.currentScreen;
-		        Slot hovered = gui.getSlotUnderMouse();
-	
-		        if (hovered != null && hovered.inventory == mc.thePlayer.inventory) {
-		        	int slot = hovered.getSlotIndex();
-		        	changedLocks = true;
-		        	
-		            if (lockedSlots.containsKey(slot) && lockedSlots.get(slot)) { // removing (3 tap)
-		                lockedSlots.remove(slot);
-		                SoundsHandler.playSound("mesky:tap", 1, 0.3f);
-		            } else {
-		            	if(!lockedSlots.containsKey(slot)) { // gray lock (1 tap)
-		            		lockedSlots.put(slot, false);
-		                	SoundsHandler.playSound("mesky:bop");
-		            	}else { // red lock (2 tap)
-		            		lockedSlots.put(slot, true);
-		            		SoundsHandler.playSound("mesky:bop", 1, 2);
-		            	}
-		            }
-		        }
-	    	}
-	    	
-	    	return;
 	    }
 	    
 	    for (int i = 0; i < 9; i++) {

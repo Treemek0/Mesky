@@ -43,6 +43,8 @@ import treemek.mesky.utils.MiningUtils.MiningPath;
 import treemek.mesky.utils.ChatFunctions;
 import treemek.mesky.utils.ChatFunctions.ChatFunction;
 import treemek.mesky.utils.FriendsLocations;
+import treemek.mesky.utils.KeyActions;
+import treemek.mesky.utils.KeyActions.KeyAction;
 import treemek.mesky.utils.Waypoints.Waypoint;
 import treemek.mesky.utils.Waypoints.WaypointGroup;
 import treemek.mesky.utils.chat.ChatFilter;
@@ -122,6 +124,13 @@ public class ConfigHandler {
             Utils.addMinecraftMessageWithPrefix(EnumChatFormatting.DARK_GREEN + "Reloaded slotLocks " + EnumChatFormatting.GREEN + '\u2713');
         } catch (IOException e) {
             Utils.writeError("There was a problem with reloading slotLocks: " + e.getMessage());
+        }
+        
+        try {
+            reloadKeyActions();
+            Utils.addMinecraftMessageWithPrefix(EnumChatFormatting.DARK_GREEN + "Reloaded key actions " + EnumChatFormatting.GREEN + '\u2713');
+        } catch (IOException e) {
+            Utils.writeError("There was a problem with reloading key actions: " + e.getMessage());
         }
 
 		RecipeHandler.reloadRecipes();
@@ -318,15 +327,26 @@ public class ConfigHandler {
     }
     
     public static void reloadMiningPaths() throws IOException {
-    		if(new File(directory + "/mesky/utils/meskyMiningPaths.json").exists()) {
-	            Object[] paths = initJsonArray(directory + "/mesky/utils/meskyMiningPaths.json", MiningUtils.MiningPath[].class);
-	            if (paths != null) {
-	            	ArrayList<MiningPath> list = new ArrayList<>(Arrays.asList((MiningUtils.MiningPath[]) paths));
-	            	
-	            	MiningUtils.miningPaths = list;
-	            }
+		if(new File(directory + "/mesky/utils/meskyMiningPaths.json").exists()) {
+            Object[] paths = initJsonArray(directory + "/mesky/utils/meskyMiningPaths.json", MiningUtils.MiningPath[].class);
+            if (paths != null) {
+            	ArrayList<MiningPath> list = new ArrayList<>(Arrays.asList((MiningUtils.MiningPath[]) paths));
+            	
+            	MiningUtils.miningPaths = list;
             }
+        }
     }
+    
+	public static void reloadKeyActions() throws IOException {
+		if(new File(directory + "/mesky/utils/meskyKeyActions.json").exists()) {
+	        Object[] paths = initJsonArray(directory + "/mesky/utils/meskyKeyActions.json", KeyAction[].class);
+	        if (paths != null) {
+	        	ArrayList<KeyAction> list = new ArrayList<>(Arrays.asList((KeyAction[]) paths));
+	        	
+	        	KeyActions.actions = list;
+	        }
+	    }
+	}
     
 	public static void SaveAlert(List<Alerts.Alert> alerts) {
 		new File(Mesky.configDirectory + "/mesky/utils/").mkdirs();
@@ -399,6 +419,16 @@ public class ConfigHandler {
     	new File(Mesky.configDirectory + "/mesky/utils/").mkdirs();
     	try (FileWriter writer = new FileWriter(Mesky.configDirectory + "/mesky/utils/meskyMacroWaypoints.json")) {
             new GsonBuilder().setPrettyPrinting().create().toJson(waypointsList, writer);
+            writer.flush();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+    
+    public static void SaveKeyActions(List<KeyAction> actions) {
+    	new File(Mesky.configDirectory + "/mesky/utils/").mkdirs();
+    	try (FileWriter writer = new FileWriter(Mesky.configDirectory + "/mesky/utils/meskyKeyActions.json")) {
+            new GsonBuilder().setPrettyPrinting().create().toJson(actions, writer);
             writer.flush();
         } catch (IOException ex) {
             ex.printStackTrace();

@@ -31,42 +31,38 @@ import treemek.mesky.utils.manager.CameraManager;
 public class Freelook {
 	public static boolean cameraToggled = false;
     
-    public static final KeyBinding KEY = new KeyBinding("Freelook", Keyboard.KEY_LMENU, "Mesky");
-    
     @SideOnly(Side.CLIENT)
     @SubscribeEvent
-    public void onKey(InputEvent.KeyInputEvent e) throws IllegalArgumentException, IllegalAccessException {
-        boolean isPressed = Keyboard.getEventKeyState();
-        int k = Keyboard.getEventKey();
+    public void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
+        if(Minecraft.getMinecraft().thePlayer == null) return;
         
-    	if(isPressed) {
-	    	if(k == KEY.getKeyCode() && SettingsConfig.FreeLookToogle.isOn && cameraToggled) {
-	        	cameraToggled = false;
-	        	CameraManager.lockCamera(false, null, null);
-	        	RotationUtils.lockRotation(false, null, null);
-	            Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;
-	            return;
-	        }
-	    	
-	    	if(k == KEY.getKeyCode() && !cameraToggled && SettingsConfig.FreeLook.isOn){
-	        	if(SettingsConfig.FreeRotate.isOn) {
-		        	cameraToggled = true;
-		            CameraManager.lockCamera(true, null, null);
-		            Minecraft.getMinecraft().gameSettings.thirdPersonView = 1;
-	        	}else {
-	        		cameraToggled = true;
-	        		RotationUtils.lockRotation(true, null, null);
-	        		Minecraft.getMinecraft().gameSettings.thirdPersonView = 1;
-	        	}
-	        }
-    	}else {
-    		if(k == KEY.getKeyCode() && cameraToggled && !SettingsConfig.FreeLookToogle.isOn) {
-	        	cameraToggled = false;
-	        	CameraManager.lockCamera(false, null, null);
-	        	RotationUtils.lockRotation(false, null, null);
-	            Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;
-	            return;
-    		}
-    	}
+    	if(SettingsConfig.FreeLookKeybind.keybind.wasKeybindPressed() && SettingsConfig.FreeLookToogle.isOn && cameraToggled) {
+        	cameraToggled = false;
+        	CameraManager.lockCamera(false, null, null);
+        	RotationUtils.lockRotation(false, null, null);
+            Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;
+            return;
+        }
+    	
+    	if(SettingsConfig.FreeLookKeybind.keybind.wasKeybindPressed() && !cameraToggled && SettingsConfig.FreeLook.isOn){
+        	if(SettingsConfig.FreeRotate.isOn) {
+	        	cameraToggled = true;
+	            CameraManager.lockCamera(true, null, null);
+	            Minecraft.getMinecraft().gameSettings.thirdPersonView = 1;
+        	}else {
+        		cameraToggled = true;
+        		RotationUtils.lockRotation(true, null, null);
+        		Minecraft.getMinecraft().gameSettings.thirdPersonView = 1;
+        	}
+        }
+    	
+		if(SettingsConfig.FreeLookKeybind.keybind.wasKeybindReleased() && cameraToggled && !SettingsConfig.FreeLookToogle.isOn) {
+        	cameraToggled = false;
+        	CameraManager.lockCamera(false, null, null);
+        	RotationUtils.lockRotation(false, null, null);
+            Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;
+            return;
+		}
     }
 }

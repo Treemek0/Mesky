@@ -101,7 +101,7 @@ public class AotvOverlay {
 		shouldChangeFov = true;
 		changedFov = 1 - f * SettingsConfig.AotvZoomMultiplayer.number.floatValue();
 
-	    AxisAlignedBB box = block.getSelectedBoundingBox(mc.theWorld, pos).expand(0.005, 0.005, 0.005)
+	    AxisAlignedBB box = block.getSelectedBoundingBox(mc.theWorld, pos).expand(0.01, 0.01, 0.01)
 		        .offset(-mc.getRenderManager().viewerPosX, -mc.getRenderManager().viewerPosY, -mc.getRenderManager().viewerPosZ);
 		
 	    if(Math.floor(distance) <= teleportDistance) {

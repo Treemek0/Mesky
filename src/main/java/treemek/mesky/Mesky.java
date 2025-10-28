@@ -51,8 +51,10 @@ import treemek.mesky.features.illegal.GhostBlock;
 import treemek.mesky.features.illegal.GhostPickaxe;
 import treemek.mesky.features.illegal.JawbusDetector;
 import treemek.mesky.handlers.GuiHandler;
+import treemek.mesky.handlers.KeyboardHandler;
 import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.handlers.gui.elements.buttons.FileSelectorButton;
+import treemek.mesky.handlers.gui.keyaction.KeyActionGui;
 import treemek.mesky.handlers.gui.warp.fasttravel.WarpGui;
 import treemek.mesky.listeners.GuiOpenListener;
 import treemek.mesky.listeners.WarpErrorListener;
@@ -62,6 +64,7 @@ import treemek.mesky.utils.Alerts;
 import treemek.mesky.utils.ChatFunctions;
 import treemek.mesky.utils.FriendsLocations;
 import treemek.mesky.utils.HypixelCheck;
+import treemek.mesky.utils.KeyActions;
 import treemek.mesky.utils.Locations;
 import treemek.mesky.utils.MacroWaypoints;
 import treemek.mesky.utils.MiningUtils;
@@ -153,11 +156,9 @@ public class Mesky {
 		MinecraftForge.EVENT_BUS.register(new WarpErrorListener());
 		MinecraftForge.EVENT_BUS.register(new ChatFilter());
 		MinecraftForge.EVENT_BUS.register(new AotvOverlay());
+		MinecraftForge.EVENT_BUS.register(new KeyActions());
+		MinecraftForge.EVENT_BUS.register(new KeyboardHandler());
 		
-		ClientRegistry.registerKeyBinding(GhostBlock.GKEY);
-		ClientRegistry.registerKeyBinding(Freelook.KEY);
-		ClientRegistry.registerKeyBinding(LockSlot.KEY);
-		ClientRegistry.registerKeyBinding(ChatFilter.chatOpenKey);
 		//ClientRegistry.registerKeyBinding(RecordHeadMovement.HeadRecorder);
 		//ClientRegistry.registerKeyBinding(RecordHeadMovement.HeadPlayer);
 	}

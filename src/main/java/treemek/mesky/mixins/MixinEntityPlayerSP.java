@@ -32,7 +32,7 @@ public class MixinEntityPlayerSP {
         	if(!LockSlot.dropKeyPressed) {
         		ChatComponentText dropMessage = new ChatComponentText(EnumChatFormatting.RED + "[Mesky] \u26A0 You cannot drop this item. Unlock the slot first.");
         		ChatStyle style = new ChatStyle();
-        		style.setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("Unlock slot in inventory using [KEY " + Keyboard.getKeyName(LockSlot.KEY.getKeyCode()) + "]")));
+        		style.setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("Unlock slot in inventory using [KEY " + SettingsConfig.LockSlotsKeybind.keybind.getKeysAsString() + "]")));
         		dropMessage.setChatStyle(style);
         		ChatFilter.checkFilterAndSend(SettingsConfig.dropItem_filter, dropMessage);
         		SoundsHandler.playSound("mesky:block", 1, 0.1f);

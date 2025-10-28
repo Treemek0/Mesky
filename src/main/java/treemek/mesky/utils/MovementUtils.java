@@ -443,85 +443,99 @@ public class MovementUtils {
 	    double deltaZ = player.posZ - player.lastTickPosZ;
 	    
 	    double speed = Math.sqrt(deltaX * deltaX + deltaZ * deltaZ);
-	    if(player.isSneaking()) speed /= 0.33;
-	    KeyBinding.setKeyBindState(shift, (speed > 0.45));
 	    
-	    int moveS = moveLeft ? -1 : moveRight ? 1 : 0;
-	    int moveF = moveForward ? 1 : moveBackward ? -1 : 0;
-	    Vec3 nextTickPos = Utils.predictNextTick(player, moveS, moveF, isGap, false, false);
+	    boolean bforward = false;
+	    boolean bback = false;
+	    boolean bleft = false;
+	    boolean bright = false;
 	    
-	    KeyBinding.setKeyBindState(forward, false);
-        KeyBinding.setKeyBindState(back, false);
-        KeyBinding.setKeyBindState(left, false);
-        KeyBinding.setKeyBindState(right, false);
-	    
-	    // Apply combined movement to prevent getting stuck at diagonal walls
 	    if(!isGap || (isGap && targetPos.getY() - oldPos.getY() <= 3)) {
 		    if (moveForward && moveLeft) {
-		    	if(player.moveForward != 1) KeyBinding.setKeyBindState(forward, true);
-		        KeyBinding.setKeyBindState(left, true);
+		    	if(player.moveForward != 1) bforward = true;
+		        bleft = true;
 		    } else if (moveForward && moveRight) {
-		    	if(player.moveForward != 1) KeyBinding.setKeyBindState(forward, true);
-		        KeyBinding.setKeyBindState(right, true);
+		    	if(player.moveForward != 1) bforward = true;
+		        bright = true;
 		    } else if (moveBackward && moveLeft) {
-		        KeyBinding.setKeyBindState(back, true);
-		        KeyBinding.setKeyBindState(left, true);
+		        bback = true;
+		        bleft = true;
 		    } else if (moveBackward && moveRight) {
-		        KeyBinding.setKeyBindState(back, true);
-		        KeyBinding.setKeyBindState(right, true);
+		        bback = true;
+		        bright = true;
 		    } else {
-		        // If no diagonal movement is required, move in the prioritized direction
-		        KeyBinding.setKeyBindState(forward, moveForward);
-		        KeyBinding.setKeyBindState(back, moveBackward);
-		        KeyBinding.setKeyBindState(left, moveLeft);
-		        KeyBinding.setKeyBindState(right, moveRight);
+		        bforward = moveForward;
+		        bback = moveBackward;
+		        bleft = moveLeft;
+		        bright = moveRight;
 		    }
 	    }
 	    
 	    // Ensure lateral movement is disabled if not needed
 	    if (!moveLeft && !moveRight) {
-	        KeyBinding.setKeyBindState(left, false);
-	        KeyBinding.setKeyBindState(right, false);
+	        bleft = false;
+	        bright = false;
 	    }
+	    
+	    boolean bJumping = false;
+	    boolean bQuick_jump = false;
+	    boolean sprinting = false;
 	    
 	    // jumping
 	    if (isGap && player.onGround) {
     		if((Utils.getYawDifference(rotationYaw, player.rotationYaw) < 2.5 || !useRotation) && !player.isSneaking()) {
-    			Utils.debug(isOnEdge(targetPos) + " " + !player.isSneaking() + " " + player.onGround);
 		    	if(isOnEdge(targetPos) && !player.isSneaking() && player.onGround) {
 		    		if(targetPos.getY() - oldPos.getY() > 0 || player.getDistanceSq(targetPos) > 1.4f) {
-		    			Minecraft.getMinecraft().thePlayer.setSprinting(true);
-		    			sprintingStartedBlock = Utils.playerPosition();
+		    			sprinting = true;
 		    		}
-		        	player.jump();
+		    		
+		        	bQuick_jump = true;
 		        	Utils.debug("jump1 " + rotationYaw + " " + player.rotationYaw);
 		    	}
     		}else {
 	    		Utils.debug("stopped moving for rotation before jump: " + rotationYaw + " " + player.rotationYaw);
 	    		if(!RotationUtils.isPlayerRotating()) RotationUtils.rotateStraight(RotationUtils.getNeededYawFromMinecraftRotation(rotationYaw), 0, 0.25f, false);
-	    		KeyBinding.setKeyBindState(forward, false);
-		        KeyBinding.setKeyBindState(back, false);
-		        KeyBinding.setKeyBindState(left, false);
-		        KeyBinding.setKeyBindState(right, false);
+	    		bforward = false;
+		        bback = false;
+		        bleft = false;
+		        bright = false;
 	    	}
 	    }else {
-	    	KeyBinding.setKeyBindState(jump, false);
 	    	if(!player.isInWater() && !player.isInLava()) {
 		    	if (diffY > 0 && player.onGround && shouldJump(targetPos) && isOnEdge(targetPos) && isTargetLowEnough(targetPos.add(0,-1,0))) {
-		    		player.jump();
+		    		bQuick_jump = true;
 		    		Utils.debug("jump2");
-			    } else {
-			        KeyBinding.setKeyBindState(jump, false);
 			    }
 	    	}else {
 	    		if (diffY > 0) {
-	    			KeyBinding.setKeyBindState(jump, true);
+	    			bJumping = true;
 		    		Utils.debug("jump3");
-			    } else {
-			        KeyBinding.setKeyBindState(jump, false);
 			    }
 	    	}
 	    }
+	    
+	    int moveS = bleft ? -1 : bright ? 1 : 0;
+	    int moveF = bforward ? 1 : bback ? -1 : 0;
+	    Vec3 nextTickPos = Utils.predictNextTick(player, moveS, moveF, bJumping, sprinting, player.isSneaking());
+	    
+	    if(targetPos.distanceSqToCenter(nextTickPos.xCoord, nextTickPos.yCoord, nextTickPos.zCoord) > targetPos.distanceSqToCenter(player.posX, player.posY, player.posZ)) {
+	    	bback = false;
+	    	//bJumping = false;
+	    	bleft = false;
+	    	bright = false;
+	    }
+	    
+	    if(bQuick_jump) player.jump();
+	    if(sprinting) {
+	    	Minecraft.getMinecraft().thePlayer.setSprinting(true);
+	    	sprintingStartedBlock = Utils.playerPosition();
+	    }else {
+	    	Minecraft.getMinecraft().thePlayer.setSprinting(false);
+	    }
+	    KeyBinding.setKeyBindState(jump, bJumping);
+	    KeyBinding.setKeyBindState(forward, bforward);
+        KeyBinding.setKeyBindState(back, bback);
+        KeyBinding.setKeyBindState(left, bleft);
+        KeyBinding.setKeyBindState(right, bright);
 	}
 	
 	private boolean isTargetLowEnough(BlockPos pos) {

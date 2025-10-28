@@ -17,8 +17,6 @@ import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.utils.Utils;
 
 public class GhostBlock {
-
-	public static final KeyBinding GKEY = new KeyBinding("Ghost Block/Pickaxe", Keyboard.KEY_G, "Mesky");
 	boolean hasBeenClicked = false;
 	public static boolean canDestroyHardBlock = false;
 	
@@ -26,7 +24,7 @@ public class GhostBlock {
 	@SubscribeEvent
     public void onRenderWorld(RenderWorldLastEvent event) {
 		if(SettingsConfig.GhostBlocks.isOn) {
-	        if (GKEY.isKeyDown()) {
+	        if (SettingsConfig.GhostKeybind.keybind.isKeybindDown()) {
 	        	if(!hasBeenClicked) {
 	        		hasBeenClicked = true;
 			        MovingObjectPosition object = Minecraft.getMinecraft().thePlayer.rayTrace(Minecraft.getMinecraft().playerController.getBlockReachDistance(), 1.0F);

@@ -14,6 +14,7 @@ import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import treemek.mesky.config.ConfigHandler;
+import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.utils.Alerts.Alert;
 
 public class ChatFunctions {
@@ -98,15 +99,17 @@ public class ChatFunctions {
 		String onlyNonColorMessage = nonColorMessage;
 		boolean autor = false;
 		
-		if(nonColorMessage.contains(": ")){
-			onlyNonColorMessage = nonColorMessage.substring(nonColorMessage.indexOf(":") + 1);
-			String[] beforeMessage = nonColorMessage.split(":")[0].split(" ");
+		if(nonColorMessage.contains(": ") && ((nonColorMessage.contains("[") && nonColorMessage.contains("]")) || nonColorMessage.contains(">"))){
+			onlyNonColorMessage = nonColorMessage.substring(nonColorMessage.indexOf(":") + 2);
 			
-			for (String string : beforeMessage) {
-				if(string.equals(nickname) || string.equals(nickname + ":")) autor = true;
+			if(SettingsConfig.AlertsIgnoreSelf.isOn) {
+				String[] beforeMessage = nonColorMessage.split(":")[0].split(" ");
+				
+				for (String string : beforeMessage) {
+					if(string.equals(nickname) || string.equals(nickname + ":")) return;
+				}
 			}
 		}
-		
 		
 		for(int i = 0; i < chatFunctionsList.size(); i++) {
 			if(!chatFunctionsList.get(i).enabled) continue;

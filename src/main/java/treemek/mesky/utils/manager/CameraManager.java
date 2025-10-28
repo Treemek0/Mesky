@@ -55,6 +55,8 @@ public class CameraManager {
 	}
 	
 	public static void lockCamera(boolean t, Float yaw, Float pitch) {
+		if(Minecraft.getMinecraft().thePlayer == null) return;
+		
 		if(yaw == null) {
 			cameraYaw = Minecraft.getMinecraft().thePlayer.rotationYaw;
 		}else {

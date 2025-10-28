@@ -1351,6 +1351,18 @@ public class Utils {
 	    return nextPos;
 	}
 	
+	public static Vec3 predictNextTicks(EntityLivingBase entity, float moveStrafe, float moveForward, boolean jumping, boolean sprinting, boolean sneaking, int ticksCount) {
+		Vec3 currentPos = entity.getPositionVector();
+		Vec3 nextTick = predictNextTick(entity, moveStrafe, moveForward, jumping, sprinting, sneaking);
+		
+		Vec3 diff = nextTick.subtract(currentPos);
+		for (int i = 0; i < ticksCount; i++) {
+			currentPos.add(diff);
+		}
+		
+		return currentPos;
+	}
+	
 	public static void sendDiscordWebhook(String webhookUrl, String content) {
 		if(webhookUrl == null) return;
 		

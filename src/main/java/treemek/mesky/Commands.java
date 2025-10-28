@@ -72,6 +72,7 @@ import treemek.mesky.handlers.api.Bazaar.SellType;
 import treemek.mesky.handlers.gui.GUI;
 import treemek.mesky.handlers.gui.GuiLocations;
 import treemek.mesky.handlers.gui.TestGui;
+import treemek.mesky.handlers.gui.keyaction.KeyActionGui;
 import treemek.mesky.handlers.gui.sounds.SoundGui;
 import treemek.mesky.handlers.gui.warp.fasttravel.WarpGui;
 import treemek.mesky.handlers.gui.warp.rift.RiftWarpGui;
@@ -285,6 +286,9 @@ public class Commands extends CommandBase{
     		if(command.equals("map")) {
     			Utils.saveNearbyMaps(Minecraft.getMinecraft().thePlayer);
     			return;
+    		}
+    		if(command.equals("keyactions")) {
+    			GuiHandler.GuiType = new KeyActionGui();
     		}
     		if(command.equals("loop")) {
     			if(args.length > 2) {

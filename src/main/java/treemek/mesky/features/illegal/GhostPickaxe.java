@@ -23,14 +23,12 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import treemek.mesky.config.SettingsConfig;
 
 public class GhostPickaxe {
-
-	public static final KeyBinding GKEY = GhostBlock.GKEY;
 	boolean hasBeenClicked = false;
 	
 	@SideOnly(Side.CLIENT)
 	@SubscribeEvent
 	public void onKeyPress(InputEvent.KeyInputEvent event) {
-        if (GKEY.isPressed() && SettingsConfig.GhostPickaxe.isOn) {
+        if (SettingsConfig.GhostKeybind.keybind.isKeybindDown() && SettingsConfig.GhostPickaxe.isOn) {
             InventoryPlayer inventory = Minecraft.getMinecraft().thePlayer.inventory;
             for (int i = 0; i < inventory.mainInventory.length; i++) {
                 ItemStack item = inventory.mainInventory[i];

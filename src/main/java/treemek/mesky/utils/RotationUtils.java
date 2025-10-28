@@ -456,6 +456,8 @@ public class RotationUtils {
 	}
 	
 	public static void lockRotation(boolean b, Float yaw, Float pitch) {
+		if(Minecraft.getMinecraft().thePlayer == null) return;
+		
 		if(yaw == null) {
 			lockedRotationYaw = Minecraft.getMinecraft().thePlayer.rotationYaw;
 		}else {

@@ -189,8 +189,8 @@ public class Alerts extends GuiScreen {
 			String nonColorMessage = StringUtils.stripControlCodes(message);
 			String onlyNonColorMessage = nonColorMessage;
 			
-			if(nonColorMessage.contains(": ") && nonColorMessage.contains("[") && nonColorMessage.contains("]")){
-				onlyNonColorMessage = nonColorMessage.substring(nonColorMessage.indexOf(":") + 1);
+			if(nonColorMessage.contains(": ") && ((nonColorMessage.contains("[") && nonColorMessage.contains("]")) || nonColorMessage.contains(">"))){
+				onlyNonColorMessage = nonColorMessage.substring(nonColorMessage.indexOf(":") + 2);
 				
 				if(SettingsConfig.AlertsIgnoreSelf.isOn) {
 					String[] beforeMessage = nonColorMessage.split(":")[0].split(" ");

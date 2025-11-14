@@ -8,6 +8,7 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GlStateManager;
 import treemek.mesky.config.SettingsConfig.Setting;
 import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.handlers.gui.elements.GuiButtonRunnable;
@@ -154,8 +155,12 @@ public class SettingKeybindButton extends GuiButtonRunnable{
 	@Override
 	public void drawButtonForegroundLayer(int x, int y) {
         Minecraft.getMinecraft().getTextureManager().bindTexture(buttonTextures);
-		
-		this.drawTexturedModalRect(x, y, 0, 46 + 20, this.width / 2, this.height);
-        this.drawTexturedModalRect(x + this.width / 2, y, 200 - this.width / 2, 46 + 20, this.width / 2, this.height);
+    	
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(x, y, 0);
+        GlStateManager.scale((float) width / 200f, (float) height / 20f, 1f);
+        drawTexturedModalRect(0, 0, 0, 46 + 20, 200, 20);
+        
+        GlStateManager.popMatrix();
 	}
 }

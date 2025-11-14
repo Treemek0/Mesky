@@ -95,8 +95,8 @@ public class TextField
         defaultFontHeight = fontRendererInstance.FONT_HEIGHT;
 		scaleFactor = (float) RenderHandler.getTextScale(height/2.2);
     }
-    
-    public void update(int x, int y, int width, int height) {
+
+	public void update(int x, int y, int width, int height) {
         this.xPosition = x;
         this.yPosition = y;
         this.width = width;
@@ -592,13 +592,13 @@ public class TextField
             Gui.drawRect(this.xPosition, this.yPosition, this.xPosition + this.width, this.yPosition + this.height, frameColor);
             Gui.drawRect(this.xPosition + 1, this.yPosition + 1, this.xPosition + this.width - 1, this.yPosition + this.height - 1, -16777216);
             
-            int i = this.isEnabled ? this.enabledColor : this.disabledColor;
+            int textColor = this.isEnabled ? this.enabledColor : this.disabledColor;
 
-            boolean colored = (!isFocused || tabToggled) && showColors;
+            boolean isColored = (!isFocused || tabToggled) && showColors;
             
             List<Pair> colorSetters = new ArrayList<>();
             
-            if(colored) {
+            if(isColored) {
 	            Matcher matcher = Reference.COLOR_PATTERN.matcher(this.text);
 	            StringBuilder renderedText = new StringBuilder();
 	
@@ -609,22 +609,22 @@ public class TextField
 	            }
             }
             
-            int j = this.cursorPosition - this.lineScrollOffset;
-            int k = this.selectionEnd - this.lineScrollOffset;
-            String s = RenderHandler.trimStringToWidth(this.text.substring(this.lineScrollOffset), getWritableWidth(), false, scaleFactor);
-            boolean flag = j >= 0 && j <= s.length();
-            boolean flag1 = this.isFocused && this.cursorCounter / 10 % 2 == 0 && flag;
+            int visibleCursorPos = this.cursorPosition - this.lineScrollOffset;
+            int visibleSelectionEnd = this.selectionEnd - this.lineScrollOffset;
+            String renderedText = RenderHandler.trimStringToWidth(this.text.substring(this.lineScrollOffset), getWritableWidth(), false, scaleFactor);
+            boolean isCursorVisible = visibleCursorPos >= 0 && visibleCursorPos <= renderedText.length();
+            boolean isCursorRenderTick = this.isFocused && this.cursorCounter / 10 % 2 == 0 && isCursorVisible;
             
-            int l =  this.xPosition + 4;
-            int i1 = this.yPosition + (this.height/2) - ((int)(defaultFontHeight * scaleFactor)/2);
-            double j1 = l;
+            int left =  this.xPosition + 4;
+            int textY = this.yPosition + (this.height/2) - ((int)(defaultFontHeight * scaleFactor)/2);
+            double textX = left;
 
             List<EnumChatFormatting> lastColorBeforeCursor = new ArrayList<>();
             
-            if (s.length() > 0) {
-                String s1 = flag ? s.substring(0, j) : s;
+            if (renderedText.length() > 0) {
+                String s1 = isCursorVisible ? renderedText.substring(0, visibleCursorPos) : renderedText;
                 
-                if(colored) {
+                if(isColored) {
 	                List<EnumChatFormatting> lastColor = new ArrayList<>();
 	                int add = 0; // when adding color to s1, index is being offset by 2, because color code added to string has 2 chars
 	
@@ -636,7 +636,7 @@ public class TextField
 	                        if(ColorUtils.isEnumColor(color)) lastColor.clear();
 	                    	lastColor.add(color); // if the color is before the visible area, set it as the lastColor
 	                        
-	                        if(index - lineScrollOffset <= j) {
+	                        if(index - lineScrollOffset <= visibleCursorPos) {
 	                        	if(ColorUtils.isEnumColor(color)) lastColorBeforeCursor.clear();
 	                        	lastColorBeforeCursor.add(color);
 	                        }
@@ -646,7 +646,7 @@ public class TextField
 	                        s1 = s1.substring(0, visibleIndex) + color + s1.substring(visibleIndex);
 	                        add += color.toString().length();
 	                        
-	                        if(index - lineScrollOffset <= j) {
+	                        if(index - lineScrollOffset <= visibleCursorPos) {
 	                        	if(ColorUtils.isEnumColor(color)) lastColorBeforeCursor.clear();
 	                        	lastColorBeforeCursor.add(color);
 	                        }
@@ -655,27 +655,28 @@ public class TextField
 	
 	                s1 = applyListOfChatFormattingsToStart(s1, lastColor); // apply the last color at the start of the visible string
                 }
-                RenderHandler.drawText(s1, (float) l, (float) i1, scaleFactor, true, i);
-                j1 = l + (int) (fontRendererInstance.getStringWidth(s1) * scaleFactor) + 0.3f;
-            }
-
-            boolean flag2 = this.cursorPosition < this.text.length() || this.text.length() >= this.getMaxStringLength();
-            double k1 = j1;
-
-            if (!flag)
-            {
-                k1 = j > 0 ? l + this.width : l;
-            }
-            else if (flag2)
-            {
-                k1 = j1 - 1;
-                --j1;
-            }
-
-            if (s.length() > 0 && flag && j < s.length()) {
-                String t = s.substring(j);
                 
-                if(colored) {
+                RenderHandler.drawText(s1, (float) left, (float) textY, scaleFactor, true, textColor);
+                textX = left + RenderHandler.getTextWidth(s1, scaleFactor) + 0.3f;
+            }
+
+            boolean shouldCursorBeVertical = this.cursorPosition < this.text.length() || this.text.length() >= this.getMaxStringLength();
+            double cursorX = textX;
+
+            if (!isCursorVisible)
+            {
+                cursorX = visibleCursorPos > 0 ? left + this.width : left;
+            }
+            else if (shouldCursorBeVertical)
+            {
+                cursorX = textX - 1;
+                --textX;
+            }
+
+            if (renderedText.length() > 0 && isCursorVisible && visibleCursorPos < renderedText.length()) {
+                String t = renderedText.substring(visibleCursorPos);
+                
+                if(isColored) {
 	                int add = 0; 
 	
 	                for (int m = 0; m < colorSetters.size(); m++) {
@@ -684,8 +685,8 @@ public class TextField
 	
 	                    int adjustedIndex = index - lineScrollOffset;
 	
-	                    if (adjustedIndex >= j && adjustedIndex - j < t.length()) {
-	                        int visibleIndex = MathHelper.clamp_int(adjustedIndex - j + add, 0, t.length());
+	                    if (adjustedIndex >= visibleCursorPos && adjustedIndex - visibleCursorPos < t.length()) {
+	                        int visibleIndex = MathHelper.clamp_int(adjustedIndex - visibleCursorPos + add, 0, t.length());
 	
 	                        t = t.substring(0, visibleIndex) + color + t.substring(visibleIndex);
 	                        add += color.toString().length();
@@ -694,35 +695,26 @@ public class TextField
 	
 	                t = applyListOfChatFormattingsToStart(t, lastColorBeforeCursor);
                 }
-                RenderHandler.drawText(t, (float) j1 + 0.7f, (float) i1, scaleFactor, true, i);
+                RenderHandler.drawText(t, (float) textX + 0.7f, (float) textY, scaleFactor, true, textColor);
             }
 
-
-            
-            if (k != j)
-            {
-                if (k > s.length())
-                {
-                    k = s.length();
+            if (visibleSelectionEnd != visibleCursorPos) {
+                if (visibleSelectionEnd > renderedText.length()) {
+                    visibleSelectionEnd = renderedText.length();
                 }
             	
-                int l1 = (int) (l + this.fontRendererInstance.getStringWidth(s.substring(0, k)) * scaleFactor);
-                this.drawCursorVertical(k1, i1 - 1, l1 - 1, i1 + this.fontRendererInstance.FONT_HEIGHT * scaleFactor);
+                double endX = left + RenderHandler.getTextWidth(renderedText.substring(0, visibleSelectionEnd), scaleFactor) + 0.3f;
+                this.drawCursorVertical(cursorX, textY - 1, endX - 1, textY + this.fontRendererInstance.FONT_HEIGHT * scaleFactor);
                 
-                if (flag1)
-                {
-                	RenderHandler.drawRect(k1, i1 - 1, k1 + scaleFactor, (int) (i1 + this.fontRendererInstance.FONT_HEIGHT * scaleFactor), -3092272);
+                if (isCursorRenderTick){
+                	RenderHandler.drawRect(cursorX, textY - 1, cursorX + scaleFactor, (int) (textY + this.fontRendererInstance.FONT_HEIGHT * scaleFactor), -3092272);
                 }
             }else {
-	            if (flag1)
-	            {
-	                if (flag2)
-	                {
-	                    RenderHandler.drawRect(k1, i1 - 1, k1 + scaleFactor, (int) (i1 + this.fontRendererInstance.FONT_HEIGHT * scaleFactor), -3092272);
-	                }
-	                else
-	                {
-	                    RenderHandler.drawText("_", (float)k1, (float)i1, scaleFactor, true, i);
+	            if (isCursorRenderTick) {
+	                if (shouldCursorBeVertical) {
+	                    RenderHandler.drawRect(cursorX, textY - 1, cursorX + scaleFactor, (int) (textY + this.fontRendererInstance.FONT_HEIGHT * scaleFactor), -3092272);
+	                }else {
+	                    RenderHandler.drawText("_", (float)cursorX, (float)textY, scaleFactor, true, textColor);
 	                }
 	            }
             }
@@ -741,7 +733,7 @@ public class TextField
     }
     
     /**
-     *  White selection rectangle
+     *  Selection area
      */
     private void drawCursorVertical(double x, double y, double end_x, double end_y)
     {
@@ -771,10 +763,12 @@ public class TextField
 
         Tessellator tessellator = Tessellator.getInstance();
         WorldRenderer worldrenderer = tessellator.getWorldRenderer();
-        GlStateManager.color(0.0F, 0.0F, 255.0F, 255.0F);
         GlStateManager.disableTexture2D();
         GlStateManager.enableColorLogic();
-        GlStateManager.colorLogicOp(5387);
+        GlStateManager.colorLogicOp(GL11.GL_XOR);
+        
+        GlStateManager.enableBlend();
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 0.5F);
         worldrenderer.begin(7, DefaultVertexFormats.POSITION);
         worldrenderer.pos((double)x, (double)end_y, 0.0D).endVertex();
         worldrenderer.pos((double)end_x, (double)end_y, 0.0D).endVertex();

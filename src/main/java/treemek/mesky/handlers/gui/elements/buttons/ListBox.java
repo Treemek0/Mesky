@@ -118,7 +118,7 @@ public class ListBox extends GuiButton{
 	
 	@Override
 	public void drawButton(Minecraft mc, int mouseX, int mouseY) {
-		customField.yPosition = yPosition + 1;
+		if(customField != null) customField.yPosition = yPosition + 1;
 		Option current;
 		
 		if(mouseX >= this.xPosition && mouseY >= yPosition && mouseX < this.xPosition + this.width && mouseY < yPosition + height) {
@@ -241,10 +241,12 @@ public class ListBox extends GuiButton{
 	public boolean mousePressed(int mouseX, int mouseY, int buttonId) {
 		Minecraft mc = Minecraft.getMinecraft();
 		
-		if(isCurrentCustomOption()) {
-			customField.mouseClicked(mouseX, mouseY, buttonId);
-		}else {
-			customField.setFocused(false);
+		if(customField != null) {
+			if(isCurrentCustomOption()) {
+				customField.mouseClicked(mouseX, mouseY, buttonId);
+			}else {
+				customField.setFocused(false);
+			}
 		}
 		
 		if(!opened) {
@@ -316,8 +318,12 @@ public class ListBox extends GuiButton{
 	@Override
 	public void drawButtonForegroundLayer(int x, int y) {
         Minecraft.getMinecraft().getTextureManager().bindTexture(buttonTextures);
-		
-		this.drawTexturedModalRect(x, y, 0, 46 + 20, this.width / 2, this.height);
-        this.drawTexturedModalRect(x + this.width / 2, y, 200 - this.width / 2, 46 + 20, this.width / 2, this.height);
+	
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(x, y, 0);
+        GlStateManager.scale((float) width / 200f, (float) height / 20f, 1f);
+        drawTexturedModalRect(0, 0, 0, 46 + 20, 200, 20);
+        
+        GlStateManager.popMatrix();
 	}
 }

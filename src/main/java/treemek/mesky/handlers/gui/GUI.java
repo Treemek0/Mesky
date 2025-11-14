@@ -19,6 +19,8 @@ import treemek.mesky.handlers.gui.chatfunctions.ChatFunctionsGui;
 import treemek.mesky.handlers.gui.cosmetics.CosmeticsGui;
 import treemek.mesky.handlers.gui.elements.buttons.CheckButton;
 import treemek.mesky.handlers.gui.elements.buttons.MeskyButton;
+import treemek.mesky.handlers.gui.images.ImageGalleryGui;
+import treemek.mesky.handlers.gui.inventorybuttons.InventoryButtonsGui;
 import treemek.mesky.handlers.gui.keyaction.KeyActionGui;
 import treemek.mesky.handlers.gui.macrowaypoints.MacroWaypointsGui;
 import treemek.mesky.handlers.gui.settings.SettingsGUI;
@@ -36,7 +38,7 @@ public class GUI extends GuiScreen {
 	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
 		drawDefaultBackground();
 		
-        double scale = RenderHandler.getTextScale(height/15);
+        double scale = RenderHandler.getTextScale(height/18);
         double textLength = RenderHandler.getTextWidth("Mesky", scale);
         int titleX = (int) ((width / 2) - textLength/2);
         int titleY = 10;
@@ -53,7 +55,7 @@ public class GUI extends GuiScreen {
         int centerX = width / 2;
         int centerY = height / 2;
         int buttonWidth = (int) (width / 5.5f);
-        int buttonHeight = (int) Math.min(16, (height / 15f));
+        int buttonHeight = (int) Math.min(16, (height / 18f));
         
         if (blurShader == null) {
 	        try {
@@ -72,16 +74,18 @@ public class GUI extends GuiScreen {
         this.buttonList.add(new MeskyButton(3, centerX - buttonWidth / 2, getButtonY(3, buttonHeight), buttonWidth, buttonHeight, "Chat Functions"));
         this.buttonList.add(new MeskyButton(4, centerX - buttonWidth / 2, getButtonY(4, buttonHeight), buttonWidth, buttonHeight, "Macro Waypoints"));
         this.buttonList.add(new MeskyButton(5, centerX - buttonWidth / 2, getButtonY(5, buttonHeight), buttonWidth, buttonHeight, "Key actions"));
+        this.buttonList.add(new MeskyButton(6, centerX - buttonWidth / 2, getButtonY(6, buttonHeight), buttonWidth, buttonHeight, "Inventory buttons"));
         
         this.buttonList.add(new MeskyButton(-1, 0, height - buttonHeight, buttonWidth, buttonHeight, "Gui Locations"));
-        this.buttonList.add(new MeskyButton(-3, 0, height - buttonHeight*2, buttonWidth, buttonHeight, "Sounds"));
-        this.buttonList.add(new MeskyButton(-2, width - buttonWidth, height - buttonHeight, buttonWidth, buttonHeight, "Cosmetics"));
+        this.buttonList.add(new MeskyButton(-2, 0, height - buttonHeight*2, buttonWidth, buttonHeight, "Cosmetics"));
+        this.buttonList.add(new MeskyButton(-3, width - buttonWidth, height - buttonHeight, buttonWidth, buttonHeight, "Sounds"));
+        this.buttonList.add(new MeskyButton(-4, width - buttonWidth, height - buttonHeight*2, buttonWidth, buttonHeight, "Images"));
 	}
 	
 	private int getButtonY(int i, int btn_height) {
         int startY = height / 2 - btn_height*2;
         
-        int allButtonsCount = 6;
+        int allButtonsCount = 7;
         
         if((startY + (btn_height * 1.5f * allButtonsCount) + btn_height) > height){
         	startY = (int) (height - ((btn_height * 1.5f * allButtonsCount) + btn_height));
@@ -102,6 +106,9 @@ public class GUI extends GuiScreen {
         case -3:
         	GuiHandler.GuiType = new SoundGui();
             break;
+        case -4:
+        	GuiHandler.GuiType = new ImageGalleryGui();
+        	break;
         case 0:
         	GuiHandler.GuiType = new SettingsGUI();
             break;
@@ -119,6 +126,9 @@ public class GUI extends GuiScreen {
             break;
         case 5:
         	GuiHandler.GuiType = new KeyActionGui();
+        	break;
+        case 6:
+        	GuiHandler.GuiType = new InventoryButtonsGui();
         	break;
         }
     }

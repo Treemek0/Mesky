@@ -37,6 +37,7 @@ import treemek.mesky.handlers.gui.elements.textFields.SettingTextField;
 import treemek.mesky.handlers.gui.elements.textFields.TextField;
 import treemek.mesky.utils.ImageCache;
 import treemek.mesky.utils.Utils;
+import treemek.mesky.utils.ImageCache.Cache;
 
 public class CustomCapeGui  extends GuiScreen{
 	
@@ -193,8 +194,7 @@ public class CustomCapeGui  extends GuiScreen{
 		                public void run() {
 		                    try {
 		                    	resourceLocation = Minecraft.getMinecraft().getTextureManager().getDynamicTextureLocation(path, new DynamicTexture(bufferedimage));
-		                    	ImageCache.bufferedTextureCache.put(removeFileExtension(path), bufferedimage);
-		                    	ImageCache.resourceLocationCache.put(bufferedimage, resourceLocation);
+		                    	ImageCache.bufferedCache.put(removeFileExtension(path), new Cache(bufferedimage, resourceLocation));
 		                    }catch (Exception e) {
 		                    	if(Minecraft.getMinecraft().thePlayer != null) {
                             		Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]" + EnumChatFormatting.WHITE + " in " + EnumChatFormatting.AQUA + errorWhere + EnumChatFormatting.WHITE + ": " + EnumChatFormatting.BOLD.RED + e.getLocalizedMessage()));

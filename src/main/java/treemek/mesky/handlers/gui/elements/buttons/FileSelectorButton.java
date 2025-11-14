@@ -15,12 +15,14 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ResourceLocation;
 import treemek.mesky.Reference;
 import treemek.mesky.handlers.RenderHandler;
@@ -132,9 +134,15 @@ public class FileSelectorButton extends GuiButton{
 	        // Apply filters
 	        if (!filter.isEmpty()) {
 	            chooser.resetChoosableFileFilters();
-	            for (String ext : filter) {
-	                chooser.addChoosableFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(ext.toUpperCase() + " files", ext.replace("*.", "")));
-	            }
+
+	            String[] exts = filter.stream()
+	                    .map(f -> f.replace(".", ""))
+	                    .toArray(String[]::new);
+	            
+	            FileNameExtensionFilter fnef = new FileNameExtensionFilter("Supported files (" + String.join(", ", filter) + ")", exts);
+
+	            chooser.addChoosableFileFilter(fnef);
+	            chooser.setFileFilter(fnef);
 	        }
 
 	        // Show dialog
@@ -153,8 +161,6 @@ public class FileSelectorButton extends GuiButton{
 	}
 
 	private void setPath(String path) {
-	    Utils.debug("Setting path: " + path);
-
 	    Minecraft.getMinecraft().addScheduledTask(() -> {
 	        resultField.setText(path);
 	    });
@@ -163,9 +169,14 @@ public class FileSelectorButton extends GuiButton{
 
 	public void drawButtonForegroundLayer(int x, int y, boolean isHovered) {
         Minecraft.getMinecraft().getTextureManager().bindTexture(buttonTextures);
-		
-        int i = this.getHoverState(isHovered);
-		this.drawTexturedModalRect(x, y, 0, 46 + i * 20, this.width / 2, this.height);
-        this.drawTexturedModalRect(x + this.width / 2, y, 200 - this.width / 2, 46 + i * 20, this.width / 2, this.height);
+    	
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(x, y, 0);
+        GlStateManager.scale((float) width / 200f, (float) height / 20f, 1f);
+        if(isHovered) GL11.glColor3f(0.7f, 0.7f, 0.7f);
+        drawTexturedModalRect(0, 0, 0, 46 + 20, 200, 20);
+        
+        GL11.glColor3f(1, 1, 1);
+        GlStateManager.popMatrix();
 	}
 }

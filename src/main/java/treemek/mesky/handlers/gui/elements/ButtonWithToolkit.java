@@ -8,7 +8,7 @@ public class ButtonWithToolkit extends GuiButton{
 	private long timeHovered = 0;
 	
 	protected long hovered_hold_time = 1250;
-
+	
 	public ButtonWithToolkit(int buttonId, int x, int y, int widthIn, int heightIn, String buttonText) {
 		super(buttonId, x, y, widthIn, heightIn, buttonText);
 	}
@@ -21,7 +21,7 @@ public class ButtonWithToolkit extends GuiButton{
 	}
 	
 	public boolean shouldShowTooltip() {
-	    return enabled && hovered && System.currentTimeMillis() - timeHovered  >= hovered_hold_time && displayString.length() > 0;
+	    return enabled && hovered && System.currentTimeMillis() - timeHovered  >= hovered_hold_time && (displayString == null || displayString.length() > 0);
 	}
 	
 	public void changeTimeForToolkitToShow(long t) {

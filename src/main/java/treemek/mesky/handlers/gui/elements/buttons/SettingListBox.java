@@ -405,8 +405,12 @@ public class SettingListBox extends GuiButton{
 	@Override
 	public void drawButtonForegroundLayer(int x, int y) {
         Minecraft.getMinecraft().getTextureManager().bindTexture(buttonTextures);
-		
-		this.drawTexturedModalRect(x, y, 0, 46 + 20, this.width / 2, this.height);
-        this.drawTexturedModalRect(x + this.width / 2, y, 200 - this.width / 2, 46 + 20, this.width / 2, this.height);
+    	
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(x, y, 0);
+        GlStateManager.scale((float) width / 200f, (float) height / 20f, 1f);
+        drawTexturedModalRect(0, 0, 0, 46 + 20, 200, 20);
+        
+        GlStateManager.popMatrix();
 	}
 }

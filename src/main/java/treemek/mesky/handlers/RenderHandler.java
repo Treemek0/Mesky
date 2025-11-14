@@ -80,7 +80,27 @@ public class RenderHandler {
         RenderHandler.drawText(btn.displayString,
             mouseX + 2 + (textWidth + 10) / 2 - textWidth / 2,
             startY + (textHeight * 1.5f) / 2 - textHeight / 2,
-            textScale, btn.enabled, 0xFFFFFF);
+            textScale, true, 0xFFFFFF);
+	}
+	
+	public static void drawToolkit(String text, Integer textHeight, int mouseX, int mouseY) {
+        double textScale = textHeight == null ? 0.66f : Math.max(0.66f, Math.min(1, getTextScale(textHeight)));
+        double textWidth = getTextWidth(text, textScale);
+        double tHeight = getTextHeight(textScale);
+        int startY = (int) (mouseY - tHeight * 1.5f);
+        
+        int width = new ScaledResolution(Minecraft.getMinecraft()).getScaledWidth();
+        
+
+        mouseX = Math.min(mouseX, (int) (width - (textWidth + 10)));
+        
+        drawRect(mouseX + 2, startY, (int) (mouseX + textWidth + 10),
+                 (int) (startY + tHeight * 1.5f), new Color(10, 10, 10, 200).getRGB());
+
+        RenderHandler.drawText(text,
+            mouseX + 2 + (textWidth + 10) / 2 - textWidth / 2,
+            startY + (tHeight * 1.5f) / 2 - tHeight / 2,
+            textScale, true, 0xFFFFFF);
 	}
 	
 	public static void drawImage(int x, int y, int width, int height, ResourceLocation location) {

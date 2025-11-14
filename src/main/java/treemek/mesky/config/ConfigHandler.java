@@ -43,6 +43,9 @@ import treemek.mesky.utils.MiningUtils.MiningPath;
 import treemek.mesky.utils.ChatFunctions;
 import treemek.mesky.utils.ChatFunctions.ChatFunction;
 import treemek.mesky.utils.FriendsLocations;
+import treemek.mesky.utils.ImageUploader;
+import treemek.mesky.utils.InventoryButtons;
+import treemek.mesky.utils.InventoryButtons.InventoryButton;
 import treemek.mesky.utils.KeyActions;
 import treemek.mesky.utils.KeyActions.KeyAction;
 import treemek.mesky.utils.Waypoints.Waypoint;
@@ -132,11 +135,19 @@ public class ConfigHandler {
         } catch (IOException e) {
             Utils.writeError("There was a problem with reloading key actions: " + e.getMessage());
         }
+        
+        try {
+            reloadInventoryButtons();
+            Utils.addMinecraftMessageWithPrefix(EnumChatFormatting.DARK_GREEN + "Reloaded inventory buttons " + EnumChatFormatting.GREEN + '\u2713');
+        } catch (IOException e) {
+            Utils.writeError("There was a problem with reloading inventory buttons: " + e.getMessage());
+        }
 
 		RecipeHandler.reloadRecipes();
 		ItemsHandler.reloadItemIdMapping();
         
 		SoundsHandler.reloadSounds();
+		ImageUploader.downloadImagesFromFolderToCache();
 		Utils.addMinecraftMessageWithPrefix(EnumChatFormatting.DARK_GREEN + "Reloaded sounds " + EnumChatFormatting.GREEN + '\u2713');
     }
 
@@ -347,6 +358,20 @@ public class ConfigHandler {
 	        }
 	    }
 	}
+	
+	public static void reloadInventoryButtons() throws IOException {
+	    File file = new File(directory + "/mesky/utils/meskyInventoryButtons.json");
+	    if (!file.exists()) return;
+
+	    Gson gson = new Gson();
+	    try (FileReader reader = new FileReader(file)) {
+	        Type type = new TypeToken<LinkedHashMap<Integer, InventoryButton>>(){}.getType();
+	        LinkedHashMap<Integer, InventoryButton> map = gson.fromJson(reader, type);
+	        if (map != null) {
+	            InventoryButtons.buttons = map;
+	        }
+	    }
+	}
     
 	public static void SaveAlert(List<Alerts.Alert> alerts) {
 		new File(Mesky.configDirectory + "/mesky/utils/").mkdirs();
@@ -429,6 +454,16 @@ public class ConfigHandler {
     	new File(Mesky.configDirectory + "/mesky/utils/").mkdirs();
     	try (FileWriter writer = new FileWriter(Mesky.configDirectory + "/mesky/utils/meskyKeyActions.json")) {
             new GsonBuilder().setPrettyPrinting().create().toJson(actions, writer);
+            writer.flush();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+    
+	public static void SaveInventoryButtons(Map<Integer, InventoryButton> invButtons) {
+		new File(Mesky.configDirectory + "/mesky/utils/").mkdirs();
+    	try (FileWriter writer = new FileWriter(Mesky.configDirectory + "/mesky/utils/meskyInventoryButtons.json")) {
+            new GsonBuilder().setPrettyPrinting().create().toJson(invButtons, writer);
             writer.flush();
         } catch (IOException ex) {
             ex.printStackTrace();

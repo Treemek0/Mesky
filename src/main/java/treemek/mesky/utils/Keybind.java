@@ -6,7 +6,6 @@ import java.util.List;
 import org.lwjgl.input.Keyboard;
 
 import net.minecraft.client.Minecraft;
-import treemek.mesky.handlers.KeyboardHandler;
 
 public class Keybind {
 	List<Integer> keys = new ArrayList<>();
@@ -50,7 +49,7 @@ public class Keybind {
 		
 		boolean isPressed = true;
 		for (Integer key : keys) {
-			if(!KeyboardHandler.isKeyDown(key)) {
+			if(!Keyboard.isKeyDown(key)) {
 				isPressed = false;
 			}
 		}

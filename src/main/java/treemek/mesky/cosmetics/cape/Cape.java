@@ -25,6 +25,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import treemek.mesky.Reference;
 import treemek.mesky.cosmetics.CosmeticHandler;
 import treemek.mesky.utils.ImageCache;
+import treemek.mesky.utils.ImageCache.Cache;
 import treemek.mesky.utils.Utils;
 
 public class Cape extends ModelBase{
@@ -135,9 +136,9 @@ public class Cape extends ModelBase{
 					filePath = folderPath + "/cape" + currentAnimation;
 				}
 				
-				BufferedImage buff = ImageCache.bufferedTextureCache.get(filePath);
-				if(buff != null) {
-					ResourceLocation location = ImageCache.resourceLocationCache.get(buff);
+				Cache cache = ImageCache.bufferedCache.get(filePath);
+				if(cache != null && cache.location != null) {
+					ResourceLocation location = cache.location;
 					return location;
 				}
 			}

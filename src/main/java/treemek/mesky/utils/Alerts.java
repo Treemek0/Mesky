@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 
@@ -46,6 +47,7 @@ import treemek.mesky.handlers.gui.alerts.AlertElement;
 import treemek.mesky.handlers.gui.alerts.AlertPosition;
 import treemek.mesky.handlers.soundHandler.Sound;
 import treemek.mesky.handlers.soundHandler.SoundsHandler;
+import treemek.mesky.utils.ImageCache.Cache;
 import treemek.mesky.utils.Waypoints.Waypoint;
 
 public class Alerts extends GuiScreen {
@@ -272,167 +274,162 @@ public class Alerts extends GuiScreen {
 	}
 	
 	 @SubscribeEvent
-	    public void onRenderOverlay(RenderGameOverlayEvent.Pre event) {
-		 Iterator<AlertRenderInfo> iterator = new ArrayList<>(renderingQueue).iterator();
-		 while (iterator.hasNext()) {
-			 	AlertRenderInfo info = iterator.next();
-		        String alert = info.message;
-		        
-			    // Check if the delay duration has passed and delete alert from renderingQueue
-		        if (System.currentTimeMillis() - info.startTime >= info.time) {
-		            renderingQueue.remove(info);
-		        }
-			    
-        		if(info.bufferedImage != null && info.location != null) {
-        			renderAlertImage(event.resolution, info);
-	        	}else {
-	        		renderAlertText(event.resolution, info);
-	        	}
-			}
-	    }
-
-	    private void renderAlertText(ScaledResolution resolution, AlertRenderInfo info) {
-	        Minecraft mc = Minecraft.getMinecraft();
-	        FontRenderer fontRenderer = mc.fontRendererObj;
-
-	        int posX = (int) (resolution.getScaledWidth() * ((float)(info.position[0])/100));
-	        int posY = (int) (resolution.getScaledHeight() * ((float)(info.position[1])/100));
+    public void onRenderOverlay(RenderGameOverlayEvent.Pre event) {
+	 Iterator<AlertRenderInfo> iterator = new ArrayList<>(renderingQueue).iterator();
+	 while (iterator.hasNext()) {
+		 	AlertRenderInfo info = iterator.next();
+	        String alert = info.message;
 	        
-	        RenderHandler.drawAlertText(ColorUtils.getColoredText(info.message), resolution, 0xffffff, info.scale, posX, posY);
-	        Minecraft.getMinecraft().getTextureManager().bindTexture(Gui.icons);
-	    }
-	    
-	    private void renderAlertImage(ScaledResolution resolution, AlertRenderInfo info) {
-	        Minecraft mc = Minecraft.getMinecraft();
-	        FontRenderer fontRenderer = mc.fontRendererObj;
-	        
-	        int posX = (int) (resolution.getScaledWidth() * ((float)(info.position[0])/100));
-	        int posY = (int) (resolution.getScaledHeight() * ((float)(info.position[1])/100));
-	        
-            // Draw the texture on the screen
-            int imgHeight = (int) (info.bufferedImage.getHeight() * (((double)resolution.getScaledHeight() / (double)info.bufferedImage.getHeight()) * info.scale));
-            double ratio = (double)info.bufferedImage.getWidth() / (double)info.bufferedImage.getHeight() ;
-            int imgWidth = (int) (imgHeight * ratio);
-           
-            // Calculate opacity based on elapsed time
-            long elapsedTime = System.currentTimeMillis() - info.startTime;
-            long maxOpacityTime = (long) Math.min(250, 0.25*info.time);
-            long maxOpacityEndTime = (long) Math.max(info.time-250, 0.75*info.time);
-            float opacity = RenderHandler.calculateOpacity(elapsedTime, (long)info.time, maxOpacityTime, maxOpacityEndTime);
-            
-
-            // Render the image
-            GlStateManager.pushMatrix();
-            GlStateManager.color(1.0F, 1.0F, 1.0F, opacity);
-            GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-            GlStateManager.disableDepth();
-            
-            Minecraft.getMinecraft().renderEngine.bindTexture(info.location);
-            drawModalRectWithCustomSizedTexture(posX - imgWidth / 2, posY - imgHeight / 2, 0, 0, imgWidth, imgHeight, imgWidth, imgHeight);
-            GlStateManager.enableDepth();
-            GlStateManager.disableBlend();
-            GlStateManager.popMatrix();
-	    }
-	    
-	    
-	    
-	   
-	    
-
-	    public void getTextureFromCache(Alert alert) {
-	        if (!ImageCache.bufferedTextureCache.containsKey(alert.displayedMessage)) {
-	            // If the texture is not in the cache, load it
-	        	if(alert.displayedMessage.startsWith("https:") || alert.displayedMessage.startsWith("http:")) {
-	        		ImageCache.downloadImageFromInternet(alert.displayedMessage, "Alerts " + EnumChatFormatting.DARK_AQUA + "('" + alert.triggerMessage + "')");
-	        	}else {
-	        		ImageCache.downloadImageFromFile(alert.displayedMessage, "Alerts " + EnumChatFormatting.DARK_AQUA + "('" + alert.triggerMessage + "')");
-	        	}
+		    // Check if the delay duration has passed and delete alert from renderingQueue
+	        if (System.currentTimeMillis() - info.startTime >= info.time) {
+	            renderingQueue.remove(info);
 	        }
-	        
-	        // Return the texture from the cache
-	        BufferedImage buff = ImageCache.bufferedTextureCache.getOrDefault(alert.displayedMessage, null);
-	        
-	        if(buff != null) {
-	        	ResourceLocation location = ImageCache.resourceLocationCache.getOrDefault(buff, null);
-	        	SoundsHandler.playSound(alert.sound, alert.volume, alert.pitch);
-	            
-	            // adds alert to rendering queue so it can render
-	            if(!renderingQueue.contains(new AlertRenderInfo(alert.displayedMessage, alert.time, System.currentTimeMillis(), location, buff, alert.position, alert.scale))) {
-	            	renderingQueue.add(new AlertRenderInfo(alert.displayedMessage, alert.time, System.currentTimeMillis(), location, buff, alert.position, alert.scale));
-	            }
-	        }else {
-	        	DisplayCustomAlert("Alert is still downloading...", 3000, new Float[] {50f, 50f}, 2);
-	        }
-	    }
-	    
-	    public static void putAllImagesToCache() {
-	    	// downloads alert images while loading game so when you want to get them they dont have to download (it sometimes took 5s to receive alert before this)
-	    	List<String> paths = new ArrayList();
-	    	
-	    	for (Alert alert : alertsList) {
-				if(isImage(alert.displayedMessage)) {
-					paths.add(alert.displayedMessage);
-					if(!ImageCache.bufferedTextureCache.containsKey(alert.displayedMessage)) {
-						if(alert.displayedMessage.startsWith("https:") || alert.displayedMessage.startsWith("http:")) {
-							ImageCache.downloadImageFromInternet(alert.displayedMessage, "Alerts " + EnumChatFormatting.DARK_AQUA + "('" + alert.triggerMessage + "')");
-			        	}else {
-			        		ImageCache.downloadImageFromFile(alert.displayedMessage, "Alerts " + EnumChatFormatting.DARK_AQUA + "('" + alert.triggerMessage + "')");
-			        	}
-					}
+		    
+    		if(info.bufferedImage != null && info.location != null) {
+    			renderAlertImage(event.resolution, info);
+        	}else {
+        		renderAlertText(event.resolution, info);
+        	}
+		}
+    }
+
+    private void renderAlertText(ScaledResolution resolution, AlertRenderInfo info) {
+        Minecraft mc = Minecraft.getMinecraft();
+        FontRenderer fontRenderer = mc.fontRendererObj;
+
+        int posX = (int) (resolution.getScaledWidth() * ((float)(info.position[0])/100));
+        int posY = (int) (resolution.getScaledHeight() * ((float)(info.position[1])/100));
+        
+        RenderHandler.drawAlertText(ColorUtils.getColoredText(info.message), resolution, 0xffffff, info.scale, posX, posY);
+        Minecraft.getMinecraft().getTextureManager().bindTexture(Gui.icons);
+    }
+    
+    private void renderAlertImage(ScaledResolution resolution, AlertRenderInfo info) {
+        Minecraft mc = Minecraft.getMinecraft();
+        FontRenderer fontRenderer = mc.fontRendererObj;
+        
+        int posX = (int) (resolution.getScaledWidth() * ((float)(info.position[0])/100));
+        int posY = (int) (resolution.getScaledHeight() * ((float)(info.position[1])/100));
+        
+        // Draw the texture on the screen
+        int imgHeight = (int) (info.bufferedImage.getHeight() * (((double)resolution.getScaledHeight() / (double)info.bufferedImage.getHeight()) * info.scale));
+        double ratio = (double)info.bufferedImage.getWidth() / (double)info.bufferedImage.getHeight() ;
+        int imgWidth = (int) (imgHeight * ratio);
+       
+        // Calculate opacity based on elapsed time
+        long elapsedTime = System.currentTimeMillis() - info.startTime;
+        long maxOpacityTime = (long) Math.min(250, 0.25*info.time);
+        long maxOpacityEndTime = (long) Math.max(info.time-250, 0.75*info.time);
+        float opacity = RenderHandler.calculateOpacity(elapsedTime, (long)info.time, maxOpacityTime, maxOpacityEndTime);
+        
+
+        // Render the image
+        GlStateManager.pushMatrix();
+        GlStateManager.color(1.0F, 1.0F, 1.0F, opacity);
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GlStateManager.disableDepth();
+        
+        Minecraft.getMinecraft().renderEngine.bindTexture(info.location);
+        drawModalRectWithCustomSizedTexture(posX - imgWidth / 2, posY - imgHeight / 2, 0, 0, imgWidth, imgHeight, imgWidth, imgHeight);
+        GlStateManager.enableDepth();
+        GlStateManager.disableBlend();
+        GlStateManager.popMatrix();
+    }
+	     
+
+    public void getTextureFromCache(Alert alert) {
+        if (!ImageCache.bufferedCache.containsKey(alert.displayedMessage)) {
+            // If the texture is not in the cache, load it
+        	if(alert.displayedMessage.startsWith("https:") || alert.displayedMessage.startsWith("http:")) {
+        		ImageCache.downloadImageFromInternet(alert.displayedMessage, "Alerts " + EnumChatFormatting.DARK_AQUA + "('" + alert.triggerMessage + "')");
+        	}else {
+        		ImageCache.downloadImageFromFile(alert.displayedMessage, "Alerts " + EnumChatFormatting.DARK_AQUA + "('" + alert.triggerMessage + "')");
+        	}
+        }
+        
+        // Return the texture from the cache
+        Cache cache = ImageCache.bufferedCache.getOrDefault(alert.displayedMessage, null);
+        
+        if(cache != null && cache.buffer != null && cache.location != null) {
+        	ResourceLocation location = cache.location;
+        	SoundsHandler.playSound(alert.sound, alert.volume, alert.pitch);
+            
+            // adds alert to rendering queue so it can render
+            if(!renderingQueue.contains(new AlertRenderInfo(alert.displayedMessage, alert.time, System.currentTimeMillis(), location, cache.buffer, alert.position, alert.scale))) {
+            	renderingQueue.add(new AlertRenderInfo(alert.displayedMessage, alert.time, System.currentTimeMillis(), location, cache.buffer, alert.position, alert.scale));
+            }
+        }else {
+        	DisplayCustomAlert("Alert is still downloading...", 3000, new Float[] {50f, 50f}, 2);
+        }
+    }
+    
+    public static void putAllImagesToCache() {
+    	// downloads alert images while loading game so when you want to get them they dont have to download (it sometimes took 5s to receive alert before this)
+    	List<String> paths = new ArrayList();
+    	
+    	for (Alert alert : alertsList) {
+			if(isImage(alert.displayedMessage)) {
+				paths.add(alert.displayedMessage);
+				if(!ImageCache.bufferedCache.containsKey(alert.displayedMessage)) {
+					if(alert.displayedMessage.startsWith("https:") || alert.displayedMessage.startsWith("http:")) {
+						ImageCache.downloadImageFromInternet(alert.displayedMessage, "Alerts " + EnumChatFormatting.DARK_AQUA + "('" + alert.triggerMessage + "')");
+		        	}else {
+		        		ImageCache.downloadImageFromFile(alert.displayedMessage, "Alerts " + EnumChatFormatting.DARK_AQUA + "('" + alert.triggerMessage + "')");
+		        	}
 				}
 			}
-	    	
-	    	// deleting all unused alert images (while changing them or something idk)
-	    	for (Map.Entry<String, BufferedImage> cache : ImageCache.bufferedTextureCache.entrySet()) {
-	    	    String path = cache.getKey();
-	    	    BufferedImage buff = cache.getValue();
-	    	    
-	    	    if(!paths.contains(path)) {
-	    	    	ImageCache.bufferedTextureCache.remove(path);
-	    	    	Minecraft.getMinecraft().getTextureManager().deleteTexture(ImageCache.resourceLocationCache.get(buff));
-	    	    	ImageCache.resourceLocationCache.remove(buff);
-	    	    }
-	    	}
-	    }
-	    
-	    public static void editAlertPositionAndScale(Float[] position, float scale, int i, List<AlertElement> alerts) {
-	    	String alert = alerts.get(i).display.getText();
-	    	
-    		if(isImage(alert)) {
-    			if(!ImageCache.bufferedTextureCache.containsKey(alert)) {
-					if(alert.startsWith("https:") || alert.startsWith("http:")) {
-						ImageCache.downloadImageFromInternet(alert, "Alerts " + EnumChatFormatting.DARK_AQUA + "('" + "edit" + "')");
-		        	}else {
-		        		ImageCache.downloadImageFromFile(alert, "Alerts " + EnumChatFormatting.DARK_AQUA + "(" + "edit" + ")");
-		        	}
-    			}
-			}
+		}
+    	
+    	// deleting all unused alert images (while changing them or something idk)
+    	for (Entry<String, Cache> cacheEntry : ImageCache.bufferedCache.entrySet()) {
+    	    String path = cacheEntry.getKey();
+    	    Cache cache = cacheEntry.getValue();
+    	    
+    	    if(!paths.contains(path)) {
+    	    	Minecraft.getMinecraft().getTextureManager().deleteTexture(cache.location);
+    	    	ImageCache.bufferedCache.remove(path);
+    	    }
+    	}
+    }
     
-		    // Return the texture from the cache
-	        BufferedImage buff = ImageCache.bufferedTextureCache.getOrDefault(alert, null);
-	        
-	        if(buff != null) {
-	        	ResourceLocation location = ImageCache.resourceLocationCache.getOrDefault(buff, null);
-	        	
-	        	AlertPosition.alertInfo = new AlertRenderInfo(alert, 0, 0, location, buff, position, scale);
-	        	AlertPosition.alert = alerts.get(i);
-	        	AlertPosition.alertsGUI = alerts;
-	        	GuiHandler.GuiType = new AlertPosition();
-	        }else {
-	        	AlertPosition.alertInfo = new AlertRenderInfo(alert, 0, 0, null, null, position, scale);
-	        	AlertPosition.alert =  alerts.get(i);
-	        	AlertPosition.alertsGUI = alerts;
-	        	GuiHandler.GuiType = new AlertPosition();
-	        }
+    public static void editAlertPositionAndScale(Float[] position, float scale, int i, List<AlertElement> alerts) {
+    	String alert = alerts.get(i).display.getText();
+    	
+		if(isImage(alert)) {
+			if(!ImageCache.bufferedCache.containsKey(alert)) {
+				if(alert.startsWith("https:") || alert.startsWith("http:")) {
+					ImageCache.downloadImageFromInternet(alert, "Alerts " + EnumChatFormatting.DARK_AQUA + "('" + "edit" + "')");
+	        	}else {
+	        		ImageCache.downloadImageFromFile(alert, "Alerts " + EnumChatFormatting.DARK_AQUA + "(" + "edit" + ")");
+	        	}
+			}
+		}
 
-	    }
-	    
-	    
-	    private static boolean isImage(String alert) {
-	    	if((alert.contains(".png") || alert.contains(".jpg") || alert.contains(".jpeg") || alert.contains(".avif")) && (alert.contains("/") || alert.contains("\\"))) {
-	    		return true;
-	    	}
-	    	
-	    	return false;
-	    }
+	    // Return the texture from the cache
+        Cache cache = ImageCache.bufferedCache.getOrDefault(alert, null);
+        
+        if(cache != null && cache.buffer != null && cache.location != null) {
+        	ResourceLocation location = cache.location;
+        	
+        	AlertPosition.alertInfo = new AlertRenderInfo(alert, 0, 0, location, cache.buffer, position, scale);
+        	AlertPosition.alert = alerts.get(i);
+        	AlertPosition.alertsGUI = alerts;
+        	GuiHandler.GuiType = new AlertPosition();
+        }else {
+        	AlertPosition.alertInfo = new AlertRenderInfo(alert, 0, 0, null, null, position, scale);
+        	AlertPosition.alert =  alerts.get(i);
+        	AlertPosition.alertsGUI = alerts;
+        	GuiHandler.GuiType = new AlertPosition();
+        }
+
+    }
+    
+    
+    private static boolean isImage(String alert) {
+    	if((alert.contains(".png") || alert.contains(".jpg") || alert.contains(".jpeg") || alert.contains(".avif")) && (alert.contains("/") || alert.contains("\\"))) {
+    		return true;
+    	}
+    	
+    	return false;
+    }
 }

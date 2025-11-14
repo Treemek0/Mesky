@@ -51,7 +51,6 @@ import treemek.mesky.features.illegal.GhostBlock;
 import treemek.mesky.features.illegal.GhostPickaxe;
 import treemek.mesky.features.illegal.JawbusDetector;
 import treemek.mesky.handlers.GuiHandler;
-import treemek.mesky.handlers.KeyboardHandler;
 import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.handlers.gui.elements.buttons.FileSelectorButton;
 import treemek.mesky.handlers.gui.keyaction.KeyActionGui;
@@ -64,6 +63,7 @@ import treemek.mesky.utils.Alerts;
 import treemek.mesky.utils.ChatFunctions;
 import treemek.mesky.utils.FriendsLocations;
 import treemek.mesky.utils.HypixelCheck;
+import treemek.mesky.utils.InventoryButtons;
 import treemek.mesky.utils.KeyActions;
 import treemek.mesky.utils.Locations;
 import treemek.mesky.utils.MacroWaypoints;
@@ -157,7 +157,6 @@ public class Mesky {
 		MinecraftForge.EVENT_BUS.register(new ChatFilter());
 		MinecraftForge.EVENT_BUS.register(new AotvOverlay());
 		MinecraftForge.EVENT_BUS.register(new KeyActions());
-		MinecraftForge.EVENT_BUS.register(new KeyboardHandler());
 		
 		//ClientRegistry.registerKeyBinding(RecordHeadMovement.HeadRecorder);
 		//ClientRegistry.registerKeyBinding(RecordHeadMovement.HeadPlayer);

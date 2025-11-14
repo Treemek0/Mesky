@@ -575,5 +575,32 @@ public class ColorUtils {
 
         return mostUsedColor;
     }
+
+	public static int getWoolMetaFromRGB(int rgb) {
+		float r = (rgb >> 16 & 0xFF) / 255f;
+		float g = (rgb >> 8 & 0xFF) / 255f;
+		float b = (rgb & 0xFF) / 255f;
+
+		int[][] dyeColors = {
+			{221,221,221}, {219,125,62}, {179,80,188}, {107,138,201},
+			{177,166,39}, {65,174,56}, {208,132,153}, {64,64,64},
+			{154,161,161}, {46,110,137}, {126,61,181}, {46,56,141},
+			{79,50,31}, {53,70,27}, {150,52,48}, {25,22,22}
+		};
+
+		int best = 0;
+		double bestDist = Double.MAX_VALUE;
+		for(int i=0;i<16;i++) {
+			double dr = (dyeColors[i][0]/255.0 - r);
+			double dg = (dyeColors[i][1]/255.0 - g);
+			double db = (dyeColors[i][2]/255.0 - b);
+			double dist = dr*dr + dg*dg + db*db;
+			if(dist < bestDist) {
+				bestDist = dist;
+				best = i;
+			}
+		}
+		return best;
+	}
     
 }

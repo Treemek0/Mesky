@@ -9,6 +9,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.imageio.ImageIO;
@@ -20,32 +21,43 @@ import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.ResourceLocation;
 
 public class ImageCache {
+	public static class Cache {
+		public BufferedImage buffer;
+		public ResourceLocation location;
+		
+		public Cache(BufferedImage bufferedimage, ResourceLocation resourceLocation) {
+			this.buffer = bufferedimage;
+			this.location = resourceLocation;
+		}
+		
+		public boolean isNulled() {
+			return buffer == null || location == null;
+		}
+	}
+	
 	// Texture cache to store image path -> texture ID mappings
-		public static Map<String, BufferedImage> bufferedTextureCache = new ConcurrentHashMap<>();
-		public static Map<BufferedImage, ResourceLocation> resourceLocationCache = new ConcurrentHashMap<>();
+		public static Map<String, Cache> bufferedCache = new ConcurrentHashMap<>();
 	   
 		public static ResourceLocation getLocationOfPath(String path) {
-			BufferedImage buff = bufferedTextureCache.get(path);
-			if(buff != null) {
-				return resourceLocationCache.getOrDefault(buff, new ResourceLocation(""));
+			Cache cache = bufferedCache.get(path);
+			if(cache != null && cache.location != null) {
+				return cache.location;
 			}
 			
 			return new ResourceLocation("");
 		}
 		
 		public static void deleteFromImageCache(String path) {
-			if(bufferedTextureCache.containsKey(path)) {
-				BufferedImage buff = bufferedTextureCache.get(path);
-				resourceLocationCache.remove(buff);
-				bufferedTextureCache.remove(path);
+			if(bufferedCache.containsKey(path)) {
+				bufferedCache.remove(path);
 			}
 		}
 		
 		public static void removeFolderImagesFromCache(String folderPath) {
-	        Iterator<Map.Entry<String, BufferedImage>> iterator = bufferedTextureCache.entrySet().iterator();
+	        Iterator<Entry<String, Cache>> iterator = bufferedCache.entrySet().iterator();
 	        
 	        while (iterator.hasNext()) {
-	            Map.Entry<String, BufferedImage> entry = iterator.next();
+	            Entry<String, Cache> entry = iterator.next();
 	            String key = entry.getKey();
 	            
 	            if (key.startsWith(folderPath)) {
@@ -71,8 +83,7 @@ public class ImageCache {
 							public void run() {
 	                            try {
 	                            	resourceLocation = Minecraft.getMinecraft().getTextureManager().getDynamicTextureLocation(urlString, new DynamicTexture(bufferedimage));
-			                    	bufferedTextureCache.put(urlString, bufferedimage);
-	                            	resourceLocationCache.put(bufferedimage, resourceLocation);
+			                    	bufferedCache.put(urlString, new Cache(bufferedimage, resourceLocation));
 	                            } catch (Exception e) {
 	                            	if(Minecraft.getMinecraft().thePlayer != null) {
 	                            		if(e.getLocalizedMessage() == null) {
@@ -110,21 +121,53 @@ public class ImageCache {
 			                public void run() {
 			                    try {
 			                    	resourceLocation = Minecraft.getMinecraft().getTextureManager().getDynamicTextureLocation(path, new DynamicTexture(bufferedimage));
-			                    	bufferedTextureCache.put(path, bufferedimage);
-	                            	resourceLocationCache.put(bufferedimage, resourceLocation);
+			                    	bufferedCache.put(path, new Cache(bufferedimage, resourceLocation));
 			                    }catch (Exception e) {
 			                    	if(Minecraft.getMinecraft().thePlayer != null) {
-	                            		Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]" + EnumChatFormatting.WHITE + " in " + EnumChatFormatting.AQUA + errorWhere + EnumChatFormatting.WHITE + ": " + EnumChatFormatting.BOLD.RED + e.getLocalizedMessage()));
+	                            		Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]" + EnumChatFormatting.WHITE + " Error in " + EnumChatFormatting.AQUA + errorWhere + EnumChatFormatting.WHITE + ": " + EnumChatFormatting.BOLD.RED + e.getLocalizedMessage()));
 	                            	}
 			                    }
 			                }
 			            });
 			        } catch (Exception e) {
 			        	if(Minecraft.getMinecraft().thePlayer != null) {
-	             		Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]" + EnumChatFormatting.WHITE + " in " + EnumChatFormatting.AQUA + errorWhere + EnumChatFormatting.WHITE + ": " + EnumChatFormatting.BOLD.RED + e.getLocalizedMessage()));
+	             		Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]" + EnumChatFormatting.WHITE + " Error in " + EnumChatFormatting.AQUA + errorWhere + EnumChatFormatting.WHITE + ": " + EnumChatFormatting.BOLD.RED + e.getLocalizedMessage()));
 	             	}
 			        }
 	            }
 	    	}).start();
 	    }
+		 
+		 public static void downloadImageFromFile(final String path, final String customName, final String errorWhere) {
+		    	new Thread(new Runnable() {
+		            private BufferedImage bufferedimage;
+		            private ResourceLocation resourceLocation;
+		            
+					public void run() {
+				    	try {
+				    		File imageFile = new File(path);
+				    		try (InputStream inputStream = new BufferedInputStream(new FileInputStream(imageFile))) {
+			                    bufferedimage = ImageIO.read(inputStream);
+			                }
+				    		
+				            Minecraft.getMinecraft().addScheduledTask(new Runnable() {
+				                public void run() {
+				                    try {
+				                    	resourceLocation = Minecraft.getMinecraft().getTextureManager().getDynamicTextureLocation(customName, new DynamicTexture(bufferedimage));
+				                    	bufferedCache.put(customName, new Cache(bufferedimage, resourceLocation));
+				                    }catch (Exception e) {
+				                    	if(Minecraft.getMinecraft().thePlayer != null) {
+		                            		Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]" + EnumChatFormatting.WHITE + " Error in " + EnumChatFormatting.AQUA + errorWhere + EnumChatFormatting.WHITE + ": " + EnumChatFormatting.BOLD.RED + e.getLocalizedMessage()));
+		                            	}
+				                    }
+				                }
+				            });
+				        } catch (Exception e) {
+				        	if(Minecraft.getMinecraft().thePlayer != null) {
+		             		Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.BOLD.AQUA + "[Mesky]" + EnumChatFormatting.WHITE + " Error in " + EnumChatFormatting.AQUA + errorWhere + EnumChatFormatting.WHITE + ": " + EnumChatFormatting.BOLD.RED + e.getLocalizedMessage()));
+		             	}
+				        }
+		            }
+		    	}).start();
+		    }
 }

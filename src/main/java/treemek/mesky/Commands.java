@@ -72,6 +72,8 @@ import treemek.mesky.handlers.api.Bazaar.SellType;
 import treemek.mesky.handlers.gui.GUI;
 import treemek.mesky.handlers.gui.GuiLocations;
 import treemek.mesky.handlers.gui.TestGui;
+import treemek.mesky.handlers.gui.images.ImageGalleryGui;
+import treemek.mesky.handlers.gui.inventorybuttons.InventoryButtonsGui;
 import treemek.mesky.handlers.gui.keyaction.KeyActionGui;
 import treemek.mesky.handlers.gui.sounds.SoundGui;
 import treemek.mesky.handlers.gui.warp.fasttravel.WarpGui;
@@ -85,6 +87,7 @@ import treemek.mesky.utils.Alerts;
 import treemek.mesky.utils.ColorUtils;
 import treemek.mesky.utils.FriendsLocations;
 import treemek.mesky.utils.ImageCache;
+import treemek.mesky.utils.InventoryButtons;
 import treemek.mesky.utils.Locations;
 import treemek.mesky.utils.Locations.Location;
 import treemek.mesky.utils.MacroWaypoints;
@@ -108,7 +111,7 @@ import treemek.mesky.utils.manager.PartyManager;
 public class Commands extends CommandBase{
 	
 	 List<String> commands = new ArrayList<>(Arrays.asList(
-	            "commands", "gui", "reload", "waypoint", "macrowaypoint", "tempwaypoint",
+	            "commands", "gui", "reload", "inventory_buttons_nbt", "inventorybuttons", "waypoint", "macrowaypoint", "tempwaypoint",
 	            "touchwaypoint", "mark", "friend", "setfriend", "hideplayers", "find", 
 	            "findclear", "whatentity", "region", "path", "pathxray", "pathtowaypoint",
 	            "pathtomacrowaypoint", "clearpath", "flyingpath", "flyingpathtowaypoint",
@@ -148,6 +151,34 @@ public class Commands extends CommandBase{
     			if(args.length > 1) {
     				SoundsHandler.playSound(args[1]);
     			}
+    			return;
+    		}
+    		if(command.equals("inventory_buttons_nbt")) {
+    			Utils.addMinecraftMessageWithPrefix(EnumChatFormatting.BLUE + "Inventory buttons nbt tags:");
+    			Utils.addMinecraftMessage(EnumChatFormatting.GOLD + "When using spawn_egg / potion, you can use:");
+    			Utils.addMinecraftMessage(EnumChatFormatting.LIGHT_PURPLE + "[type=...] " + EnumChatFormatting.RESET + "to specify which type you want (you can use their ID or names)");
+    			Utils.addMinecraftMessage("");
+    			Utils.addMinecraftMessage(EnumChatFormatting.GOLD + "You can also color armor/blocks with:");
+    			Utils.addMinecraftMessage(EnumChatFormatting.LIGHT_PURPLE + "[hex=??????] " + EnumChatFormatting.RESET + "and give correct HEX value");
+    			Utils.addMinecraftMessage("");
+    			Utils.addMinecraftMessage(EnumChatFormatting.GOLD + "When using skull, you can set its skin:");
+    			Utils.addMinecraftMessage(EnumChatFormatting.LIGHT_PURPLE + "[skin=" + EnumChatFormatting.GREEN + "<PLAYER_NICK>" + EnumChatFormatting.LIGHT_PURPLE + "] ");
+    			Utils.addMinecraftMessage("");
+    			Utils.addMinecraftMessage("skull[skin=Treemek]");
+    			Utils.addMinecraftMessage("spawn_egg[type=Zombie]");
+    			Utils.addMinecraftMessage("spawn_egg[type=50]");
+    			Utils.addMinecraftMessage("potion[type=healing]");
+    			Utils.addMinecraftMessage("potion[type=healing_splash]");
+    			Utils.addMinecraftMessage("wool[hex=FFFFFF]");
+    			
+    			return;
+    		}
+    		if(command.equals("inventorybuttons")) {
+    			GuiHandler.GuiType = new InventoryButtonsGui();
+    			return;
+    		}
+    		if(command.equals("images")) {
+    			GuiHandler.GuiType = new ImageGalleryGui();
     			return;
     		}
     		if(command.equals("craftprofit")) {

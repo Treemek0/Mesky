@@ -1,5 +1,7 @@
 package treemek.mesky.mixins;
 
+import java.util.Map.Entry;
+
 import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -12,10 +14,15 @@ import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.client.renderer.tileentity.TileEntityItemStackRenderer;
+import net.minecraft.init.Items;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.Slot;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
 import treemek.mesky.config.ConfigHandler;
 import treemek.mesky.config.SettingsConfig;
 import treemek.mesky.features.LockSlot;
@@ -23,6 +30,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import treemek.mesky.handlers.RenderHandler;
 import treemek.mesky.handlers.gui.GUI;
 import treemek.mesky.handlers.soundHandler.SoundsHandler;
+import treemek.mesky.utils.InventoryButtons;
+import treemek.mesky.utils.InventoryButtons.InventoryButton;
+import treemek.mesky.utils.InventoryButtons.Parameters;
 import treemek.mesky.utils.Utils;
 
 @Mixin(GuiContainer.class)
@@ -32,6 +42,9 @@ public class MixinGuiContainer {
     @Shadow public Container inventorySlots;
 	@Shadow private int xSize;
     
+	final int line_color = 0x65f15337;
+	final int connected_overlay_color = 0x45f15337;
+	
     @Inject(method = "drawSlot", at = @At("RETURN"))
     private void afterDrawSlot(Slot slot, CallbackInfo ci) {
     	if(!SettingsConfig.LockSlots.isOn) return;
@@ -73,7 +86,24 @@ public class MixinGuiContainer {
 		            GlStateManager.disableLighting();
 		            GlStateManager.depthMask(false);
 		            
+		            // rendering in armor slots
 		            RenderHandler.drawImage(x, y, 16, 16, LockSlot.connected_slot);
+		            
+		            Slot hovered = LockSlot.hoveredSlot;
+		            if (hovered != null && LockSlot.connectedSlots.containsKey(hovered.getSlotIndex())) {
+		            	if(hovered.inventory != null && hovered.inventory == Minecraft.getMinecraft().thePlayer.inventory) {
+		            		
+			        		Slot connected_slot = LockSlot.getSlotByInventoryIndex(gui.inventorySlots, LockSlot.connectedSlots.get(hovered.getSlotIndex()));
+			        		if(connected_slot != null && connected_slot == slot) {	        			
+			            		if(connected_slot.slotNumber >= gui.inventorySlots.inventorySlots.size() - 40) {
+				            		if(connected_slot.inventory == Minecraft.getMinecraft().thePlayer.inventory) {
+				            			RenderHandler.drawRect(x, y, x + 16, y + 16, connected_overlay_color);
+				            			GlStateManager.color(1, 1, 1, 1);
+				            		}
+			            		}
+			        		}
+		            	}
+		            }
 		            
 		            GlStateManager.depthMask(true);
 					GlStateManager.disableBlend();
@@ -93,7 +123,6 @@ public class MixinGuiContainer {
     	GuiContainer gui = (GuiContainer)(Minecraft.getMinecraft().currentScreen);
     	if(gui.inventorySlots.inventorySlots.size() > 45) return;
     	
-    	
     	if(slot.inventory == Minecraft.getMinecraft().thePlayer.inventory) {    
 	    	if (LockSlot.connectedSlots.containsKey(slot.getSlotIndex())) {
 	            int x = slot.xDisplayPosition;
@@ -108,17 +137,18 @@ public class MixinGuiContainer {
 	            GlStateManager.disableLighting();
 	            GlStateManager.depthMask(false);
 	            
+	            // rendering in inventory
 	            RenderHandler.drawImage(x, y, 16, 16, LockSlot.connected_slot);
 	            
 	            Slot hovered = LockSlot.hoveredSlot;
 	            if (hovered != null && LockSlot.connectedSlots.containsKey(hovered.getSlotIndex())) {
 	            	if(hovered.inventory != null && hovered.inventory == Minecraft.getMinecraft().thePlayer.inventory) {
-	        		
+	            		
 		        		Slot connected_slot = LockSlot.getSlotByInventoryIndex(gui.inventorySlots, LockSlot.connectedSlots.get(hovered.getSlotIndex()));
-		        		if(connected_slot != null && connected_slot == slot) {
+		        		if(connected_slot != null && connected_slot == slot) {	        			
 		            		if(connected_slot.slotNumber >= gui.inventorySlots.inventorySlots.size() - 40) {
 			            		if(connected_slot.inventory == Minecraft.getMinecraft().thePlayer.inventory) {
-			            			RenderHandler.drawRect(x, y, x + 16, y + 16, 0x65ef3b1a);
+			            			RenderHandler.drawRect(x, y, x + 16, y + 16, connected_overlay_color);
 			            			GlStateManager.color(1, 1, 1, 1);
 			            		}
 		            		}
@@ -144,16 +174,52 @@ public class MixinGuiContainer {
     	
         if(LockSlot.connectingSlot_1 != null) {
         	Slot connecting_slot = LockSlot.getSlotByInventoryIndex(gui.inventorySlots, LockSlot.connectingSlot_1);
-        	RenderHandler.drawLine2D(mouseX, mouseY, connecting_slot.xDisplayPosition + guiLeft + 8, connecting_slot.yDisplayPosition + guiTop + 8, line_width, 0xef3b1a);
+        	RenderHandler.drawLine2D(mouseX, mouseY, connecting_slot.xDisplayPosition + guiLeft + 8, connecting_slot.yDisplayPosition + guiTop + 8, line_width, line_color);
         }
     }
     
     @Inject(method = "drawScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/inventory/GuiContainer;drawGuiContainerForegroundLayer(II)V", shift = At.Shift.AFTER))
     private void onDrawBeforeTooltip(int mouseX, int mouseY, float partialTicks, CallbackInfo ci) {
     	if(!SettingsConfig.LockSlots.isOn) return;
-
-    	GuiContainer gui = (GuiContainer)(Object)this;
     
+    	Minecraft mc = Minecraft.getMinecraft();
+    	
+        if(Minecraft.getMinecraft().currentScreen instanceof GuiInventory) {
+        	InventoryButton hoveredButton = null;
+        	
+        	for (Entry<Integer, InventoryButton> entry : InventoryButtons.buttons.entrySet()) {
+				InventoryButton invButton = entry.getValue();
+        		
+        		Parameters p = InventoryButtons.getInventoryButtonPosition(entry.getKey());
+        		
+        		boolean isHovered = invButton.isHovered(p, mouseX, mouseY);
+        		
+                GlStateManager.disableLighting();
+                GlStateManager.depthMask(false);
+                GL11.glColor4f(1, 1, 1, 1);
+                
+                InventoryButtons.renderButton(invButton, p, isHovered);
+                
+                if(invButton.shouldRenderToolkit(isHovered)) {
+                	hoveredButton = invButton;
+                }
+                
+				GlStateManager.enableLighting();
+				RenderHelper.disableStandardItemLighting();
+		        GlStateManager.depthMask(true);
+			}
+        	
+        	if(hoveredButton != null) {
+        		GlStateManager.translate(-guiLeft, -guiTop, 0);
+            	RenderHandler.drawToolkit(hoveredButton.command, null, mouseX, mouseY);
+            	GlStateManager.translate(guiLeft, guiTop, 0);
+        	}
+        	
+        	GL11.glColor4f(1, 1, 1, 1);
+        }
+    	
+    	GuiContainer gui = (GuiContainer)(Object)this;
+    	
     	float line_width = 3f;
     	
         Slot hovered = this.getSlotAtPosition(mouseX, mouseY);
@@ -177,7 +243,7 @@ public class MixinGuiContainer {
     		float[] start = clipLineToRect(center1X, center1Y, center2X, center2Y, halfSize);
     		float[] end = clipLineToRect(center2X, center2Y, center1X, center1Y, halfSize);
 
-    		RenderHandler.drawLine2D(start[0], start[1], end[0], end[1], line_width, 0xFFef3b1a);
+    		RenderHandler.drawLine2D(start[0], start[1], end[0], end[1], line_width, line_color);
     		GlStateManager.enableBlend();
     		GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
     	}
@@ -217,8 +283,10 @@ public class MixinGuiContainer {
         
         if (hovered != null && LockSlot.lockedSlots.containsKey(hovered.getSlotIndex()) && LockSlot.lockedSlots.get(hovered.getSlotIndex())) {
         	if(hovered.inventory != Minecraft.getMinecraft().thePlayer.inventory) return;
-            if(!GUI.isShiftKeyDown()) SoundsHandler.playSound("mesky:block", 1, 2);
-            ci.cancel();
+        	if(!LockSlot.connectedSlots.containsKey(hovered.getSlotIndex()) || !GUI.isShiftKeyDown()){
+	        	SoundsHandler.playSound("mesky:block", 1, 2);
+	            ci.cancel();
+        	}
         }
         
         if(hovered != null && LockSlot.connectedSlots.containsKey(hovered.getSlotIndex()) && GUI.isShiftKeyDown()) {
@@ -270,6 +338,30 @@ public class MixinGuiContainer {
         		}
         		
         		Minecraft.getMinecraft().playerController.windowClick(gui.inventorySlots.windowId, hoveredId, hotbarIndex_not_hovered, 2, Minecraft.getMinecraft().thePlayer);
+        	}
+        }
+    }
+    
+    @Inject(method = "mouseReleased", at = @At("HEAD"), cancellable = true)
+    private void onMouseReleased(int mouseX, int mouseY, int state, CallbackInfo ci) {
+        if(!SettingsConfig.LockSlots.isOn) return;
+        
+        if(Minecraft.getMinecraft().currentScreen instanceof GuiInventory) {
+        	for (Entry<Integer, InventoryButton> entry : InventoryButtons.buttons.entrySet()) {
+				InventoryButton invButton = entry.getValue();
+        	
+        		Parameters p = InventoryButtons.getInventoryButtonPosition(entry.getKey());
+        		
+        		if(invButton.isHovered(p, mouseX, mouseY)) invButton.executeCommand();;
+        	}
+        }
+        
+        GuiContainer gui = (GuiContainer)(Object)this;
+        Slot hovered = this.getSlotAtPosition(mouseX, mouseY);
+
+        if (hovered != null && hovered.inventory == Minecraft.getMinecraft().thePlayer.inventory && LockSlot.lockedSlots.getOrDefault(hovered.getSlotIndex(), false)) {
+        	if(!LockSlot.connectedSlots.containsKey(hovered.getSlotIndex()) || !GUI.isShiftKeyDown()){
+        		ci.cancel();
         	}
         }
     }

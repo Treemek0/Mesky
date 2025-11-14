@@ -75,7 +75,9 @@ public class LockSlot {
 	    }
 	    
 	    Minecraft mc = Minecraft.getMinecraft();
+
 	    if (!(mc.currentScreen instanceof GuiContainer)) return;
+	    GuiContainer gui = (GuiContainer) mc.currentScreen;
 	    
 	    if(changedLocks) {
 	    	nothingHappeningForSave++;
@@ -88,36 +90,37 @@ public class LockSlot {
 	    }
 	    
 	    if (SettingsConfig.LockSlotsKeybind.keybind.isKeybindDown()) {
-    		GuiContainer gui = (GuiContainer) mc.currentScreen;
 	        Slot hovered = gui.getSlotUnderMouse();
-
-	        if(gui.inventorySlots.inventorySlots.size() > 45) return;
 	        
-	        if (hovered != null && hovered.inventory == mc.thePlayer.inventory) {
-	        	if(keyPressed < 10 && connectingSlot_1 == null) {
-	        		if(keyPressed_slot == null) {
-			        	keyPressed_slot = hovered.getSlotIndex();
-			    	}else {
-			    		if(hovered.getSlotIndex() != keyPressed_slot) {
-			    			keyPressed_slot = hovered.getSlotIndex();
-			    			keyPressed = 0;
-			    		}
-			    	}
-	        	}
-	        	
-	    		if(keyPressed >= 10 && connectingSlot_1 == null) {
-		        	int slot = hovered.getSlotIndex();
+	        
+	        
+	        if(gui.inventorySlots.inventorySlots.size() <= 45) {
+	        
+		        if (hovered != null && hovered.inventory == mc.thePlayer.inventory) {
+		        	if(keyPressed < 10 && connectingSlot_1 == null) {
+		        		if(keyPressed_slot == null) {
+				        	keyPressed_slot = hovered.getSlotIndex();
+				    	}else {
+				    		if(hovered.getSlotIndex() != keyPressed_slot) {
+				    			keyPressed_slot = hovered.getSlotIndex();
+				    			keyPressed = 0;
+				    		}
+				    	}
+		        	}
 		        	
-		        	removeConnectedSlot(slot);
-		        	connectingSlot_1 = slot;
-		        	SoundsHandler.playSound("mesky:bop", 0.5f, 0.2f);
-	    		}
+		    		if(keyPressed >= 10 && connectingSlot_1 == null) {
+			        	int slot = hovered.getSlotIndex();
+			        	
+			        	removeConnectedSlot(slot);
+			        	connectingSlot_1 = slot;
+			        	SoundsHandler.playSound("mesky:bop", 0.5f, 0.2f);
+		    		}
+		        }
 	        }
     		
     		keyPressed++;
 	    }else {
 	    	if(keyPressed > 10 && connectingSlot_1 != null) {
-	    		GuiContainer gui = (GuiContainer) mc.currentScreen;
 		        Slot hovered = gui.getSlotUnderMouse();
 
 		        if (hovered != null && hovered.inventory == mc.thePlayer.inventory) {
@@ -148,7 +151,6 @@ public class LockSlot {
 	    
 	    if (SettingsConfig.LockSlotsKeybind.keybind.wasKeybindReleased() && SettingsConfig.LockSlots.isOn) { // locking
 	    	if(keyPressed < 10) {
-	    		GuiContainer gui = (GuiContainer) mc.currentScreen;
 		        Slot hovered = gui.getSlotUnderMouse();
 	
 		        if (hovered != null && hovered.inventory == mc.thePlayer.inventory) {
